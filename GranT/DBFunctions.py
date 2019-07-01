@@ -1,11 +1,7 @@
 import logging
 import sqlite3
 from pathlib import Path
-
-db_location = Path("/Users/Pops/Documents/GranTorismo/GranTTSport-Beta.db")
-#db_location = ':memory:'
-conn = sqlite3.connect(db_location)
-c = conn.cursor()
+from GranT import config as gtcfg
 
 def create_driveTrains():
     """Create the DriveTrain table"""
@@ -235,7 +231,6 @@ def get_manufacture(recid: int):
         c.execute(sql)
         return c.fetchall()
 
-
 def xwrite_car(recID: int, model: str, mfg_id: int, carcat_id: int, drivetrain_id: int, yearmade: str, notes: str):
     """Adds a Car record"""
     logging.debug(f"""
@@ -270,3 +265,6 @@ def xwrite_car(recID: int, model: str, mfg_id: int, carcat_id: int, drivetrain_i
     logging.debug("Completed")
     return True
 
+db_location = gtcfg.dbcfg['dbFile']
+conn = sqlite3.connect(db_location)
+c = conn.cursor()
