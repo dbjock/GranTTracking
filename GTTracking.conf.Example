@@ -1,2 +1,7 @@
 #####
 # This is a sample config file for the GT Tracking app
+######################################################
+
+[database]
+# dbFile =Path and filename of database
+dbFile = C:\Users\Pops\Code\GTurismoTracking\Data\GTTracking.db
