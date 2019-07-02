@@ -1,6 +1,5 @@
 import logging
 import sqlite3
-from pathlib import Path
 from GranT import config as gtcfg
 
 def create_driveTrains():
@@ -77,7 +76,10 @@ def create_tracks():
     logging.info("tracks table created")
 
 def write_driveTrain(theClass):
-    """Adding a record to DriveTrain table."""
+    """
+    Adding a record to DriveTrain table.
+    theClass : required the calss which will have the appropiate attributes
+    """
     logging.debug(f"PARMS: dtID:{theClass.dtID}, code:{theClass.code}, desc:{theClass.desc}")
     if not isinstance(theClass.dtID, int):
         logging.error(f"dtID not an int. Check Parms passed to function. No Record added")
@@ -212,24 +214,6 @@ def write_car(theClass):
     logging.info(f"theRecord: {theRecord} : committed")
     logging.debug("Completed")
     return True
-
-def get_manufacture(recid: int):
-    """Get recid from mfg table.
-    If recid = 0 then all returned. Results will be in a list format"""
-    if not isinstance(recid, int): #recid is not an int
-        logging.error('recid was not an int. no processing')
-        return 0
-
-    if recid > 0:
-        sql = "SELECT id, title FROM manufactures WHERE id = ?"
-        logging.debug(f'Getting specific recid: {recid} SQL: {sql}')
-        c.execute(sql, (recid,))
-        return c.fetchall()
-    else: # Get all the records
-        sql = "SELECT id, title FROM manufactures"
-        logging.debug(f'Getting all manufactures. SQL: {sql}')
-        c.execute(sql)
-        return c.fetchall()
 
 def xwrite_car(recID: int, model: str, mfg_id: int, carcat_id: int, drivetrain_id: int, yearmade: str, notes: str):
     """Adds a Car record"""
