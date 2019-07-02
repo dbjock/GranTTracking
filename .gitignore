@@ -1,6 +1,8 @@
 Snippings.txt
 GTTracking.conf
 logging.conf
+gen_test.py
 GranT/__pycache__/
 Logs/
-gen_test.py
+tests/__pycache__/
+Data/GranTTSport-Beta.db
