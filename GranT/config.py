@@ -8,7 +8,7 @@ def load_config(cfgFile):
     cfgFile : Configuration file to open (requried)\n
     """
     config.read(cfgFile)
-    dbcfg['dbFile'] = config['database']['dbfile']
+    dbcfg['dbFile'] = config.get('database','dbfile',fallback=None)
 
 logger = logging.getLogger(__name__)
 dbcfg = dict()
