@@ -1,27 +1,55 @@
 import logging
-from GranT import DBClass
-
+from GranT import gtdb
+logger = logging.getLogger(__name__)
 class Manufacture(object):
 
-    def __init__(self,dbObj):
-        self.name = None
+    def __init__(self):
         self.id = 0
-        self.db = dbObj
+        self.name = None
 
-    def load(self,id):
+    def load(self,dbConn,id):
         """
-        Get manufacture from database
-        id : Manufacture ID (int) REQUIRED
+        Load manufacture from database in MfgObject.\n
+        dbConn : db Connection object
+        id : Manufacture ID (int)\n
         """
         if not isinstance(id, int):
-            logging.debug("integer not passed.")
-            return False
+            logger.critical("id must be an integer.")
+            raise ValueError("id must be an integer.")
 
-        if id > 0:
-            logging.debug("Loading Manufacture")
-            mfgRecord = self.db.get_manufacture(id)
+        if id == 0:
+            logger.critical("id must be >0.")
+            raise ValueError("id must be >0.")
 
-        if len(mfgRecord) > 0:
+        logger.debug("Loading Manufacture")
+        mfgRecord = gtdb.getMfg(dbConn,id,key='recID')
+        logger.debug(f"{mfgRecord}")
+        self.id = mfgRecord[0]
+        self.name = mfgRecord[1]
 
-            self.id = mfgRecord[0]
-            self.name = mfgRecord[1]
+class DriveTrain(object):
+    def __init__(self):
+        self.id = 0
+        self.code = ""
+        self.desc = ""
+
+    def load(self,dbConn,id):
+        """
+        Load DriveTrain from database into DriveTrainObject.\n
+        dbConn : db Connection object
+        id : DriveTrain ID (int)\n
+        """
+        if not isinstance(id,int):
+            logger.debug("id must be an integer")
+            raise ValueError("id must be an integer.")
+
+        if id == 0:
+            logger.critical("id must be >0.")
+            raise ValueError("id must be >0.")
+
+        logger.debug("Loading DriveTrain")
+        theRecord = gtdb.getDriveTrain(dbConn,id,key='recID')
+        logger.debug(f"{theRecord}")
+        self.id = theRecord[0]
+        self.code = theRecord[1]
+        self.desc = theRecord[2]
