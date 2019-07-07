@@ -11,6 +11,81 @@ from GranT import gtdb
 logging.config.fileConfig('logging.conf', defaults=None, disable_existing_loggers=False)
 logger = logging.getLogger(__name__)
 
+def create_tracks(dbConn):
+    """Creating the Track Table"""
+    logger.info("Creating tracks table")
+    sql = "CREATE TABLE tracks (id INTEGER PRIMARY KEY, trkName TEXT UNIQUE NOT NULL, circuit_id INTEGER REFERENCES circuits (id) ON DELETE RESTRICT NOT NULL)"
+    dbCursor = dbConn.cursor()
+    try:
+        dbCursor.execute(sql)
+        dbConn.commit()
+    except:
+        logger.critical(f'Unexpected error when executing sql: {sql}', exc_info = True)
+        return None
+
+    logger.info("tracks table created")
+    return True
+
+def create_driveTrains(dbConn):
+    """Create the DriveTrain table"""
+    logger.info("Creating drivetrains Table")
+    sql = "CREATE TABLE drivetrains (id INTEGER PRIMARY KEY,code TEXT UNIQUE NOT NULL CHECK (length(code) <= 5), description TEXT)"
+    dbCursor = dbConn.cursor()
+    try:
+        dbCursor.execute(sql)
+        dbConn.commit()
+    except:
+        logger.critical(f'Unexpected error when executing sql: {sql}', exc_info = True)
+        return None
+
+    logger.info("drivetrains table created")
+    return True
+
+def create_circuits(dbConn):
+    """Creates the Circuits Table"""
+    logger.info("Creating circuits table")
+    sql = "CREATE TABLE circuits (id INTEGER PRIMARY KEY, circuitName TEXT UNIQUE NOT NULL)"
+    dbCursor = dbConn.cursor()
+    try:
+        dbCursor.execute(sql)
+        dbConn.commit()
+    except:
+        logger.critical(f'Unexpected error when executing sql: {sql}', exc_info = True)
+        return None
+
+    logger.info("Circuits table created")
+    return True
+
+def create_cars(dbConn):
+    """Creates the Cars table"""
+    logger.info("Creating cars table")
+    sql ="CREATE TABLE cars (id            INTEGER PRIMARY KEY,model         TEXT UNIQUE NOT NULL,mfg_id        INTEGER REFERENCES manufactures (id) ON DELETE RESTRICT NOT NULL,carcat_id     INTEGER REFERENCES car_cats (id) ON DELETE RESTRICT NOT NULL,drivetrain_id INTEGER NOT NULL REFERENCES drivetrains (id) ON DELETE RESTRICT NOT NULL,yearmade      TEXT,notes         TEXT)"
+    dbCursor = dbConn.cursor()
+    try:
+        dbCursor.execute(sql)
+        dbConn.commit()
+    except:
+        logger.critical(f'Unexpected error when executing sql: {sql}', exc_info = True)
+        return None
+
+    logger.info("Circuits cars created")
+    return True
+
+def create_carCats(dbConn):
+    """Creats car_cats table"""
+    logger.info("Creating the car_cats table")
+    sql = "CREATE TABLE car_cats (id INTEGER PRIMARY KEY, catName TEXT UNIQUE NOT NULL, description TEXT)"
+    dbCursor = dbConn.cursor()
+    try:
+        dbCursor.execute(sql)
+        dbConn.commit()
+    except:
+        logger.critical(f'Unexpected error when executing sql: {sql}', exc_info = True)
+        return None
+
+    logger.info("car_cats table created")
+    return True
+
 def create_manufactures(dbConn):
     """Create the Manufacture table"""
     logger.info("Creating Manufacture Table")
@@ -51,6 +126,47 @@ def addMfg(dbConn,recID,mfgName):
 
     dbConn.commit()
     logger.debug(f"Values: {theVals} : committed")
+
+def addDriveTrain(dbConn,recID,dtCode,dtDesc):
+    """
+    Adds a DriveTrain record.
+    ALL PARMS requried.
+    dbConn : DB Connection object\n
+    recID : must !0\n
+    dtCode : DriveTrain Code must contain a value\n
+    dtDesc : Full Description of the type of Drive Train\n
+    Returns True if successfull
+    """
+    logger.debug(f"PARMS: recID:{recID}, dtCode:{dtCode}, dtDesc {dtDesc}")
+    if not isinstance(recID, int):
+        logger.error(f"recID is not an integer. No Add")
+        return False
+
+    if recID == 0:
+        logger.error(f"recID must not equal zero")
+        return False
+
+    #Drive Code (dtCode) can't be blank or none. (Note.. sqlite doesn't consider this null)
+    if dtCode is None or dtCode == '':
+        logger.error(f"dtCode must contain a value. No Add")
+        return False
+
+    #Setting up SQL for Create or Update
+    theVals = (recID, dtCode, dtDesc)
+    sql = "INSERT INTO drivetrains (id, code, description) Values (?, ?, ?)"
+
+    #Executing SQL
+    logger.debug(f"Sql: {sql}")
+    try:
+        dbcursor = dbConn.cursor()
+        dbcursor.execute(sql, theVals)
+    except:
+        logger.critical(f'Unexpected error executing sql: {sql} - Values: {theVals}', exc_info = True)
+
+        return False
+    dbConn.commit()
+    logger.debug(f"Values: {theVals} : committed")
+    return True
 
 def setup_manufacture(inputFile):
     """Populates Manufacture table.\n
@@ -94,20 +210,31 @@ def setup_DriveTrain(inputFile):
                     drvTrainID = int(row[0])
                     drvTrainCode = row[1]
                     drvTrainDesc = row[2]
-                    gtdb.writeDriveTrain(myDBConn,drvTrainID,drvTrainCode,drvTrainDesc)
+                    addDriveTrain(myDBConn,drvTrainID,drvTrainCode,drvTrainDesc)
                     line_count += 1
             logger.info(f'read {line_count} lines.')
     else:
         logger.error(f"Unable to load file {Mfg_File}")
 
+def deldb(theFile):
+    """Deletes the dbfile"""
+    logger.info(f"Deleting File: {theFile}")
+    exists = os.path.isfile(theFile)
+    if exists:
+        os.remove(theFile)
+        logger.info(f"{theFile} deleted")
+    else:
+        logger.info(f"{theFile} Not found")
+
 os.system('cls')
 logger.info("*********Create DB")
 logger.info(f"Database file: {gtcfg.dbcfg['dbFile']}")
+deldb(gtcfg.dbcfg['dbFile'])
 myDBConn = gtdb.create_connection(gtcfg.dbcfg['dbFile'])
 
 if create_manufactures(myDBConn):
     setup_manufacture("DBInit/Manufactures.csv")
 
-# if gtdb.create_driveTrains(myDBConn):
-#     setup_DriveTrain("DBInit/DriveTrainCat.csv")
+if create_driveTrains(myDBConn):
+    setup_DriveTrain("DBInit/DriveTrainCat.csv")
 
