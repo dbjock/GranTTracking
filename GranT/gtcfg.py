@@ -2,6 +2,7 @@ import logging
 import configparser
 import os
 
+logger = logging.getLogger(__name__)
 def load_config(cfgFile):
     """
     Load configuraton file and store in sectional dict\n
@@ -10,7 +11,6 @@ def load_config(cfgFile):
     config.read(cfgFile)
     dbcfg['dbFile'] = config.get('database','dbfile',fallback=None)
 
-logger = logging.getLogger(__name__)
 dbcfg = dict()
 config = configparser.ConfigParser()
 load_config('./GTTracking.conf')

@@ -9,6 +9,8 @@ from GranT import gtcfg
 from GranT import gtdb
 from GranT import gtclasses as gt
 
+logging.config.fileConfig('logging.conf', defaults=None, disable_existing_loggers=False)
+logger = logging.getLogger(__name__)
 
 def ClearScreen():
     os.system('cls')
@@ -38,11 +40,9 @@ def setup_manufacture(inputFile):
     else:
         logging.error(f"Unable to load file {Mfg_File}")
 
-logging.config.fileConfig('logging.conf', defaults=None, disable_existing_loggers=False)
-logger = logging.getLogger(__name__)
 ClearScreen()
 logger.info("*********Create DB")
-
+logger.info(f"Database file: {gtcfg.dbcfg['dbFile']}")
 myDBConn = gtdb.create_connection(gtcfg.dbcfg['dbFile'])
 
 if gtdb.create_manufactures(myDBConn):
