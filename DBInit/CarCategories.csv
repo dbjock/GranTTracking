@@ -1,0 +1,17 @@
+id,CarCat,CatDesc
+1,Gr.1,Racecars with bodies and engines specially developed to provide higher performance. This group also includes prototype sports cars etc.
+2,Gr.2,Racing cars that represent the highest peak of the touring car category. This group corresponds to the GT500 class that runs in the Japanese SUPER GT.
+3,Gr.3,Racecars with special bodywork for greater aerodynamic performance. This group corresponds to the FIA's GT3 class.
+4,Gr.4,"Racecars with basic performance enhancements, such as additional safety equipment or weight optimization. This group corresponds to the FIA's GT4 class."
+5,Gr.B,"Rally cars that have been modified for dirt racing, with improved suspension systems, body height control, and so on."
+6,Gr.X,Extreme cars that don't fit into any racing category.
+7,N100,
+8,N300,
+9,N200,
+10,N400,
+11,N500,
+12,N600,
+13,N700,
+14,N800,
+15,N900,
+16,N1000,

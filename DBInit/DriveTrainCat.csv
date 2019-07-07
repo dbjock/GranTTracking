@@ -1,0 +1,6 @@
+id,code,descNotes
+1,FF,"Front Engine, Front wheel drive"
+2,FR,"Front Engine, Rear wheel drive"
+3,MR,"Middle Engine, Rear wheel drive"
+4,4WD,Four wheel drive
+5,RR,Rear Engine (behind the rear axle) Rear wheel drive
