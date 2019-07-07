@@ -13,6 +13,7 @@ class Manufacture(object):
         dbConn : db Connection object
         id : Manufacture ID (int)\n
         """
+        logger.info("Load manufacture data from DB")
         if not isinstance(id, int):
             logger.critical("id must be an integer.")
             raise ValueError("id must be an integer.")
@@ -21,11 +22,28 @@ class Manufacture(object):
             logger.critical("id must be >0.")
             raise ValueError("id must be >0.")
 
-        logger.debug("Loading Manufacture")
         mfgRecord = gtdb.getMfg(dbConn,id,key='recID')
         logger.debug(f"{mfgRecord}")
         self.id = mfgRecord[0]
         self.name = mfgRecord[1]
+
+    def add(self,dbConn):
+        """
+        Add Manufacture obj to database.\n
+        dbConn : db Connection object\n
+        Return: None. *self.id will have recID if successful. False if failed
+        """
+        logger.info("Adding manufacture data to DB")
+        self.id = gtdb.add_Mfg(dbConn,self.name)
+
+    def update(self,dbConn):
+        """
+        Update Manufacture obj to database.\n
+        dbConn : db Connection object\n
+        Return: True if successfull
+        """
+        logger.info(f"Updating record {self.id} MfgName change to {self.name}")
+        gtdb.update_Mfg(dbConn,self.id,self.name)
 
 class DriveTrain(object):
     def __init__(self):

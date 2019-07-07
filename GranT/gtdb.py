@@ -16,53 +16,75 @@ def create_connection(dbfile):
     conn = sqlite3.connect(dbfile)
     return conn
 
-def writeMfg(dbConn,recID,mfgName):
+def add_Mfg(dbConn,mfgName):
     """
-    Writes/Creates a manufacture record.
+    Adds a manufacture record.
     All PARMS requried.
     dbConn : DB Connection object
-    recID : 0 = Attempt to Create Record
-            !0 Record will update/create as needed
     mfgName : mfgName/name of the manufacture (Must not be None,null,blank)
-    Returns True if successful. Else Nothing
+    Returns : True if successfull
+    """
+    logger.debug(f"Adding Manufacture to DB. mfgnam={mfgName}")
+    if mfgName is None or mfgName == '':
+        logger.error(f"mfgName must contain a value. No Add/Update")
+        return False
+
+    theVals = (mfgName,)
+    sql = "INSERT INTO manufactures (mfgName) Values (?)"
+    # Execute SQL
+    logger.debug(f"Sql: {sql}")
+    try:
+        dbcursor = dbConn.cursor()
+        dbcursor.execute(sql, theVals)
+    except sqlite3.IntegrityError as e:
+        logger.error(f"sqlite integrity error: {e.args[0]}")
+        return False
+    except:
+        logger.critical(f'Unexpected error executing sql: {sql}', exc_info = True)
+        return False
+
+    dbConn.commit()
+    logger.debug(f"Values: {theVals} : committed")
+    return getMfg(dbConn,mfgName,key="mfgName")
+
+def update_Mfg(dbConn,recID,mfgName):
+    """
+    Updates mfgName in manufacture record.
+    All PARMS requried.
+    dbConn : DB Connection object
+    recID : int of record to update
+    mfgName : mfgName value (Must not be None,null,blank)
+    Returns True if successful.
     """
     logger.debug(f"PARMS: recID: {recID}, mfgName: {mfgName}")
     if not isinstance(recID, int):
-        logger.error(f"recID is not an integer. No Add/Update")
-        return None
+        logger.error(f"recID is not an integer.")
+        raise ValueError(f"recID is not an integer.")
 
     # Can't allow blank data in (Note.. db doesn't consider this null)
     if mfgName is None or mfgName == '':
-        logger.error(f"mfgName must contain a value. No Add/Update")
-        return None
+        logger.error(f"mfgName must contain a value.")
+        raise ValueError(f"mfgName must contain a value.")
 
-    #Setting up SQL for Create or Update
-    if recID == 0: #Add record. If mfgName unique, will add with unique recID
-        logger.debug(f"Creating record for mfgName: {mfgName}")
-        theVars = (mfgName,)
-        sql = "INSERT INTO manufactures (mfgName) Values (?)"
-    else: #Add/replace record with provided data based on recID
-        logger.debug(f"Create/Update record")
-        theVars = (recID, mfgName)
-        sql = "INSERT OR REPLACE INTO manufactures (id, mfgName) Values (?, ?)"
+    #Setting up SQL Update
+    theVals = (mfgName,recID)
+    sql = "UPDATE manufactures SET mfgName = ? WHERE id = ?"
 
     # Execute SQL
     logger.debug(f"Sql: {sql}")
     try:
         dbcursor = dbConn.cursor()
-        dbcursor.execute(sql, theVars)
+        dbcursor.execute(sql, theVals)
     except sqlite3.IntegrityError as e:
-        logger.error(f"theVars: {theVars} sqlite integrity error: {e.args[0]}")
-        return None
+        logger.error(f"theVals: {theVals} sqlite integrity error: {e.args[0]}")
     except:
         logger.critical(f'Unexpected error executing sql: {sql}', exc_info = True)
-        return None
 
     dbConn.commit()
-    logger.info(f"Values: {theVars} : committed")
+    logger.info(f"Values: {theVals} : committed")
     return True
 
-def writeDriveTrain(dbConn,recID,dtCode,dtDesc):
+def AddDriveTrain(dbConn,recID,dtCode,dtDesc):
     """Creates a DriveTrain record. (no updates)
     ALL PARMS requried.
     dbConn : DB Connection object\n
@@ -186,21 +208,6 @@ def getAllMfg(dbConn):
     except:
         logger.critical(f'Unexpected error executing sql: {sql}', exc_info = True)
         return None
-
-def create_manufactures(dbConn):
-    """Create the Manufacture table"""
-    logger.info("Creating Manufacture Table")
-    sql = "CREATE TABLE manufactures (id INTEGER PRIMARY KEY, mfgName TEXT UNIQUE NOT NULL)"
-    dbCursor = dbConn.cursor()
-    try:
-        dbCursor.execute(sql)
-    except:
-        logger.critical(f'Unexpected error when executing sql: {sql}', exc_info = True)
-        return None
-
-    dbConn.commit()
-    logger.info("Manufactures table has been created")
-    return True
 
 def create_tracks(dbConn):
     """Creating the Track Table"""
