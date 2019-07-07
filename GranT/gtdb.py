@@ -62,13 +62,53 @@ def writeMfg(dbConn,recID,mfgName):
     logger.info(f"Values: {theVars} : committed")
     return True
 
+def writeDriveTrain(dbConn,recID,dtCode,dtDesc):
+    """Creates a DriveTrain record. (no updates)
+    ALL PARMS requried.
+    dbConn : DB Connection object\n
+    recID : must be !0\n
+    dtCode : DriveTrain Code must contain a value\n
+    dtDesc : Full Description of the type of Drive Train\n
+    Returns True if successfull
+    """
+    logger.debug(f"PARMS: recID:{recID}, dtCode:{dtCode}, dtDesc {dtDesc}")
+    if not isinstance(recID, int):
+        logger.error(f"recID is not an integer. No Add")
+        return None
+
+    if recID == 0:
+        logger.error(f"recID must not equal zero")
+        return None
+
+    #Drive Code (dtCode) can't be blank or none. (Note.. sqlite doesn't consider this null)
+    if dtCode is None or dtCode == '':
+        logger.error(f"dtCode must contain a value. No Add")
+        return None
+
+    #Setting up SQL for Create or Update
+    theVals = (recID, dtCode, dtDesc)
+    sql = "INSERT INTO drivetrains (id, code, description) Values (?, ?, ?)"
+
+    #Executing SQL
+    logger.debug(f"Sql: {sql}")
+    try:
+        dbcursor = dbConn.cursor()
+        dbcursor.execute(sql, theVals)
+    except:
+        logger.critical(f'Unexpected error executing sql: {sql} - Values: {theVals}', exc_info = True)
+        return None
+
+    dbConn.commit()
+    logger.info(f"Values: {theVals} : committed")
+    return True
+
 def getMfg(dbConn,value,key='recID'):
     """
     Gets the manufacture record from the database based on the key being used.\n
     dbConn = sqlite3 connection object
     value : Is the value being search for.
     key   : the column name to search on. recID, or mfgName. Default is recID\n
-    Returns : [(recID, mfgName)] of False if nothing is found?
+    Returns : [(recID, mfgName)] or False if nothing is found?
     """
     logger.info(f"Getting Manufacture value={value} key={key}")
     if key == 'recID':
@@ -87,11 +127,45 @@ def getMfg(dbConn,value,key='recID'):
         logger.error(f'key {key} does not exist')
         return None
 
+    #Ready to execute SQL
     try:
+        logger.debug(f"sql: {sql}")
         dbCursor = dbConn.cursor()
         dbCursor.execute(sql, theVars)
         result = dbCursor.fetchone()
         logger.info("Return Manufacture results")
+        return result
+    except:
+        logger.critical(f'Unexpected error executing sql: {sql}', exc_info = True)
+        return None
+
+def getDriveTrain(dbConn,value,key='recID'):
+    """
+    Gets the DriveTrain record from the database based on the key being used.\n
+    dbConn = sqlite3 connection object
+    value : Is the value being search for.
+    key   : the column name to search on. recID, dtCode. Default is recID\n
+    Returns : [(recID, dtCode, dtDesc)] or False if nothing is found?
+    """
+    logger.info(f"Getting DriveTrain value={value}, key={key}")
+    if key == 'recID':
+        if not isinstance(value, int):
+            logger.error(f"recID must be an integer value")
+            return None
+
+        theVals = (value,)
+        sql = "SELECT id, code, description FROM drivetrains WHERE id = ?"
+    elif key =='dtCode':
+        theVals = (value,)
+        sql = f"SELECT id, code, description FROM drivetrains WHERE code = ?"
+
+    #Execute SQL
+    try:
+        logger.debug(f"sql: {sql}")
+        dbCursor = dbConn.cursor()
+        dbCursor.execute(sql, theVals)
+        result = dbCursor.fetchone()
+        logger.info("Return DriveTrain results")
         return result
     except:
         logger.critical(f'Unexpected error executing sql: {sql}', exc_info = True)
