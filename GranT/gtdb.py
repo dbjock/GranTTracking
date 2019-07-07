@@ -22,7 +22,7 @@ def writeMfg(dbConn,recID,mfgName):
     mfgName : mfgName/name of the manufacture (Must not be None,null,blank)
     Returns True if successful. Else Nothing
     """
-    logging.debug(f"PARMS: recid: {recID}, mfgName: {mfgName}")
+    logging.debug(f"PARMS: recID: {recID}, mfgName: {mfgName}")
     if not isinstance(recID, int):
         logging.error(f"recID is not an integer. No Add/Update")
         return None
@@ -33,13 +33,13 @@ def writeMfg(dbConn,recID,mfgName):
         return None
 
     #Setting up SQL for Create or Update
-    if recID == 0: #Add record. If mfgName unique, will add with unique recid
+    if recID == 0: #Add record. If mfgName unique, will add with unique recID
         logging.debug(f"Creating record for mfgName: {mfgName}")
         theVars = (mfgName,)
         sql = "INSERT INTO manufactures (mfgName) Values (?)"
     else: #Add/replace record with provided data based on recID
         logging.debug(f"Create/Update record")
-        theVars = (recid, mfgName)
+        theVars = (recID, mfgName)
         sql = "INSERT OR REPLACE INTO manufactures (id, mfgName) Values (?, ?)"
 
     # Execute SQL
@@ -63,7 +63,7 @@ def getMfg(dbConn,value,key='recID'):
     dbConn = sqlite3 connection object
     value : Is the value being search for.
     key   : the column name to search on. recID, or mfgName. Default is recID
-    Returns : [(recid, mfgName)] of False if nothing is found?
+    Returns : [(recID, mfgName)] of False if nothing is found?
     """
     logging.info(f"Getting Manufacture value={value} key={key}")
     if key == 'recID':
@@ -95,7 +95,7 @@ def getMfg(dbConn,value,key='recID'):
 def getAllMfg(dbConn):
     """
     Gets all records from the Manufacturing table
-    return: Returns : [(recid, mfgName),...]
+    return: Returns : [(recID, mfgName),...]
     """
     logging.info(f'Getting all manufactures')
     dbCursor = dbConn.cursor()
