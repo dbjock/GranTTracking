@@ -1,106 +1,89 @@
-import unittest
 import logging
 import logging.config
+from pathlib import Path
+import os
 #Application required modules
 from GranT import gtdb
+from GranT import gtcfg
 
-class TestMfg(unittest.TestCase):
+logging.config.fileConfig('logging.conf', defaults=None, disable_existing_loggers=False)
+logger = logging.getLogger(__name__)
 
-    def setUp(self):
-        pass
+def deldb(theFile):
+    """Deletes the dbfile"""
+    logger.info(f"Deleting File: {theFile}")
+    exists = os.path.isfile(theFile)
+    if exists:
+        os.remove(theFile)
+        logger.info(f"{theFile} deleted")
+    else:
+        logger.info(f"{theFile} Not found")
 
-    def tearDown(self):
-        pass
+def test_mfg_CreatingRec(dbFile):
+    """Testing ability to get all records from dbFile"""
+    logger.info(f"*" * 50)
+    logger.info(f"Testing writeMfg with new records, and getAllMfg to return")
+    logger.info(f"*" * 50)
+    deldb(dbFile)
+    dbConn = gtdb.create_connection(dbFile)
+    gtdb.create_manufactures(dbConn)
+    gtdb.writeMfg(dbConn,0,"TheTest")
+    gtdb.writeMfg(dbConn,0,"TheTest1")
+    gtdb.writeMfg(dbConn,0,"TheTest2")
+    dbConn.close #Force write
+    dbConn = gtdb.create_connection(dbFile)
+    result = gtdb.getAllMfg(dbConn)
+    dbConn.close #Force write
+    if len(result) < 3:
+        logger.error(f"Test Failed")
+    else:
+        logger.info(f"Test Passed")
+        return True
 
-    def test_CreateTable(self):
-        myDBConnection = gtdb.create_connection(":memory:")
-        self.assertTrue(gtdb.create_manufactures(myDBConnection),"Should have been able to create table")
+def test_mfg_UpdatingRec(dbFile):
+    """Testing ability to get all records from dbFile"""
+    logger.info(f"*" * 50)
+    logger.info(f"Testing writeMfg to update, and getMfg to verify the update")
+    logger.info(f"*" * 50)
+    deldb(dbFile)
+    dbConn = gtdb.create_connection(dbFile)
+    gtdb.create_manufactures(dbConn)
+    gtdb.writeMfg(dbConn,2,"TheTest2")
+    dbConn.close
+    dbConn = gtdb.create_connection(dbFile)
+    logger.info(f"Getting records by recID - Before Change")
+    theOrginal = gtdb.getMfg(dbConn,2,key='recID')
+    gtdb.writeMfg(dbConn,2,"TheTest2a")
+    dbConn.close
+    dbConn = gtdb.create_connection(dbFile)
+    theNew = gtdb.getMfg(dbConn,2,key='recID')
+    dbConn.close
+    if theOrginal[0] == theNew[0] and theOrginal[1] != theNew[1]:
+        logger.info(f"Testing passed")
+        return True
+    else:
+        logger.error(f"Testing Failed. Values are not different")
 
-    def test_writeNewRec(self):
-        myDBConnection = gtdb.create_connection(":memory:")
-        gtdb.create_manufactures(myDBConnection)
-        self.assertTrue(gtdb.writeMfg(myDBConnection,0,"TheTest"),"Should have been able to write a record")
+def mainTest():
+    os.system('cls')
+    logger.info("Getter Done testing")
+    dbTestFile = "C:/Users/Pops/Code/GTurismoTracking/tests/testdb.db"
+    logger.info(f"Testing using database: {dbTestFile} ")
+    FailCount = 0
+    TestCount = 0
+    if not test_mfg_CreatingRec(dbTestFile):
+        FailCount +=1
 
-    def test_UpdateRec(self):
-        myDBConnection = gtdb.create_connection(":memory:")
-        gtdb.create_manufactures(myDBConnection)
-        self.assertTrue(gtdb.writeMfg(myDBConnection,5,"TheTest"),"Should have been able to write a record")
+    if not test_mfg_UpdatingRec(dbTestFile):
+        FailCount +=1
 
-    def test_getAllRec(self):
-        myDBConnection = gtdb.create_connection(":memory:")
-        gtdb.create_manufactures(myDBConnection)
-        gtdb.writeMfg(myDBConnection,0,"TheTest")
-        gtdb.writeMfg(myDBConnection,0,"TheTest1")
-        gtdb.writeMfg(myDBConnection,0,"TheTest2")
-        self.assertGreater(len(gtdb.getAllMfg(myDBConnection)),2,"Should get all the records")
+    if FailCount > 0:
+        logger.error(f"Fail count: {FailCount}")
+        print(f"Fail count: {FailCount}")
+    else:
+        print("All Test Passed")
 
-    def test_getRec(self):
-        myDBConnection = gtdb.create_connection(":memory:")
-        gtdb.create_manufactures(myDBConnection)
-        gtdb.writeMfg(myDBConnection,0,"TheTest")
-        gtdb.writeMfg(myDBConnection,0,"TheTest1")
-        gtdb.writeMfg(myDBConnection,0,"TheTest2")
-        self.assertGreater(len(gtdb.getMfg(myDBConnection,1,key='recID')),1,"Should have got 1 record")
-
-class TestTracks(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_CreateTable(self):
-        myDBConnection = gtdb.create_connection(":memory:")
-        self.assertTrue(gtdb.create_tracks(myDBConnection),"Should have been able to create table")
-
-class TestDriveTrains(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_CreateTable(self):
-        myDBConnection = gtdb.create_connection(":memory:")
-        self.assertTrue(gtdb.create_driveTrains(myDBConnection),"Should have been able to create table")
-
-class TestCircuits(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_CreateTable(self):
-        myDBConnection = gtdb.create_connection(":memory:")
-        self.assertTrue(gtdb.create_circuits(myDBConnection),"Should have been able to create table")
-
-class TestCars(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_CreateTable(self):
-        myDBConnection = gtdb.create_connection(":memory:")
-        self.assertTrue(gtdb.create_cars(myDBConnection),"Should have been able to create table")
-
-class TestCarCat(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_CreateTable(self):
-        myDBConnection = gtdb.create_connection(":memory:")
-        self.assertTrue(gtdb.create_carCats(myDBConnection),"Should have been able to create table")
 
 if __name__ == '__main__':
-    unittest.main()
+    mainTest()
+
