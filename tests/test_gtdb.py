@@ -16,10 +16,15 @@ class TestMfg(unittest.TestCase):
         myDBConnection = gtdb.create_connection(":memory:")
         self.assertTrue(gtdb.create_manufactures(myDBConnection),"Should have been able to create table")
 
-    def test_writeRec(self):
+    def test_writeNewRec(self):
         myDBConnection = gtdb.create_connection(":memory:")
         gtdb.create_manufactures(myDBConnection)
         self.assertTrue(gtdb.writeMfg(myDBConnection,0,"TheTest"),"Should have been able to write a record")
+
+    def test_UpdateRec(self):
+        myDBConnection = gtdb.create_connection(":memory:")
+        gtdb.create_manufactures(myDBConnection)
+        self.assertTrue(gtdb.writeMfg(myDBConnection,5,"TheTest"),"Should have been able to write a record")
 
     def test_getAllRec(self):
         myDBConnection = gtdb.create_connection(":memory:")
