@@ -137,7 +137,7 @@ def addDriveTrain(dbConn,recID,dtCode,dtDesc):
     dtDesc : Full Description of the type of Drive Train\n
     Returns True if successfull
     """
-    logger.debug(f"PARMS: recID:{recID}, dtCode:{dtCode}, dtDesc {dtDesc}")
+    logger.debug(f"PARMS: recID:{recID}, dtCode:{dtCode}, dtDesc:{dtDesc}")
     if not isinstance(recID, int):
         logger.error(f"recID is not an integer. No Add")
         return False
@@ -162,8 +162,48 @@ def addDriveTrain(dbConn,recID,dtCode,dtDesc):
         dbcursor.execute(sql, theVals)
     except:
         logger.critical(f'Unexpected error executing sql: {sql} - Values: {theVals}', exc_info = True)
-
         return False
+
+    dbConn.commit()
+    logger.debug(f"Values: {theVals} : committed")
+    return True
+
+def addCarCat(dbConn,recID,carCat,catDesc):
+    """Adds a car_cats record.
+    ALL PARMS requried.
+    dbConn : DB Connection object\n
+    recID : must !0\n
+    carCat : Catagory Code must contain a value\n
+    catDesc : Catagory Description of the type of Drive Train\n
+    Returns True if successfull
+    """
+    logger.debug(f"PARMS: recID:{recID}, carCat:{carCat}, catDesc:{catDesc}")
+    if not isinstance(recID, int):
+        logger.error(f"recID is not an integer. No Add")
+        return False
+
+    if recID == 0:
+        logger.error(f"recID must not equal zero")
+        return False
+
+    #Car Category (carCat) can't be blank or none. (Note.. sqlite doesn't consider this null)
+    if carCat is None or carCat == '':
+        logger.error(f"carCat must contain a value. No Add")
+        return False
+
+    #Setting up SQL for Create or Update
+    theVals = (recID, carCat, catDesc)
+    sql = "INSERT INTO car_cats (id, catName, description) Values (?, ?, ?)"
+
+    #Executing SQL
+    logger.debug(f"Sql: {sql}")
+    try:
+        dbcursor = dbConn.cursor()
+        dbcursor.execute(sql, theVals)
+    except:
+        logger.critical(f'Unexpected error executing sql: {sql} - Values: {theVals}', exc_info = True)
+        return False
+
     dbConn.commit()
     logger.debug(f"Values: {theVals} : committed")
     return True
@@ -214,7 +254,31 @@ def setup_DriveTrain(inputFile):
                     line_count += 1
             logger.info(f'read {line_count} lines.')
     else:
-        logger.error(f"Unable to load file {Mfg_File}")
+        logger.error(f"Unable to load file {inFile}")
+
+def setup_carCats(inputFile):
+    """Populates the car_cats table.\n
+    inputfile = csv filename with path"""
+    inFile = Path(inputFile)
+    if inFile.exists():
+        logger.info(f"Loading {inputFile}")
+        with open(inFile) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            line_count = 0
+            for row in csv_reader:
+                if line_count == 0:
+                    logger.debug(f'First Row: {", ".join(row)}')
+                    line_count += 1
+                else:
+                    logger.debug(f"Row: {int(row[0])}, {row[1]}, {row[2]}")
+                    recID = int(row[0])
+                    carCat = row[1]
+                    catDesc = row[2]
+                    addCarCat(myDBConn,recID,carCat,catDesc)
+                    line_count += 1
+            logger.info(f'read {line_count} lines.')
+    else:
+        logger.error(f"Unable to load file {inFile}")
 
 def deldb(theFile):
     """Deletes the dbfile"""
@@ -238,3 +302,5 @@ if create_manufactures(myDBConn):
 if create_driveTrains(myDBConn):
     setup_DriveTrain("DBInit/DriveTrainCat.csv")
 
+if create_carCats(myDBConn):
+    setup_carCats("DBInit\CarCategories.csv")
