@@ -13,7 +13,10 @@ def create_connection(dbfile):
     *If dbfile does not exist it will be created with an empty database
     """
     logger.debug(f"Creating Connection to {dbfile}")
-    conn = sqlite3.connect(dbfile)
+    conn = sqlite3.connect(dbfile,detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+    conn.row_factory = sqlite3.Row #Ability to get column names (.keys())
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA foreign_keys = ON") #Turning on foreign_key enforcement
     return conn
 
 def add_Mfg(dbConn,mfgName):
@@ -168,4 +171,3 @@ def getAllMfg(dbConn):
     except:
         logger.critical(f'Unexpected error executing sql: {sql}', exc_info = True)
         return None
-
