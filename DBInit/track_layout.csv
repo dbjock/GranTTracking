@@ -1,0 +1,82 @@
+ID,track_id,name,miles,circuit_id
+1,1,,0.56,1
+2,2,Seaside,3.24,1
+3,2,Seaside II,3.24,1
+4,2,Gardens,2.7,1
+5,2,Gardens II,2.7,1
+6,3,Lake,1.86,2
+7,3,Lake II,1.86,2
+8,4,GP,3.61,1
+9,4,GP II,3.61,1
+10,4,Center,1.06,1
+11,4,East,2.26,1
+12,4,West,2.59,1
+13,4,Center II,1.06,1
+14,4,East II,2.26,1
+15,4,West II,2.59,1
+16,5,Yamagiwa,3.05,1
+17,5,Yamagiwa II,3.05,1
+18,5,Miyabi,1.21,1
+19,5,Yamagiwa+Miyabi,4.25,1
+20,5,Yamagiwa+Miyabi II,4.25,1
+21,6,Windmills,2.06,2
+22,6,Windmills II,2.06,2
+23,6,Road Track - A,3.18,1
+24,6,Road Track - A II,3.18,1
+25,6,Road Track - B,2.42,1
+26,6,Road Track - B II,2.42,1
+27,6,Road Track.- C,1.65,1
+28,6,Road Track -C II,1.65,1
+29,7,,1.99,1
+30,7,II,1.99,1
+31,7,Infield A,2.08,1
+32,7,Infield A II,2.08,1
+33,7,Infield B,1.78,1
+34,7,Infield B II,1.78,1
+35,8,,1.27,3
+36,9,Grand Prix Circuit,2.45,3
+37,9,Indy Circuit,1.21,3
+38,10,Central Outer Loop,2.74,4
+39,10,Central Inner Loop,2.72,4
+40,10,East Outer Loop,4.54,4
+41,10,East Inner Loop,4.47,4
+42,10,South Outer Loop,3.23,4
+43,10,South Inner Loop,4.08,4
+44,11,Big Willow,2.46,3
+45,11,Streets of Willow Springs,1.66,3
+46,11,Streets of Willow Springs II,1.66,3
+47,11,Horse Thief Mile,1.01,3
+48,11,Horse Thief Mill II,1.01,3
+49,12,,1.04,1
+50,12,II,1.04,1
+51,13,,3.61,3
+52,13,East Course,1.39,3
+53,14,,2.9,3
+54,14,Shortcut Course,1.88,3
+55,15,Grand Prix Layout,2.89,3
+56,16,A,5.89,1
+57,16,A II,5.89,1
+58,16,B,4.39,1
+59,16,B II,4.39,1
+60,16,C,6.73,1
+61,16,C II,6.73,1
+62,17,,3.37,1
+63,17,II,3.37,1
+64,18,,3.6,3
+65,18,No Chicane,3.58,3
+66,19,,2.37,3
+67,20,,3.86,3
+68,21,,2.68,3
+69,21,Short Track,1.45,3
+70,22,,18.82,1
+71,23,,4.28,2
+72,23,II,4.28,2
+73,24,,4.35,3
+74,25,,8.47,3
+75,25,No Chicane,8.43,3
+76,26,,2.68,3
+77,27,,2.84,3
+78,27,(Short),2.81,3
+79,28,Nordschleife,12.95,3
+80,28,24h,15.77,3
+81,28,GP,3.2,3
