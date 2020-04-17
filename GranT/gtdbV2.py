@@ -1,9 +1,10 @@
 import logging
 import sqlite3
+from pathlib import Path
 
 # Version 2 - This module will have everything to CRUD the database.
 logger = logging.getLogger(__name__)
-# TODO: Need initdb method for creating db.
+# TODO:
 
 
 class GTdb:
@@ -13,6 +14,9 @@ class GTdb:
 
         if name:
             self.open(name)
+            self.cursor.execute("PRAGMA database_list;")
+            xtmp = self.cursor.fetchall()
+            self.dbfile = xtmp[0][2]
 
     def open(self, name):
         logging.debug(f"open db {name}")
@@ -39,17 +43,16 @@ class GTdb:
         scriptFile = open(scriptFileName, 'r')
         script = scriptFile.read()
         scriptFile.close()
-        logging.debug(f"execute script")
-        c = self.cursor
+        # c = self.cursor
         try:
-            c.executescript(script)
+            self.cursor.executescript(script)
         except:
             logger.critical(
                 f"Unexpected Error running script {scriptFileName}", exc_info=True)
             quit()
 
         self.conn.commit()
-        logging.debug(f"changes commit")
+        logging.debug(f"script commited")
 
     def getMfg(self, value=None, key='recID'):
         """
@@ -116,3 +119,21 @@ class GTdb:
             logger.critical(
                 f'Unexpected error executing sql: {sql}', exc_info=True)
             return None
+
+    def initDB(self, scriptPath=None):
+        """Create tables, views, indexes
+
+        PARM
+        scriptPath : path to script files *Required
+        """
+        logger.debug(f"scriptPath={scriptPath}")
+        scripts = ['createTables.sql',
+                   'LoadLookUpData.sql',
+                   'LoadOtherData.sql']
+
+        gtScripts = Path(scriptPath)
+
+        for sFile in scripts:
+            scriptFile = gtScripts / sFile
+            logger.info(f"Executing {scriptFile}")
+            self.exeScriptFile(scriptFileName=f'{scriptFile}')
