@@ -5,4 +5,6 @@ gen_test.py
 *.pyc
 */__pycache__/
 Logs/
-Data/GranTTSport.db
+Data/*.db
+tests/DEPRECATE*
+test-*
