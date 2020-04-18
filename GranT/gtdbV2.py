@@ -2,37 +2,30 @@ import logging
 import sqlite3
 from pathlib import Path
 
-# Version 2 - This module will have everything to CRUD the database.
+# TODO:Delete-Manufacture, Update-Manufacture, Create-Manufacture
+# Custom App modules
+from GranT import gtclasses
 logger = logging.getLogger(__name__)
-# TODO:
 
 
 class GTdb:
     def __init__(self, name=None):
         self.conn = None
-        self.cursor = None
-
         if name:
-            self.open(name)
-            self.cursor.execute("PRAGMA database_list;")
-            xtmp = self.cursor.fetchall()
+            logging.debug(f"attempt open db {name}")
+            try:
+                self.conn = sqlite3.connect(
+                    name, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
+                # self.cursor = self.conn.cursor()
+            except sqlite3.Error as errID:
+                logger.critical(
+                    f"Database connection failure. ", exc_info=True)
+                quit()
+            c = self.conn.cursor()
+            c.execute("PRAGMA database_list;")
+            xtmp = c.fetchall()
+            logging.debug(f"{xtmp}")
             self.dbfile = xtmp[0][2]
-
-    def open(self, name):
-        logging.debug(f"open db {name}")
-        try:
-            self.conn = sqlite3.connect(
-                name, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
-            self.cursor = self.conn.cursor()
-        except sqlite3.Error as errID:
-            logger.critical(f"Database connection failure. ", exc_info=True)
-            quit()
-
-        # Ability to get column names (.keys())
-        self.conn.row_factory = sqlite3.Row
-
-        # Turning on foreign_key enforcement
-        self.cursor.execute("PRAGMA foreign_keys = ON")
 
     def exeScriptFile(self, scriptFileName=None):
         """
@@ -43,9 +36,9 @@ class GTdb:
         scriptFile = open(scriptFileName, 'r')
         script = scriptFile.read()
         scriptFile.close()
-        # c = self.cursor
         try:
-            self.cursor.executescript(script)
+            c = self.conn.cursor()
+            c.executescript(script)
         except:
             logger.critical(
                 f"Unexpected Error running script {scriptFileName}", exc_info=True)
@@ -61,44 +54,59 @@ class GTdb:
         PARMS
         value : Is the value being search for.
         key   : the column name to search on. recID, or mfgName. Default is recID
-        Returns : list object
+        Returns : Manufacture object
         """
         logger.info(f"Getting Manufacture key={key} value={value}")
-        selectSQL = "SELECT id, Make, alpha2, Country, region FROM v_manufactures "
+        selectSQL = """SELECT mfg.id as mfgid,
+                mfg.name AS Make,
+                c.id as cntryID,
+                c.name AS Country,
+                c.alpha2,
+                c.alpha3,
+                c.region
+                FROM manufacture AS mfg
+                LEFT JOIN country AS c ON mfg.country_id = c.ID """
+
         if key == 'recID':
             if not isinstance(value, int):
                 logger.error(f"recID must be an integer value")
                 return None
 
-            whereSQL = "WHERE id = ?"
-            theVars = (value,)
-            sql = selectSQL + whereSQL
-            logger.debug(f'Getting specific recID: {value} SQL: {sql}')
+            whereSQL = "WHERE mfgid = ?"
         elif key == 'Make':
             whereSQL = "WHERE Make = ?"
-            theVars = (value,)
-            sql = selectSQL + whereSQL
-            logger.debug(f'Getting specific recID: {value} SQL: {sql}')
         else:
             logger.error(f'key {key} does not exist')
             return None
 
+        theVars = (value,)
+        sql = selectSQL + whereSQL
         # Ready to execute SQL
         try:
             logger.debug(f"sql: {sql}")
-            dbCursor = self.cursor
-            dbCursor.execute(sql, theVars)
-            result = dbCursor.fetchone()
-            logger.debug(f"results: {result}")
-            logger.info(f"Returning Manufacture results")
-            return result
+            # Enable the .keys() to get column names.
+            self.conn.row_factory = sqlite3.Row
+            c = self.conn.cursor()
+            c.execute(sql, theVars)
+            row = c.fetchone()
         except:
             logger.critical(
                 f'Unexpected error executing sql: {sql}', exc_info=True)
             return None
 
+        # Place results into Manufacture class
+        xCountry = gtclasses.Country(
+            cntryID=row['cntryID'], cntryName=row['Country'],
+            alpha2=row['alpha2'], alpha3=row['alpha3'], region=row['region'])
+
+        xMake = gtclasses.Manufacture(
+            mfgid=row['mfgid'], mfgName=row['Make'], countryObj=xCountry)
+
+        logger.info(f"Returning Manufacture results")
+        return xMake
+
     def getAllMfg(self, orderBy='id'):
-        """Returns manufacture records
+        """Returns manufacture records ordered by choice.
 
         PARMS
         orderBy : Column to order by
