@@ -5,96 +5,111 @@ logger = logging.getLogger(__name__)
 class Country(object):
 
     def __init__(self, cntryID, cntryName, alpha2, alpha3, region):
-        self.cntryID = cntryID
+        self.id = cntryID
         self.cntryName = cntryName
         self.alpha2 = alpha2
         self.alpha3 = alpha3
         self.region = region
 
     def __repr__(self):
-        return f"Country(cntryID={self.cntryID}, cntryName='{self.cntryName}', alpha2='{self.alpha2}', alpha3='{self.alpha3}', region='{self.region}')"
+        return f"Country(cntryID={self.id}, cntryName='{self.cntryName}', alpha2='{self.alpha2}', alpha3='{self.alpha3}', region='{self.region}')"
 
 
 class Manufacture(object):
-
     def __init__(self, mfgid, mfgName, countryObj):
         """
-        mfgid     : type int
-        mfgName   : type string
+        Manufacture object. Used by car, and many other objects
+        mfgid     : type int. Unique for all manufactures in db
+        mfgName   : type str. Unique for all manufactures in db
         countryObj: object created from the Country Class.
         """
-        self.mfgid = mfgid
+        self.id = mfgid
         self.mfgName = mfgName
-        self.cntry = countryObj
+        self.country = countryObj
 
     def __repr__(self):
-        return f"Manufacture(mfgid={self.mfgid},mfgName='{self.mfgName}', countryObj={self.cntry})"
+        return f"Manufacture(mfgid={self.id},mfgName='{self.mfgName}', countryObj={self.country})"
 
-    def WIPload(self, dbConn, id):
+
+class DriveTrain(object):
+    def __init__(self, id, code, desc):
         """
-        Load manufacture from database in MfgObject.
+        Drive Train object. Primarily used with cars.
 
-        PARMS
-        dbConn : db Connection object
-        id : Manufacture ID (int)\n
+        id   : type int. Unique for all drive trains in db.
+        code : type str. Unique for all drive trains.
+        desc : type str. Free text describing the Drive Train.
         """
-        logger.info("Load manufacture data from DB")
-        if not isinstance(id, int):
-            logger.critical("id must be an integer.")
-            raise ValueError("id must be an integer.")
+        self.id = id
+        self.code = code
+        self.desc = desc
 
-        if id == 0:
-            logger.critical("id must be >0.")
-            raise ValueError("id must be >0.")
+    def __repr__(self):
+        return f"DriveTrain(id={self.id},code='{self.code}',desc='{self.desc}')"
 
-        # mfgRecord = gtdb.getMfg(dbConn, id, key='recID')
-        mfgRecord = dbConn.getMfg(value=id, key='recID')
-        logger.debug(f"{mfgRecord}")
-        self.id = mfgRecord[0]
-        self.name = mfgRecord[1]
 
-    def WIP_add(self, dbConn):
+class ClassCat(object):
+    def __init__(self, id, name, desc):
         """
-        Add Manufacture obj to database.\n
-        dbConn : db Connection object\n
-        Return: None. *self.id will have recID if successful. False if failed
+        Class/Category object. Used in cars, and optional for races to.
+
+        id   : type int. Unique for all class/cat's in db.
+        name : type str. Short name of the class/cat. Unique in db.
+        desc : type str. Full text describing the class/cat.
         """
-        logger.info("Adding manufacture data to DB")
-        self.id = gtdb.add_Mfg(dbConn, self.name)
+        self.id = id
+        self.name = name
+        self.desc = desc
 
-    def WIP_update(self, dbConn):
+    def __repr__(self):
+        return f"ClassCat(id={self.id}, name='{self.name}', desc='{self.desc}')"
+
+
+class Circuit(object):
+    def __init__(self, id, name):
         """
-        Update Manufacture obj to database.\n
-        dbConn : db Connection object\n
-        Return: True if successfull
+        Circut object. This object is a property of different race tracks.
+
+        id   : type int. Unique for all circuits in db.
+        name : type str. name of the circuit, unique in db.
         """
-        logger.info(f"Updating record {self.id} MfgName change to {self.name}")
-        gtdb.update_Mfg(dbConn, self.id, self.name)
+        self.id = id
+        self.name = name
+
+    def __repr__(self):
+        return f"Circuit(id={self.id}, name='{self.name}')"
 
 
-class WIP_DriveTrain(object):
-    def __init__(self):
-        self.id = 0
-        self.code = ""
-        self.desc = ""
-
-    def load(self, dbConn, id):
+class League(object):
+    def __init__(self, id, name, sortord):
         """
-        Load DriveTrain from database into DriveTrainObject.\n
-        dbConn : db Connection object
-        id : DriveTrain ID (int)\n
+        League object.
+
+        id     : type int. Unique for all circuits in db.
+        name   : type str. name of the circuit, unique in db.
+        sortord: type int. Order which the object should be sorted.
         """
-        if not isinstance(id, int):
-            logger.debug("id must be an integer")
-            raise ValueError("id must be an integer.")
+        self.id = id
+        self.name = name
+        self.sortord = sortord
 
-        if id == 0:
-            logger.critical("id must be >0.")
-            raise ValueError("id must be >0.")
+    def __repr__(self):
+        return f"League(id={self.id}, name='{self.name}', sortord={self.sortord})"
 
-        logger.debug("Loading DriveTrain")
-        theRecord = gtdb.getDriveTrain(dbConn, id, key='recID')
-        logger.debug(f"{theRecord}")
-        self.id = theRecord[0]
-        self.code = theRecord[1]
-        self.desc = theRecord[2]
+
+class Track(object):
+
+    def __init__(self, id, name, countryObj):
+        """
+        Track object. Used by car, and many other objects
+
+        id     : type int. Unique for all manufactures in db
+        Name   : type str. Unique for all manufactures in db
+        countryObj: object created from the Country Class.
+        """
+        self.id = id
+        self.mfgName = Name
+        self.country = countryObj
+
+    def __repr__(self):
+        return f"Track(id={self.id},name='{self.name}', countryObj={self.country})"
