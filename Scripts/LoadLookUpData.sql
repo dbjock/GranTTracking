@@ -30,7 +30,6 @@ INSERT INTO circuit (id, name) VALUES (3, 'World Circuit');
 INSERT INTO circuit (id, name) VALUES (4, 'City Circuit');
 
 -- Table: country
-INSERT INTO country (ID, name, alpha2, alpha3, region) VALUES (0, 'Unknown', ' ', ' ', ' ');
 INSERT INTO country (ID, name, alpha2, alpha3, region) VALUES (1, 'Afghanistan', 'AF', 'AFG', 'Asia');
 INSERT INTO country (ID, name, alpha2, alpha3, region) VALUES (2, 'Aland Islands', 'AX', 'ALA', 'Europe');
 INSERT INTO country (ID, name, alpha2, alpha3, region) VALUES (3, 'Albania', 'AL', 'ALB', 'Europe');

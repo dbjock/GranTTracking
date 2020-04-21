@@ -6,7 +6,6 @@
 PRAGMA foreign_keys = off;
 
 -- Table: manufacture
-INSERT INTO manufacture (id, name, country_id) VALUES (0, 'Test for No Country', NULL);
 INSERT INTO manufacture (id, name, country_id) VALUES (1, 'Jaguar', 235);
 INSERT INTO manufacture (id, name, country_id) VALUES (2, 'Aston Martin', 235);
 INSERT INTO manufacture (id, name, country_id) VALUES (3, 'McLaren', 235);
@@ -61,7 +60,6 @@ INSERT INTO manufacture (id, name, country_id) VALUES (51, 'Pagani', 111);
 INSERT INTO manufacture (id, name, country_id) VALUES (52, 'RE Amemiya', 113);
 
 -- Table: track
-INSERT INTO track (id, name, country_id) VALUES (0, 'Test ** minimal entry', NULL);
 INSERT INTO track (id, name, country_id) VALUES (1, 'Northern Isle Speedway', NULL);
 INSERT INTO track (id, name, country_id) VALUES (2, 'Dragon Tail', 56);
 INSERT INTO track (id, name, country_id) VALUES (3, 'Colorado Springs', 237);
@@ -92,7 +90,6 @@ INSERT INTO track (id, name, country_id) VALUES (27, 'Fuji International Speedwa
 INSERT INTO track (id, name, country_id) VALUES (28, 'Nurburgring', 84);
 
 -- Table: track_layout
-INSERT INTO track_layout (id, track_id, name, miles, circuit_id) VALUES (0, 0, NULL, 99999, 1);
 INSERT INTO track_layout (id, track_id, name, miles, circuit_id) VALUES (1, 1, NULL, 0.56, 1);
 INSERT INTO track_layout (id, track_id, name, miles, circuit_id) VALUES (2, 2, 'Seaside', 3.24, 1);
 INSERT INTO track_layout (id, track_id, name, miles, circuit_id) VALUES (3, 2, 'Seaside II', 3.24, 1);
