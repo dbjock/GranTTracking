@@ -5,6 +5,7 @@ from pathlib import Path
 # TODO:Delete-Manufacture, Update-Manufacture, Create-Manufacture
 # Custom App modules
 from GranT import gtclasses
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,17 +48,17 @@ class GTdb:
         self.conn.commit()
         logging.debug(f"script commited")
 
-    def getMfg(self, value=None, key='recID'):
+    def getMfg(self, value=None, key='mfgId'):
         """
         Gets the manufacture record from the database based on the key being used.
 
-        PARMS
+        ARGS:
         value : Is the value being search for.
-        key   : the column name to search on. recID, or mfgName. Default is recID
-        Returns : Manufacture object
+        key   : the column to search on. mfgId, or mfgName. Default is mfgid
+        Returns : ManufactureObject. IF ManufactureObject.mfgid = 0 then nothing found
         """
-        logger.info(f"Getting Manufacture key={key} value={value}")
-        selectSQL = """SELECT mfg.id as mfgid,
+        logger.debug(f"Getting Manufacture: {key}={value}")
+        selectSQL = """SELECT mfg.id as mfgId,
                 mfg.name AS Make,
                 c.id as cntryID,
                 c.name AS Country,
@@ -67,12 +68,12 @@ class GTdb:
                 FROM manufacture AS mfg
                 LEFT JOIN country AS c ON mfg.country_id = c.ID """
 
-        if key == 'recID':
+        if key == 'mfgId':
             if not isinstance(value, int):
-                logger.error(f"recID must be an integer value")
+                logger.error(f"mfgId must be an integer value")
                 return None
 
-            whereSQL = "WHERE mfgid = ?"
+            whereSQL = "WHERE mfgId = ?"
         elif key == 'Make':
             whereSQL = "WHERE Make = ?"
         else:
@@ -94,15 +95,26 @@ class GTdb:
                 f'Unexpected error executing sql: {sql}', exc_info=True)
             return None
 
-        # Place results into Manufacture class
-        xCountry = gtclasses.Country(
-            cntryID=row['cntryID'], cntryName=row['Country'],
-            alpha2=row['alpha2'], alpha3=row['alpha3'], region=row['region'])
+        if row:
+            # Place results into Manufacture object
+            logger.debug("manufacture found.")
+            xCountry = gtclasses.Country(
+                cntryID=row['cntryID'], cntryName=row['Country'],
+                alpha2=row['alpha2'], alpha3=row['alpha3'], region=row['region'])
 
-        xMake = gtclasses.Manufacture(
-            mfgid=row['mfgid'], mfgName=row['Make'], countryObj=xCountry)
+            xMake = gtclasses.Manufacture(
+                mfgid=row['mfgid'], mfgName=row['Make'], countryObj=xCountry)
 
-        logger.info(f"Returning Manufacture results")
+            logger.debug(f"Returning Manufacture results")
+        else:
+            # Create blank Manufacture object
+            logger.debug("manufacture not found.")
+            xCountry = gtclasses.Country(
+                cntryID=0, cntryName='', alpha2='', alpha3='', region='')
+
+            xMake = gtclasses.Manufacture(
+                mfgid=0, mfgName='', countryObj=xCountry)
+
         return xMake
 
     def getAllMfg(self, orderBy='id'):
@@ -110,15 +122,23 @@ class GTdb:
 
         PARMS
         orderBy : Column to order by
+        returns a list
         """
         logger.info(f"Getting all manufactures, orderd by {orderBy}")
-        selectSQL = "SELECT id, Make, alpha2, Country, region FROM v_manufactures "
+        selectSQL = """SELECT mfg.id as id,
+                    mfg.name AS Make,
+                    c.alpha2,
+                    c.name AS Country,
+                    c.region
+                FROM manufacture AS mfg
+                LEFT JOIN country AS c ON mfg.country_id = c.ID """
+
         sql = selectSQL + f"ORDER BY {orderBy}"
 
         # Ready to execute SQL
+        logger.debug(f"sql: {sql}")
         try:
-            logger.debug(f"sql: {sql}")
-            dbCursor = self.cursor
+            dbCursor = self.conn.cursor()
             dbCursor.execute(sql)
             result = dbCursor.fetchall()
             logger.info(f"Returning all Manufacture results")
@@ -143,5 +163,61 @@ class GTdb:
 
         for sFile in scripts:
             scriptFile = gtScripts / sFile
-            logger.info(f"Executing {scriptFile}")
+            logger.debug(f"Executing {scriptFile}")
             self.exeScriptFile(scriptFileName=f'{scriptFile}')
+
+    def addMfg(self, mfgObj):
+        """Adding a manufuture record to database.
+
+        ARGS
+        mfgObj : Manufacture class object
+        Returns - list (ResultCode, ResultText)
+                 ResultCode 0 = it worked
+                 Resultcode <> 0 - See ResultText for details
+        Fields which cause common errors.
+         - mfgObj.mfgName must be unique in db (case insensitive).
+         - mfgObj.country.id must exist in Country table in db.
+        """
+        logger.debug(f"addMfg: MfgObj= {mfgObj}")
+        sql = "INSERT INTO manufacture (name, country_id) VALUES (:mfgName, :cntryID)"
+        theVals = {'mfgName': mfgObj.mfgName, 'cntryID': mfgObj.country.id}
+
+        logger.debug(f"Sql: {sql}")
+        try:
+            c = self.conn.cursor()
+            c.execute(sql, theVals)
+            self.conn.commit()
+        except sqlite3.IntegrityError as e:
+            logger.error(f"sqlite integrity error: {e.args[0]}")
+            return [2, f"sqlite integrity error: {e.args[0]}"]
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            return [3, "Critical error see logs"]
+
+        logger.debug("Data Saved")
+        return [0, "Data Saved"]
+
+    def getAllTracksBy(self, orderBy='Track'):
+        selectSQL = """SELECT t.id as id,
+                t.name as track,
+                c.alpha2,
+                c.name AS Country,
+                c.region
+                FROM track as t
+                INNER JOIN
+                country as c ON t.country_id = c.id """
+
+        sql = selectSQL + f"ORDER BY {orderBy}"
+        # Execute the SQL
+        logger.debug(f"sql: {sql}")
+        try:
+            dbCursor = self.conn.cursor()
+            dbCursor.execute(sql)
+            result = dbCursor.fetchall()
+            logger.info(f"Returning All Track info")
+            return result
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            return None
