@@ -195,8 +195,33 @@ class GTdb:
                 f'Unexpected error executing sql: {sql}', exc_info=True)
             return [3, "Critical error see logs"]
 
-        logger.debug("Data Saved")
-        return [0, "Data Saved"]
+        logger.debug("Manufacture Saved")
+        return [0, "Manufacture Saved"]
+
+    def delMfg(self, mfgId):
+        """Delete manufacutre record from database
+
+        ARGS:
+        mfgId : UniqueID of Manufacture in DB (Manufacture.id)
+        Returns - list (ResultCode, ResultText)
+                 ResultCode 0 = it worked
+                 Resultcode <> 0 - See ResultText for details
+        """
+        logger.debug(f"delete manufacture id={mfgId}")
+        sql = "DELETE FROM manufacture WHERE id = ?"
+        theVals = (mfgId,)
+        logger.debug(f"sql: {sql}")
+        try:
+            c = self.conn.cursor()
+            c.execute(sql, theVals)
+            self.conn.commit()
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            return [3, "Critical error see logs"]
+
+        logger.debug("manufacture deleted")
+        return [0, "Manufacture Deleted"]
 
     def getAllTracksBy(self, orderBy='Track'):
         selectSQL = """SELECT t.id as id,
