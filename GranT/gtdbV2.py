@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 class GTdb:
     def __init__(self, name=None):
         self.conn = None
+        self._selectTrackLayoutSQL = """SELECT t.id as trackId, t.name AS track, l.id AS layouId, l.name AS layout, l.miles AS Miles, c.id as circuitId, c.name AS Circuit, cntry.ID as cntryId, cntry.name as Country, cntry.alpha2, cntry.alpha3, cntry.region as Region FROM track as t INNER JOIN track_layout as l ON t.id = l.track_id LEFT JOIN country as cntry ON t.country_id = cntry.ID INNER JOIN circuit AS c ON l.circuit_id = c.id"""
         if name:
             logging.debug(f"attempt open db {name}")
             try:
@@ -28,9 +29,37 @@ class GTdb:
             logging.debug(f"{xtmp}")
             self.dbfile = xtmp[0][2]
 
-    def exeScriptFile(self, scriptFileName=None):
+    def _exeInsertSql(self, insertSQL, theVals):
+        """Submit InsertSql provided. (internal use only)
+
+        ARGS
+        insertSQL : The insert Sql to use.
+        theVals   : The value parms passed into the sql
+
+        Returns - list (ResultCode, ResultText)
+                ResultCode 0 = Success Add
+                Resultcode != 0 - See ResultText for details
         """
-        Executes a Script file.
+        logger.debug(f"insert Sql: {insertSQL}")
+        logger.debug(f"Values: {theVals}")
+        try:
+            c = self.conn.cursor()
+            c.execute(insertSQL, theVals)
+            self.conn.commit()
+        except sqlite3.IntegrityError as e:
+            logger.warning(f"sqlite integrity error: {e.args[0]}")
+            return [2, f"sqlite integrity error: {e.args[0]}"]
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            return [3, "Critical error see logs"]
+
+        logger.debug("successful commit of sql")
+        return [0, "Insert successful"]
+
+    def _exeScriptFile(self, scriptFileName=None):
+        """
+        Executes a Script file. (internal use only)
         scriptFileName : SQL script file to run
         """
         logging.debug(f"loading script {scriptFileName} to memory")
@@ -60,7 +89,7 @@ class GTdb:
         logger.debug(f"Getting Manufacture: {key}={value}")
         selectSQL = """SELECT mfg.id as mfgId,
                 mfg.name AS Make,
-                c.id as cntryID,
+                c.id as cntryId,
                 c.name AS Country,
                 c.alpha2,
                 c.alpha3,
@@ -69,13 +98,6 @@ class GTdb:
                 LEFT JOIN country AS c ON mfg.country_id = c.ID """
 
         whereSQL = f" WHERE {key} = ?"
-
-            whereSQL = "WHERE mfgId = ?"
-        elif key == 'Make':
-            whereSQL = "WHERE Make = ?"
-        else:
-            logger.error(f'key {key} does not exist')
-            return None
 
         theVars = (value,)
         sql = selectSQL + whereSQL
@@ -96,21 +118,21 @@ class GTdb:
         if row:
             # Place results into Manufacture object
             logger.debug("manufacture found.")
-            xCountry = gtclasses.Country(
-                cntryID=row['cntryID'], cntryName=row['Country'],
+            xCountry = gtClass.Country(
+                cntryID=row['cntryId'], cntryName=row['Country'],
                 alpha2=row['alpha2'], alpha3=row['alpha3'], region=row['region'])
 
-            xMake = gtclasses.Manufacture(
+            xMake = gtClass.Manufacture(
                 mfgid=row['mfgid'], mfgName=row['Make'], countryObj=xCountry)
 
             logger.debug(f"Returning Manufacture results")
         else:
             # Create blank Manufacture object
             logger.debug("manufacture not found.")
-            xCountry = gtclasses.Country(
+            xCountry = gtClass.Country(
                 cntryID=0, cntryName='', alpha2='', alpha3='', region='')
 
-            xMake = gtclasses.Manufacture(
+            xMake = gtClass.Manufacture(
                 mfgid=0, mfgName='', countryObj=xCountry)
 
         return xMake
@@ -162,7 +184,7 @@ class GTdb:
         for sFile in scripts:
             scriptFile = gtScripts / sFile
             logger.debug(f"Executing {scriptFile}")
-            self.exeScriptFile(scriptFileName=f'{scriptFile}')
+            self._exeScriptFile(scriptFileName=f'{scriptFile}')
 
     def addMfg(self, mfgObj):
         """Adding a manufuture record to database.
@@ -170,7 +192,7 @@ class GTdb:
         ARGS
         mfgObj : Manufacture class object
         Returns - list (ResultCode, ResultText)
-                 ResultCode 0 = it worked
+                 ResultCode 0 = Success Add
                  Resultcode <> 0 - See ResultText for details
         Fields which cause common errors.
          - mfgObj.mfgName must be unique in db (case insensitive).
@@ -180,24 +202,10 @@ class GTdb:
         sql = "INSERT INTO manufacture (name, country_id) VALUES (:mfgName, :cntryID)"
         theVals = {'mfgName': mfgObj.mfgName, 'cntryID': mfgObj.country.id}
 
-        logger.debug(f"Sql: {sql}")
-        try:
-            c = self.conn.cursor()
-            c.execute(sql, theVals)
-            self.conn.commit()
-        except sqlite3.IntegrityError as e:
-            logger.error(f"sqlite integrity error: {e.args[0]}")
-            return [2, f"sqlite integrity error: {e.args[0]}"]
-        except:
-            logger.critical(
-                f'Unexpected error executing sql: {sql}', exc_info=True)
-            return [3, "Critical error see logs"]
-
-        logger.debug("Manufacture Saved")
-        return [0, "Manufacture Saved"]
+        return self._exeInsertSql(sql, theVals)
 
     def delMfg(self, mfgId):
-        """Delete manufacutre record from database
+        """Delete manufacture record from database
 
         ARGS:
         mfgId : UniqueID of Manufacture in DB (Manufacture.id)
@@ -221,26 +229,97 @@ class GTdb:
         logger.debug("manufacture deleted")
         return [0, "Manufacture Deleted"]
 
-    def getAllTracksBy(self, orderBy='Track'):
-        selectSQL = """SELECT t.id as id,
-                t.name as track,
-                c.alpha2,
-                c.name AS Country,
-                c.region
-                FROM track as t
-                INNER JOIN
-                country as c ON t.country_id = c.id """
+    def getTrackLayout(self, key='layoutId', value=None):
+        """
+        Gets a single Track Layout record from database based on key and value passed.
 
-        sql = selectSQL + f"ORDER BY {orderBy}"
+        ARGS:
+        value : Is the value being search for.
+        key   : the column to search on. layoutId, or Layout. Default is layoutId
+        Returns : TrackLayout Object. IF TrackLayoutObject.id == 0 then nothing found
+        """
+        if key == 'layoutId':
+            whereSQL = "WHERE l.id = ?"
+        elif key == 'Layout':
+            whereSQL = "WHERE l.name = ?"
+
+        sql = self._selectTrackLayoutSQL + " " + whereSQL
+        theVals = (value,)
         # Execute the SQL
         logger.debug(f"sql: {sql}")
         try:
-            dbCursor = self.conn.cursor()
-            dbCursor.execute(sql)
-            result = dbCursor.fetchall()
-            logger.info(f"Returning All Track info")
-            return result
+            # Enable the .keys() to get column names.
+            self.conn.row_factory = sqlite3.Row
+            c = self.conn.cursor()
+            c.execute(sql, theVals)
+            row = c.fetchone()
         except:
             logger.critical(
                 f'Unexpected error executing sql: {sql}', exc_info=True)
             return None
+
+        if row:  # Populate trackLayout obj
+            logger.debug("track layout found")
+            xCircuit = gtClass.Circuit(row['circuitId'], row['Circuit'])
+            xCountry = gtClass.Country(
+                cntryID=row['cntryId'], cntryName=row['Country'],
+                alpha2=row['alpha2'], alpha3=row['alpha3'], region=row['region'])
+            xTrack = gtClass.Track(
+                row['trackId'], name=row['track'], countryObj=xCountry)
+            xTrackLayout = gtClass.TrackLayout(
+                row['layouId'], row['layout'], miles=row['Miles'], trackObj=xTrack, circuitObj=xCircuit)
+
+        else:  # Create blank trackLayout obj (no data returned)
+            logger.debug("track layout not found")
+            xCircuit = gtClass.Circuit(id=0, name=None)
+            xCountry = gtClass.Country(
+                cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)
+            xTrack = gtClass.Track(id=0, name=None, countryObj=xCountry)
+            xTrackLayout = gtClass.TrackLayout(
+                id=0, name=None, miles=None, trackObj=xTrack, circuitObj=xCircuit)
+
+        return xTrackLayout
+
+    def getTrack(self, key='trackId', value=None):
+        """
+        Gets a single Track record from database based on key and value passed.
+
+        ARGS:
+        value : Is the value being search for.
+        key   : the column to search on. trackId, or track. Default is trackId
+        Returns : Track Object. IF TrackObject.id == 0 then nothing found.
+        """
+        if key == 'trackId':
+            whereSQL = "WHERE trackId = ?"
+        elif key == 'track':
+            whereSQL = "WHERE track = ?"
+
+        sql = self._selectTrackLayoutSQL + " " + whereSQL
+        theVals = (value,)
+        logger.debug(f"sql = {sql}")
+        logger.debug(f"theVals = {theVals}")
+        try:
+            # Enable the .keys() to get column names.
+            self.conn.row_factory = sqlite3.Row
+            c = self.conn.cursor()
+            c.execute(sql, theVals)
+            row = c.fetchone()
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            return None
+        if row:  # Populate the track object
+            logger.debug("track found")
+            xCountry = gtClass.Country(
+                cntryID=row['cntryId'], cntryName=row['Country'], alpha2=row['alpha2'], alpha3=row['alpha3'], region=row['Region'])
+            xTrack = gtClass.Track(
+                id=row['trackId'], name=row['track'], countryObj=xCountry)
+
+        else:  # create a blank track object
+            logger.debug("no track found")
+            xCountry = gtClass.Country(
+                cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)
+            xTrack = gtClass.Track(id=0, name=None, countryObj=xCountry)
+
+        logger.debug(f'track = {xTrack}')
+        return xTrack
