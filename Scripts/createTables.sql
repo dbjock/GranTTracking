@@ -120,31 +120,4 @@ CREATE TABLE weather (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR (16) UN
 -- Index: sortord
 CREATE INDEX sortord ON league (sortord COLLATE RTRIM ASC);
 
--- View: v_track_layouts
-CREATE VIEW v_track_layouts AS SELECT l.id AS layout_id,
-           t.name AS track,
-           l.name AS layout,
-           c.name AS Circuit,
-           l.miles AS Miles,
-           cnty.name as Country,
-           cnty.region as Region
-      FROM track_layout AS l
-           INNER JOIN
-           track AS t ON t.id = l.track_id
-           INNER JOIN
-           circuit AS c ON c.id = l.circuit_id
-           left JOIN
-           country as cnty ON t.country_id = cnty.ID;
-
--- View: v_manufactures
-CREATE VIEW v_manufactures AS
-    SELECT mfg.id,
-           mfg.name AS Make,
-           c.alpha2,
-           c.name AS Country,
-           c.region
-      FROM manufacture AS mfg
-           LEFT JOIN
-           country AS c ON mfg.country_id = c.ID;
-
 PRAGMA foreign_keys = on;
