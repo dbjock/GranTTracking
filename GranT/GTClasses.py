@@ -108,8 +108,26 @@ class Track(object):
         countryObj: object created from the Country Class.
         """
         self.id = id
-        self.mfgName = Name
+        self.name = name
         self.country = countryObj
 
     def __repr__(self):
         return f"Track(id={self.id},name='{self.name}', countryObj={self.country})"
+
+
+class TrackLayout(object):
+    def __init__(self, id, name, miles, trackObj, circuitObj):
+        """
+        Track Layout.
+
+        id       : type int. ID of the Track Layout. Unique ID for the track laout
+        track_id : ID linking to the Track object
+        """
+        self.id = id
+        self.name = name
+        self.track = trackObj
+        self.circuit = circuitObj
+        self.miles = miles
+
+    def __repr__(self):
+        return f"TrackLayout=(id={self.id},name='{self.name}',miles={self.miles},trackObj={self.track}, circuitObj={self.circuit}"
