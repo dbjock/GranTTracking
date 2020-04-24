@@ -4,7 +4,7 @@ from pathlib import Path
 
 # TODO:Delete-Manufacture, Update-Manufacture, Create-Manufacture
 # Custom App modules
-from GranT import gtclasses
+from GranT import gtclasses as gtClass
 
 logger = logging.getLogger(__name__)
 
@@ -48,13 +48,13 @@ class GTdb:
         self.conn.commit()
         logging.debug(f"script commited")
 
-    def getMfg(self, value=None, key='mfgId'):
+    def getMfg(self, key='mfgId', value=None):
         """
         Gets the manufacture record from the database based on the key being used.
 
         ARGS:
         value : Is the value being search for.
-        key   : the column to search on. mfgId, or mfgName. Default is mfgid
+        key   : the column to search on. mfgId, or Make. Default is mfgid
         Returns : ManufactureObject. IF ManufactureObject.mfgid = 0 then nothing found
         """
         logger.debug(f"Getting Manufacture: {key}={value}")
@@ -68,10 +68,7 @@ class GTdb:
                 FROM manufacture AS mfg
                 LEFT JOIN country AS c ON mfg.country_id = c.ID """
 
-        if key == 'mfgId':
-            if not isinstance(value, int):
-                logger.error(f"mfgId must be an integer value")
-                return None
+        whereSQL = f" WHERE {key} = ?"
 
             whereSQL = "WHERE mfgId = ?"
         elif key == 'Make':
@@ -83,8 +80,9 @@ class GTdb:
         theVars = (value,)
         sql = selectSQL + whereSQL
         # Ready to execute SQL
+        logger.debug(f"{theVars}")
+        logger.debug(f"sql: {sql}")
         try:
-            logger.debug(f"sql: {sql}")
             # Enable the .keys() to get column names.
             self.conn.row_factory = sqlite3.Row
             c = self.conn.cursor()
