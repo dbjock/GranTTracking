@@ -6,5 +6,5 @@ gen_test.py
 */__pycache__/
 Logs/
 Data/*.db
-tests/DEPRECATE*
 test-*
+testing.log
