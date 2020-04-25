@@ -29,30 +29,31 @@ class GTdb:
             logging.debug(f"{xtmp}")
             self.dbfile = xtmp[0][2]
 
-    def _exeInsertSql(self, insertSQL, theVals):
+    def _exeSQL(self, sql, theVals):
         """Submit InsertSql provided. (internal use only)
 
         ARGS
-        insertSQL : The insert Sql to use.
+        sql : The insert Sql to use.
         theVals   : The value parms passed into the sql
 
         Returns - list (ResultCode, ResultText)
-                ResultCode 0 = Success Add
+                ResultCode 0 = Success execution
                 Resultcode != 0 - See ResultText for details
         """
-        logger.debug(f"insert Sql: {insertSQL}")
+        logger.debug(f"insert Sql: {sql}")
         logger.debug(f"Values: {theVals}")
         try:
             c = self.conn.cursor()
-            c.execute(insertSQL, theVals)
+            c.execute(sql, theVals)
             self.conn.commit()
+
         except sqlite3.IntegrityError as e:
             logger.warning(f"sqlite integrity error: {e.args[0]}")
             return [2, f"sqlite integrity error: {e.args[0]}"]
         except:
             logger.critical(
                 f'Unexpected error executing sql: {sql}', exc_info=True)
-            return [3, "Critical error see logs"]
+            quit()
 
         logger.debug("successful commit of sql")
         return [0, "Insert successful"]
@@ -187,7 +188,7 @@ class GTdb:
             self._exeScriptFile(scriptFileName=f'{scriptFile}')
 
     def addMfg(self, mfgObj):
-        """Adding a manufuture record to database.
+        """Adding a manufacture record to database.
 
         ARGS
         mfgObj : Manufacture class object
@@ -202,7 +203,7 @@ class GTdb:
         sql = "INSERT INTO manufacture (name, country_id) VALUES (:mfgName, :cntryID)"
         theVals = {'mfgName': mfgObj.mfgName, 'cntryID': mfgObj.country.id}
 
-        return self._exeInsertSql(sql, theVals)
+        return self._exeSQL(sql, theVals)
 
     def delMfg(self, mfgId):
         """Delete manufacture record from database
@@ -323,3 +324,25 @@ class GTdb:
 
         logger.debug(f'track = {xTrack}')
         return xTrack
+
+    def updateMfg(self, mfgObj):
+        """Update a manufacture record in database
+
+        ARGS: mfgObj is the Manufacture class object
+        - Record that will be UPDATED is based on mfgObj.id.
+        WARNING! - Do not change original mfgObj.id. Unexpected results will occur
+        Returns - list (ResultCode, ResultText)
+                ResultCode 0 = Success execution
+                Resultcode != 0 - See ResultText for details
+        """
+        logger.debug(f"mfgrecord update {mfgObj}")
+        # Sanity check - does the mfgRecord exist in db?
+        testMfg = self.getMfg(value=mfgObj.id)
+        if testMfg.id == 0:  # Mfg is not in database
+            return [1, f"mfg id {mfgObj.id} not in database."]
+
+        theVals = {'mfgID': mfgObj.id, 'mfgName': mfgObj.mfgName,
+                   'cntryID': mfgObj.country.id}
+        sql = "UPDATE manufacture SET name = :mfgName, country_id = :cntryID WHERE id = :mfgID"
+
+        return self._exeSQL(sql, theVals)
