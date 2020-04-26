@@ -198,6 +198,7 @@ class GTdb:
         Fields which cause common errors.
          - mfgObj.mfgName must be unique in db (case insensitive).
          - mfgObj.country.id must exist in Country table in db.
+          mfgObj.id is ignored
         """
         logger.debug(f"addMfg: MfgObj= {mfgObj}")
         sql = "INSERT INTO manufacture (name, country_id) VALUES (:mfgName, :cntryID)"
@@ -205,12 +206,27 @@ class GTdb:
 
         return self._exeSQL(sql, theVals)
 
+    def addTrack(self, trackObj):
+        """Adding a Track record to the database
+
+        ARGS
+        trackObj : Track class object
+        Returns - list (ResultCode, ResultText)
+                 ResultCode 0 = Success Add
+                 Resultcode <> 0 - See ResultText for details
+        """
+        logger.debug(f"addTrack: trackObj={trackObj}")
+        theVals = {'trackName': trackObj.name, 'cntryID': trackObj.country.id}
+        sql = "INSERT INTO track (name, country_id) VALUES (:trackName, :cntryID)"
+
+        return self._exeSQL(sql, theVals)
+
     def delMfg(self, mfgId):
         """Delete manufacture record from database
 
         ARGS:
-        mfgId : UniqueID of Manufacture in DB (Manufacture.id)
-        Returns - list (ResultCode, ResultText)
+        mfgId: UniqueID of Manufacture in DB(Manufacture.id)
+        Returns - list(ResultCode, ResultText)
                  ResultCode 0 = it worked
                  Resultcode <> 0 - See ResultText for details
         """
@@ -331,7 +347,7 @@ class GTdb:
         ARGS: mfgObj is the Manufacture class object
         - Record that will be UPDATED is based on mfgObj.id.
         WARNING! - Do not change original mfgObj.id. Unexpected results will occur
-        Returns - list (ResultCode, ResultText)
+        Returns - list(ResultCode, ResultText)
                 ResultCode 0 = Success execution
                 Resultcode != 0 - See ResultText for details
         """
