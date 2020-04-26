@@ -40,7 +40,7 @@ class GTdb:
                 ResultCode 0 = Success execution
                 Resultcode != 0 - See ResultText for details
         """
-        logger.debug(f"insert Sql: {sql}")
+        logger.debug(f"Sql: {sql}")
         logger.debug(f"Values: {theVals}")
         try:
             c = self.conn.cursor()
@@ -351,14 +351,36 @@ class GTdb:
                 ResultCode 0 = Success execution
                 Resultcode != 0 - See ResultText for details
         """
-        logger.debug(f"mfgrecord update {mfgObj}")
+        logger.debug(f"manufacture record update {mfgObj}")
         # Sanity check - does the mfgRecord exist in db?
         testMfg = self.getMfg(value=mfgObj.id)
         if testMfg.id == 0:  # Mfg is not in database
-            return [1, f"mfg id {mfgObj.id} not in database."]
+            return [1, f"manufacture id {mfgObj.id} not in database."]
 
         theVals = {'mfgID': mfgObj.id, 'mfgName': mfgObj.mfgName,
                    'cntryID': mfgObj.country.id}
         sql = "UPDATE manufacture SET name = :mfgName, country_id = :cntryID WHERE id = :mfgID"
+
+        return self._exeSQL(sql, theVals)
+
+    def updateTrack(self, trackObj):
+        """Update a manufacture record in database
+
+        ARGS: mfgObj is the Manufacture class object
+        - Record that will be UPDATED is based on mfgObj.id.
+        WARNING! - Do not change original TrackObj.id. Unexpected results will occur
+        Returns - list(ResultCode, ResultText)
+                ResultCode 0 = Success execution
+                Resultcode != 0 - See ResultText for details
+        """
+        logger.debug(f"track record update {trackObj}")
+        # Sanity check - does the track record exist in db?
+        testMfg = self.getTrack(value=trackObj.id)
+        if testMfg.id == 0:  # Mfg is not in database
+            return [1, f"track id {trackObj.id} not in database."]
+
+        theVals = {'trackID': trackObj.id, 'trackName': trackObj.name,
+                   'cntryID': trackObj.country.id}
+        sql = "UPDATE track SET name = :trackName, country_id = :cntryID WHERE id = :trackID"
 
         return self._exeSQL(sql, theVals)
