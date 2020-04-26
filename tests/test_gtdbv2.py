@@ -8,7 +8,10 @@ import os
 from GranT import gtdbV2
 from GranT import gtclasses as GTClass
 
-# logging.basicConfig(level=logging.DEBUG, filename='test.log', filemode='w')
+_gtPath = Path.cwd()
+_gtLogs = _gtPath / 'Logs'
+_gtScripts = _gtPath / 'Scripts'
+_gtData = _gtPath / 'Data'
 
 logger = logging.getLogger()
 handler = logging.StreamHandler()
@@ -18,7 +21,7 @@ handler.setFormatter(conFormat)
 handler.setLevel(logging.INFO)
 logger.addHandler(handler)
 
-fileHandler = logging.FileHandler('testing.log')
+fileHandler = logging.FileHandler(_gtLogs / 'testing.log')
 fileFormat = logging.Formatter(
     '%(asctime)s %(levelname)-8s:%(name)s.%(funcName)s: %(message)s')
 
@@ -32,11 +35,8 @@ print("Logging test test.log. You may see warnings below which are normal")
 
 
 class TestMfg(unittest.TestCase):
-    gtPath = Path.cwd()
-    gtData = gtPath / 'Data'
-    gtScripts = gtPath / 'Scripts'
 
-    def test_mfgAdd(self):
+    def test_mfg_add(self):
         logger.info(
             "==== BEGIN Add Manufacture (Must have unique name, and a country)")
         countryExist = GTClass.Country(
@@ -49,77 +49,77 @@ class TestMfg(unittest.TestCase):
         logger.info(
             "Add Manufacture - Name: Non-Existing, Country ID: Existing")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
         testMfg = GTClass.Manufacture(
-            mfgid=0, mfgName='NEW Manufacture', countryObj=countryExist)
-        result = dbConn1.addMfg(testMfg)
+            id=0, name='NEW Manufacture', countryObj=countryExist)
+        result = dbConn1.mfg_add(testMfg)
         self.assertEqual(result[0], 0)
         del dbConn1
 
         logger.info("Add Manufacture - Name: Existing, Country ID: Existing")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
         testMfg = GTClass.Manufacture(
-            mfgid=0, mfgName='Honda', countryObj=countryExist)
-        result = dbConn1.addMfg(testMfg)
+            id=0, name='Honda', countryObj=countryExist)
+        result = dbConn1.mfg_add(testMfg)
         self.assertNotEqual(result[0], 0)
         del dbConn1
 
         logger.info(
             "Add Manufacture - Name: Existing (all caps), Country ID: Existing")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
         testMfg = GTClass.Manufacture(
-            mfgid=0, mfgName='HONDA', countryObj=countryExist)
-        result = dbConn1.addMfg(testMfg)
+            id=0, name='HONDA', countryObj=countryExist)
+        result = dbConn1.mfg_add(testMfg)
         self.assertNotEqual(result[0], 0)
         del dbConn1
 
         logger.info(
             "Add Manufacture - Name: Non-Existing, Country ID: Non-Existing")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
         testMfg = GTClass.Manufacture(
-            mfgid=0, mfgName='NEW manufacture', countryObj=countryNonExist)
-        result = dbConn1.addMfg(testMfg)
+            id=0, name='NEW manufacture', countryObj=countryNonExist)
+        result = dbConn1.mfg_add(testMfg)
         self.assertNotEqual(result[0], 0)
         del dbConn1
 
         logger.info("Add Manufacture - Name: Existing, Country ID: Null/None")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
         testMfg = GTClass.Manufacture(
-            mfgid=0, mfgName='Honda', countryObj=countryNull)
-        result = dbConn1.addMfg(testMfg)
+            id=0, name='Honda', countryObj=countryNull)
+        result = dbConn1.mfg_add(testMfg)
         self.assertNotEqual(result[0], 0)
         del dbConn1
 
         logger.info(
             "Add Manufacture - Name: Non-Existing, Country ID: Null/None")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
         testMfg = GTClass.Manufacture(
-            mfgid=0, mfgName='new Manufacture', countryObj=countryNull)
-        result = dbConn1.addMfg(testMfg)
+            id=0, name='new Manufacture', countryObj=countryNull)
+        result = dbConn1.mfg_add(testMfg)
         self.assertNotEqual(result[0], 0)
         del dbConn1
 
         logger.info(
             "Add Manufacture - Name: Non-Existing, Country ID: Non-Existing")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
         testMfg = GTClass.Manufacture(
-            mfgid=0, mfgName='Another new one that should fail', countryObj=countryNonExist)
-        result = dbConn1.addMfg(testMfg)
+            id=0, name='Another new one that should fail', countryObj=countryNonExist)
+        result = dbConn1.mfg_add(testMfg)
         self.assertNotEqual(result[0], 0)
         del dbConn1
 
         logger.info(f"====END Manufacture\n")
 
-    def test_mfgGet(self):
+    def test_getMfg(self):
         logger.info("==== BEGIN Get/read Manufacture")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
 
         logger.info("Get Manufacture by id")
         mfgId = 4
@@ -129,7 +129,7 @@ class TestMfg(unittest.TestCase):
         logger.info("Get Manufacture by name")
         mfgName = 'honda'
         testMfg = dbConn1.getMfg(key='Make', value=mfgName)
-        self.assertEqual(testMfg.mfgName.upper(), mfgName.upper())
+        self.assertEqual(testMfg.name.upper(), mfgName.upper())
         self.assertNotEqual(testMfg.id, 0)
 
         logger.info("Get non exist Manfuacture by id")
@@ -145,59 +145,93 @@ class TestMfg(unittest.TestCase):
         del dbConn1
         logger.info(f"==== END Get/read Manufacture\n")
 
-    def test_mfgDel(self):
+    def test_mfg_delete(self):
         logger.info("==== BEGIN Delete Manufacture")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
 
-        logging.info("Delete Manufacture that does not exist")
+        logging.info("Delete Manufacture = Manufacture ID: Non Existing")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
         mfgId = 999999
-        result = dbConn1.delMfg(mfgId)
+        result = dbConn1.mfg_delete(mfgId)
         # Sqlite.. the delete works, even if record doesn't exist.
         self.assertEqual(result[0], 0)
-
-        logging.info("Delete Manufacture that exist")
-        mfgId = 1
-        result = dbConn1.delMfg(mfgId)
-        self.assertEqual(result[0], 0)
-
         del dbConn1
-        logger.info(f"==== END Delete Manufacture\n")
 
-    def test_mfgUpdate(self):
-        logger.info("==== BEGIN UPDATE Manufacture")
+        logging.info("Delete Manufacture = Manufacture ID: Existing")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
-
-        logging.info("Change/Update Manufacture Name.")
-        orgMfg = dbConn1.getMfg(value=1)
-        updateMfg = orgMfg
-        updateMfg.mfgName = "MY new NAME"
-        result = dbConn1.updateMfg(updateMfg)
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        mfgId = 1
+        result = dbConn1.mfg_delete(mfgId)
         self.assertEqual(result[0], 0)
-
-        logging.info("Change Country null on Manufacture.")
-        orgMfg = dbConn1.getMfg(value=4)
-        updateMfg = orgMfg
-        updateMfg.country.id = None
-        result = dbConn1.updateMfg(updateMfg)
-        self.assertNotEqual(result[0], 0)
-
-        logging.info("Testing change with Mfgid not in database.")
-        orgMfg = dbConn1.getMfg(value=14)
-        updateMfg = orgMfg
-        updateMfg.id = 99999
-        result = dbConn1.updateMfg(updateMfg)
-        self.assertNotEqual(result[0], 0)
-
         del dbConn1
-        logger.info(f"==== END UPDATE Manufacture\n")
+
+        logger.info("==== END Delete Manufacture\n")
+
+    def test_mfg_update(self):
+        logger.info(
+            "==== BEGIN UPDATE Manufacture (Assumpting Get manufacture works)")
+        countryExist = GTClass.Country(
+            cntryID=235, cntryName='', alpha2='', alpha3='', region='')
+        countryNonExist = GTClass.Country(
+            cntryID=999, cntryName=None, alpha2=None, alpha3=None, region=None)
+        countryNull = GTClass.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)
+
+        logging.info(
+            "Update Manufacture: Name: Change, Country ID: No change.")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        testMfg = dbConn1.getMfg(value=1)
+        testMfg.name = "MY new NAME"
+        result = dbConn1.mfg_update(testMfg)
+        self.assertEqual(result[0], 0)
+        del dbConn1
+
+        logging.info(
+            "Update Manufacture: Name: No Change, Country ID: Change to null.")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        testMfg = dbConn1.getMfg(value=4)
+        testMfg.country = countryNull
+        result = dbConn1.mfg_update(testMfg)
+        self.assertNotEqual(result[0], 0)
+        del dbConn1
+
+        logging.info(
+            "Update Manufacture: Name: Change, Country ID: No Change, Mfg ID: Non Existing.")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        testMfg = dbConn1.getMfg(value=14)
+        testMfg.id = 99999
+        result = dbConn1.mfg_update(testMfg)
+        self.assertNotEqual(result[0], 0)
+        del dbConn1
+
+        logging.info(
+            "Update Manufacture: Name: Change to Existing, Country ID: No change ")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        xMfg = dbConn1.getMfg(value=3)
+        testMfg = dbConn1.getMfg(value=14)
+        testMfg.name = xMfg.name
+        result = dbConn1.mfg_update(testMfg)
+        self.assertNotEqual(result[0], 0)  # Should save
+        del dbConn1
+
+        logging.info(
+            "Update Manufacture: Name: No change, Country ID: Change to Non Existing")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        testMfg = dbConn1.getMfg(value=14)
+        testMfg.country = countryNonExist
+        result = dbConn1.mfg_update(testMfg)
+        self.assertNotEqual(result[0], 0)  # Should save
+        del dbConn1
+
+    logger.info(f"==== END UPDATE Manufacture\n")
 
 
 class TestTrack(unittest.TestCase):
-    gtPath = Path.cwd()
-    gtData = gtPath / 'Data'
-    gtScripts = gtPath / 'Scripts'
 
     def test_trackAdd(self):
         logger.info(
@@ -211,7 +245,7 @@ class TestTrack(unittest.TestCase):
 
         logger.info("Add Track - Name: Non-Existing, Country ID: Existing")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
         testTrack = GTClass.Track(
             id=0, name='New Track name', countryObj=countryExist)
         result = dbConn1.addTrack(testTrack)
@@ -220,7 +254,7 @@ class TestTrack(unittest.TestCase):
 
         logger.info("Add Track - Name: Existing, Country ID: Existing")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
         testTrack = GTClass.Track(
             id=0, name='Nurburgring', countryObj=countryExist)
         result = dbConn1.addTrack(testTrack)
@@ -230,7 +264,7 @@ class TestTrack(unittest.TestCase):
         logger.info(
             "Add Track - Name: Existing (all caps), Country ID: Existing")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
         testTrack = GTClass.Track(
             id=0, name='NURBURGRING', countryObj=countryExist)
         result = dbConn1.addTrack(testTrack)
@@ -239,7 +273,7 @@ class TestTrack(unittest.TestCase):
 
         logger.info("Add Track - Name: Non-Existing, Country ID: Non-Existing")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
         testTrack = GTClass.Track(
             id=0, name='New Track name', countryObj=countryNonExist)
         result = dbConn1.addTrack(testTrack)
@@ -248,7 +282,7 @@ class TestTrack(unittest.TestCase):
 
         logger.info("Add Track - Name: Existing, Country ID: Null/None")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
         testTrack = GTClass.Track(
             id=0, name='Nurburgring', countryObj=countryNull)
         result = dbConn1.addTrack(testTrack)
@@ -257,7 +291,7 @@ class TestTrack(unittest.TestCase):
 
         logger.info("Add Track - Name: Non-Existing, Country ID: Null/None")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
         testTrack = GTClass.Track(
             id=0, name='New Track Name', countryObj=countryNull)
         result = dbConn1.addTrack(testTrack)
@@ -265,7 +299,7 @@ class TestTrack(unittest.TestCase):
 
         logger.info("Add Track - Name: Non-Existing, Country ID: Non-Existing")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
         testTrack = GTClass.Track(
             id=0, name='New Track Name', countryObj=countryNonExist)
         result = dbConn1.addTrack(testTrack)
@@ -276,7 +310,7 @@ class TestTrack(unittest.TestCase):
     def test_trackGet(self):
         logger.info("==== BEGIN Get/read Track")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{self.gtScripts}')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
 
         logger.info("Get a Track by the track id")
         testVal = 4
@@ -301,3 +335,86 @@ class TestTrack(unittest.TestCase):
 
         del dbConn1
         logger.info(f"==== END Get/read Track\n")
+
+    def test_trackUpdate(self):
+        logging.info("===== BEGIN Update Track (Assumption getTrack works)")
+        countryExist = GTClass.Country(
+            cntryID=235, cntryName='', alpha2='', alpha3='', region='')
+        countryNonExist = GTClass.Country(
+            cntryID=999, cntryName=None, alpha2=None, alpha3=None, region=None)
+        countryNull = GTClass.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)
+
+        logging.info("Update Track - Name: Change, Country ID: No change")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        testTrack = dbConn1.getTrack(value=4)
+        testTrack.name = "Track Name change test"
+        result = dbConn1.updateTrack(testTrack)
+        self.assertEqual(result[0], 0)
+        del dbConn1
+
+        logging.info(
+            "Update Track - Name: Change to Existing, Country ID: No change")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        testTrack = dbConn1.getTrack(value=4)
+        testTrack.name = "Nurburgring"
+        result = dbConn1.updateTrack(testTrack)
+        self.assertNotEqual(result[0], 0)  # Record should not save
+        del dbConn1
+
+        logging.info(
+            "Update Track - Name: No change, Country ID: Change to null")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        testTrack = dbConn1.getTrack(value=4)
+        testTrack.country = countryNull
+        result = dbConn1.updateTrack(testTrack)
+        self.assertEqual(result[0], 0)
+        del dbConn1
+
+        logging.info(
+            "Update Track - Name: No change, Country ID: Change to Non Existing")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        testTrack = dbConn1.getTrack(value=4)
+        testTrack.country = countryNonExist
+        result = dbConn1.updateTrack(testTrack)
+        self.assertNotEqual(result[0], 0)  # Record should not save
+        del dbConn1
+
+        # TODO: Need to test Name: Change, Country ID: No Change, ID: Non Existing.
+
+        logger.info(f"==== END Upate Track test\n")
+
+    def test_trackDelete(self):
+        logging.info("===== BEGIN Delete Track (Assumption getTrack works)")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        # Delete Track - Track ID: Existing
+        # Delete TRack - Track ID: Non Existing
+
+        logging.info("===== End Delete Track\n")
+
+
+class TestTrackLayout(unittest.TestCase):
+
+    def test_trackLayoutGet(self):
+        logger.info("==== BEGIN Get/Read track Layout")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Get Track Layout - Track Layout ID: Exists")
+        testVal = 2
+        testLayout = dbConn1.getTrackLayout(value=testVal)
+        self.assertEqual(testLayout.id, testVal)
+
+        logging.info("Get Track Layout - Track Layout ID: Non Exists")
+        testVal = 999
+        testLayout = dbConn1.getTrackLayout(value=testVal)
+        self.assertEqual(testLayout.id, 0)  # No record found
+
+        del dbConn1
+        logger.info("==== END Get/Read track Layout\n")
