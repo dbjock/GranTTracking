@@ -56,7 +56,7 @@ class GTdb:
             quit()
 
         logger.debug("successful commit of sql")
-        return [0, "Insert successful"]
+        return [0, "Commit successful"]
 
     def _exeScriptFile(self, scriptFileName=None):
         """
@@ -221,7 +221,7 @@ class GTdb:
 
         return self._exeSQL(sql, theVals)
 
-    def delMfg(self, mfgId):
+    def mfg_delete(self, mfgId):
         """Delete manufacture record from database
 
         ARGS:
@@ -233,18 +233,16 @@ class GTdb:
         logger.debug(f"delete manufacture id={mfgId}")
         sql = "DELETE FROM manufacture WHERE id = ?"
         theVals = (mfgId,)
-        logger.debug(f"sql: {sql}")
-        try:
-            c = self.conn.cursor()
-            c.execute(sql, theVals)
-            self.conn.commit()
-        except:
-            logger.critical(
-                f'Unexpected error executing sql: {sql}', exc_info=True)
-            return [3, "Critical error see logs"]
+        r = self._exeSQL(sql, theVals)
+        if r[0] == 0:
+            r[1] = "Manufacture Deleted"
+            logger.debug(
+                f"returning manufacture id: {mfgId} no longer exists.")
+        else:
+            logger.debug(f"problem with manufacture delete {r}.")
 
-        logger.debug("manufacture deleted")
-        return [0, "Manufacture Deleted"]
+        logger.debug(f"returning {r}")
+        return r
 
     def getTrackLayout(self, key='layoutId', value=None):
         """
