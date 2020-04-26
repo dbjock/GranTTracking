@@ -124,7 +124,7 @@ class GTdb:
                 alpha2=row['alpha2'], alpha3=row['alpha3'], region=row['region'])
 
             xMake = gtClass.Manufacture(
-                mfgid=row['mfgid'], mfgName=row['Make'], countryObj=xCountry)
+                id=row['mfgid'], name=row['Make'], countryObj=xCountry)
 
             logger.debug(f"Returning Manufacture results")
         else:
@@ -134,7 +134,7 @@ class GTdb:
                 cntryID=0, cntryName='', alpha2='', alpha3='', region='')
 
             xMake = gtClass.Manufacture(
-                mfgid=0, mfgName='', countryObj=xCountry)
+                id=0, name='', countryObj=xCountry)
 
         return xMake
 
@@ -187,7 +187,7 @@ class GTdb:
             logger.debug(f"Executing {scriptFile}")
             self._exeScriptFile(scriptFileName=f'{scriptFile}')
 
-    def addMfg(self, mfgObj):
+    def mfg_add(self, mfgObj):
         """Adding a manufacture record to database.
 
         ARGS
@@ -200,11 +200,17 @@ class GTdb:
          - mfgObj.country.id must exist in Country table in db.
           mfgObj.id is ignored
         """
-        logger.debug(f"addMfg: MfgObj= {mfgObj}")
+        logger.debug(f"add mfg: MfgObj= {mfgObj}")
         sql = "INSERT INTO manufacture (name, country_id) VALUES (:mfgName, :cntryID)"
-        theVals = {'mfgName': mfgObj.mfgName, 'cntryID': mfgObj.country.id}
+        theVals = {'mfgName': mfgObj.name, 'cntryID': mfgObj.country.id}
+        r = self._exeSQL(sql, theVals)
+        if r[0] == 0:
+            r[1] = f"Manufacture name: {mfgObj.name} added"
+        else:
+            logger.debug(f"problem with manufacture add {r}.")
 
-        return self._exeSQL(sql, theVals)
+        logger.debug(f"returning {r}")
+        return r
 
     def addTrack(self, trackObj):
         """Adding a Track record to the database
@@ -236,8 +242,6 @@ class GTdb:
         r = self._exeSQL(sql, theVals)
         if r[0] == 0:
             r[1] = "Manufacture Deleted"
-            logger.debug(
-                f"returning manufacture id: {mfgId} no longer exists.")
         else:
             logger.debug(f"problem with manufacture delete {r}.")
 
@@ -339,7 +343,7 @@ class GTdb:
         logger.debug(f'track = {xTrack}')
         return xTrack
 
-    def updateMfg(self, mfgObj):
+    def mfg_update(self, mfgObj):
         """Update a manufacture record in database
 
         ARGS: mfgObj is the Manufacture class object
@@ -351,15 +355,26 @@ class GTdb:
         """
         logger.debug(f"manufacture record update {mfgObj}")
         # Sanity check - does the mfgRecord exist in db?
+        logger.debug("sanity check. confirm mfg Record exists.")
         testMfg = self.getMfg(value=mfgObj.id)
         if testMfg.id == 0:  # Mfg is not in database
-            return [1, f"manufacture id {mfgObj.id} not in database."]
+            r = [1, f"manufacture id {mfgObj.id} not in database."]
+            logger.debug(f"returning {r}")
+            return r
 
-        theVals = {'mfgID': mfgObj.id, 'mfgName': mfgObj.mfgName,
+        logger.debug("sanity check passed. execute SQL")
+        theVals = {'mfgID': mfgObj.id, 'mfgName': mfgObj.name,
                    'cntryID': mfgObj.country.id}
         sql = "UPDATE manufacture SET name = :mfgName, country_id = :cntryID WHERE id = :mfgID"
 
-        return self._exeSQL(sql, theVals)
+        r = self._exeSQL(sql, theVals)
+        if r[0] == 0:
+            r[1] = f"Manufacture id: {mfgObj.id} Updated"
+        else:
+            logger.debug(f"problem updating manufacture id: {mfgObj.id}")
+
+        logger.debug(f"returning {r}")
+        return r
 
     def updateTrack(self, trackObj):
         """Update a manufacture record in database

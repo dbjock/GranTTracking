@@ -16,19 +16,19 @@ class Country(object):
 
 
 class Manufacture(object):
-    def __init__(self, mfgid, mfgName, countryObj):
+    def __init__(self, id, name, countryObj):
         """
         Manufacture object. Used by car, and many other objects
         mfgid     : type int. Unique for all manufactures in db
         mfgName   : type str. Unique for all manufactures in db
         countryObj: object created from the Country Class.
         """
-        self.id = mfgid
-        self.mfgName = mfgName
+        self.id = id
+        self.name = name
         self.country = countryObj
 
     def __repr__(self):
-        return f"Manufacture(mfgid={self.id},mfgName='{self.mfgName}', countryObj={self.country})"
+        return f"Manufacture(id={self.id},name='{self.name}', countryObj={self.country})"
 
 
 class DriveTrain(object):
