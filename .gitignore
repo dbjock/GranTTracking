@@ -1,10 +1,16 @@
-Snippings.txt
-GTTracking.conf
-logging.conf
-gen_test.py
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
 *.pyc
-*/__pycache__/
+
+#Code design
+.vscode/
+
+#GT App Specific
+Snippings.txt
 Logs/
-Data/*.db
+Data/
+*.conf
+gen_test.py
 test-*
-testing.log
