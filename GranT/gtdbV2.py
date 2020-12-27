@@ -1,8 +1,9 @@
+import sys
 import logging
 import sqlite3
 from pathlib import Path
 
-# TODO:Delete-Manufacture, Update-Manufacture, Create-Manufacture
+# TODO: Update/Change Track
 # Custom App modules
 from GranT import gtclasses as gtClass
 
@@ -18,11 +19,10 @@ class GTdb:
             try:
                 self.conn = sqlite3.connect(
                     name, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
-                # self.cursor = self.conn.cursor()
             except sqlite3.Error as errID:
                 logger.critical(
                     f"Database connection failure. ", exc_info=True)
-                quit()
+                sys.exit(1)
             c = self.conn.cursor()
             c.execute("PRAGMA database_list;")
             xtmp = c.fetchall()
@@ -30,7 +30,7 @@ class GTdb:
             self.dbfile = xtmp[0][2]
 
     def _exeSQL(self, sql, theVals):
-        """Submit InsertSql provided. (internal use only)
+        """Executes INSERT, DELETE, UPDATE sql. (internal use only)
 
         ARGS
         sql : The insert Sql to use.
@@ -44,18 +44,21 @@ class GTdb:
         logger.debug(f"Values: {theVals}")
         try:
             c = self.conn.cursor()
+            # Enabling full sql traceback to logger.debug
+            self.conn.set_trace_callback(logger.debug)
             c.execute(sql, theVals)
             self.conn.commit()
-
         except sqlite3.IntegrityError as e:
             logger.warning(f"sqlite integrity error: {e.args[0]}")
             return [2, f"sqlite integrity error: {e.args[0]}"]
         except:
             logger.critical(
                 f'Unexpected error executing sql: {sql}', exc_info=True)
-            quit()
+            sys.exit(1)
 
         logger.debug("successful commit of sql")
+        # Disable full sql traceback to logger.debug
+        self.conn.set_trace_callback(None)
         return [0, "Commit successful"]
 
     def _exeScriptFile(self, scriptFileName=None):
@@ -73,7 +76,7 @@ class GTdb:
         except:
             logger.critical(
                 f"Unexpected Error running script {scriptFileName}", exc_info=True)
-            quit()
+            sys.exit(1)
 
         self.conn.commit()
         logging.debug(f"script commited")
@@ -108,9 +111,13 @@ class GTdb:
         try:
             # Enable the .keys() to get column names.
             self.conn.row_factory = sqlite3.Row
+            # Enabling full sql traceback to logger.debug
+            self.conn.set_trace_callback(logger.debug)
             c = self.conn.cursor()
             c.execute(sql, theVars)
             row = c.fetchone()
+            # Disable full sql traceback to logger.debug
+            self.conn.set_trace_callback(None)
         except:
             logger.critical(
                 f'Unexpected error executing sql: {sql}', exc_info=True)
@@ -125,8 +132,7 @@ class GTdb:
 
             xMake = gtClass.Manufacture(
                 id=row['mfgid'], name=row['Make'], countryObj=xCountry)
-
-            logger.debug(f"Returning Manufacture results")
+            logger.debug(f"returning manufacture object")
         else:
             # Create blank Manufacture object
             logger.debug("manufacture not found.")
@@ -135,6 +141,7 @@ class GTdb:
 
             xMake = gtClass.Manufacture(
                 id=0, name='', countryObj=xCountry)
+            logger.debug(f"returning blank manufacture object")
 
         return xMake
 
@@ -160,9 +167,13 @@ class GTdb:
         logger.debug(f"sql: {sql}")
         try:
             dbCursor = self.conn.cursor()
+            # Enabling full sql traceback to logger.debug
+            self.conn.set_trace_callback(logger.debug)
             dbCursor.execute(sql)
             result = dbCursor.fetchall()
             logger.info(f"Returning all Manufacture results")
+            # Disable full sql traceback to logger.debug
+            self.conn.set_trace_callback(None)
             return result
         except:
             logger.critical(
@@ -187,7 +198,7 @@ class GTdb:
             logger.debug(f"Executing {scriptFile}")
             self._exeScriptFile(scriptFileName=f'{scriptFile}')
 
-    def mfg_add(self, mfgObj):
+    def addMfg(self, mfgObj):
         """Adding a manufacture record to database.
 
         ARGS
@@ -227,7 +238,7 @@ class GTdb:
 
         return self._exeSQL(sql, theVals)
 
-    def mfg_delete(self, mfgId):
+    def deleteMfg(self, mfgId):
         """Delete manufacture record from database
 
         ARGS:
@@ -269,9 +280,13 @@ class GTdb:
         try:
             # Enable the .keys() to get column names.
             self.conn.row_factory = sqlite3.Row
+            # Enabling full sql traceback to logger.debug
+            self.conn.set_trace_callback(logger.debug)
             c = self.conn.cursor()
             c.execute(sql, theVals)
             row = c.fetchone()
+            # Disable full sql traceback to logger.debug
+            self.conn.set_trace_callback(None)
         except:
             logger.critical(
                 f'Unexpected error executing sql: {sql}', exc_info=True)
@@ -313,16 +328,22 @@ class GTdb:
         elif key == 'track':
             whereSQL = "WHERE track = ?"
 
-        sql = self._selectTrackLayoutSQL + " " + whereSQL
+        sqlSelect = """SELECT t.id as trackId, t.name AS track, cntry.ID as cntryId, cntry.name as Country, cntry.alpha2, cntry.alpha3, cntry.region as Region FROM track as t LEFT JOIN country as cntry ON t.country_id = cntry.ID"""
+        # sql = self._selectTrackLayoutSQL + " " + whereSQL
+        sql = sqlSelect + " " + whereSQL
         theVals = (value,)
         logger.debug(f"sql = {sql}")
         logger.debug(f"theVals = {theVals}")
         try:
             # Enable the .keys() to get column names.
             self.conn.row_factory = sqlite3.Row
+            # Enabling full sql traceback to logger.debug
+            self.conn.set_trace_callback(logger.debug)
             c = self.conn.cursor()
             c.execute(sql, theVals)
             row = c.fetchone()
+            # Disable full sql traceback to logger.debug
+            self.conn.set_trace_callback(None)
         except:
             logger.critical(
                 f'Unexpected error executing sql: {sql}', exc_info=True)
@@ -343,7 +364,7 @@ class GTdb:
         logger.debug(f'track = {xTrack}')
         return xTrack
 
-    def mfg_update(self, mfgObj):
+    def updateMfg(self, mfgObj):
         """Update a manufacture record in database
 
         ARGS: mfgObj is the Manufacture class object
@@ -377,19 +398,20 @@ class GTdb:
         return r
 
     def updateTrack(self, trackObj):
-        """Update a manufacture record in database
+        """[summary]
 
-        ARGS: mfgObj is the Manufacture class object
-        - Record that will be UPDATED is based on mfgObj.id.
-        WARNING! - Do not change original TrackObj.id. Unexpected results will occur
-        Returns - list(ResultCode, ResultText)
-                ResultCode 0 = Success execution
-                Resultcode != 0 - See ResultText for details
+        Args:
+            trackObj ([type]): [description]
+
+        Returns:
+            list: ResultCode, ResultText
+                ResultCode 0 = Success
+                ResultCode != 0 = see ResultText for details
         """
         logger.debug(f"track record update {trackObj}")
-        # Sanity check - does the track record exist in db?
-        testMfg = self.getTrack(value=trackObj.id)
-        if testMfg.id == 0:  # Mfg is not in database
+        # Sanity check - See if tracking id exists
+        testObj = self.getTrack(value=trackObj.id)
+        if testObj.id == 0:  # Not found in db
             return [1, f"track id {trackObj.id} not in database."]
 
         theVals = {'trackID': trackObj.id, 'trackName': trackObj.name,
