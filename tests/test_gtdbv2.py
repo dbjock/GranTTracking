@@ -12,6 +12,7 @@ from datetime import datetime
 from GranT import gtdbV2
 from GranT import gtclasses as GTClass
 
+# TODO: Add delete Manufacture where mfg relationship may break
 _gtPath = Path.cwd()
 _gtLogs = _gtPath / 'Logs'
 _gtScripts = _gtPath / 'Scripts'
@@ -459,12 +460,53 @@ class TestTrack(unittest.TestCase):
 
     def test_trackDelete(self):
         logger.info("===== BEGIN Delete Track (Assumption getTrack works)")
+        countryExist = GTClass.Country(
+            cntryID=235, cntryName='United Kingdom of Great Britain and Northern Ireland', alpha2='GB', alpha3='GBR', region='Europe')
+
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
 
-        # Delete Track - Track ID: Existing
-        # Delete TRack - Track ID: Non Existing
+        # Delete Track - Track ID: Existing, Track Layout: No relation
+        logger.info(
+            "Delete Track - Track ID: Existing, Track Layout: No relation")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        logger.info("Create new track, will have no track layouts")
+        xTrackName = 'New Track name to delete'
+        testTrack = GTClass.Track(
+            id=0, name=xTrackName, countryObj=countryExist)
+        result = dbConn1.addTrack(testTrack)
+        if result[0] != 0:  # Unsuccessfull test add
+            logger.critical(
+                "Unable to test track delete as test track was unable to be created.")
+            sys.exit(1)
+        # Getting new test track ID
+        testTrack = dbConn1.getTrack(key='track', value=xTrackName)
+        logger.info("Deleting the new track")
+        result = dbConn1.deleteTrack(testTrack.id)
+        self.assertEqual(result[0], 0)
+        logger.info("Confirming record does not exist in db")
+        testTrack = dbConn1.getTrack(value=testTrack.id)
+        self.assertEqual(testTrack.id, 0)
 
+        # Delete Track - Track ID: Existing, Track Layout: Related
+        logger.info(
+            "Delete Track - Track ID: Existing, Track Layout: Related")
+        # Track id 2, 'Dragon Tail' has several Track Layouts
+        xTrackId = 2
+        result = dbConn1.deleteTrack(xTrackId)
+        logger.debug(f"result={result}")
+        self.assertNotEqual(result[0], 0)
+
+        # Delete Track - Track ID: Non Existing
+        logger.info("Delete Track - Track ID: Non Existing")
+        xTrackId = 999999
+        result = dbConn1.deleteTrack(xTrackId)
+        # Sqlite.. the delete works, even if record doesn't exist.
+        self.assertEqual(result[0], 0)
+        logger.info("Confirming record does not exist in db")
+        testTrack = dbConn1.getTrack(value=testTrack.id)
+        self.assertEqual(testTrack.id, 0)
         logger.info("===== End Delete Track\n")
 
 

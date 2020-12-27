@@ -3,7 +3,8 @@ import logging
 import sqlite3
 from pathlib import Path
 
-# TODO: Update/Change Track
+# TODO: Put logger.warning for add/update/delete. Should just rely on _exeSQL for warning. Not sure what called it.
+# TODO: got to work on TrackLayout stuff
 # Custom App modules
 from GranT import gtclasses as gtClass
 
@@ -258,6 +259,29 @@ class GTdb:
 
         logger.debug(f"returning {r}")
         return r
+
+    def deleteTrack(self, trackId):
+        """Delete track record from db based on trackId
+
+        Args:
+            trackId (int): UniqueID of the track in the db
+
+        Returns:
+            list: ResultCode, ResultText
+                ResultCode 0 : successfull
+                Resultcode != 0 : See ResultText for details
+        """
+        logger.debug(f"delete track trackId = {trackId}")
+        sql = "DELETE FROM track WHERE id = ?"
+        theVals = (trackId,)
+        result = self._exeSQL(sql, theVals)
+        if result[0] == 0:  # Successful
+            result[1] = f"track deleted trackId = {trackId}"
+        else:  # Unsuccessfull
+            logger.warning(
+                f"Problem with deleting track record. trackId={trackId}. Results: {result}")
+
+        return result
 
     def getTrackLayout(self, key='layoutId', value=None):
         """
