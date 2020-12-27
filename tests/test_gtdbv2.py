@@ -3,6 +3,8 @@ import unittest
 from pathlib import Path
 import logging
 import os
+import sys
+from datetime import datetime
 
 # App Testing requirements
 from GranT import gtdbV2
@@ -12,33 +14,43 @@ _gtPath = Path.cwd()
 _gtLogs = _gtPath / 'Logs'
 _gtScripts = _gtPath / 'Scripts'
 _gtData = _gtPath / 'Data'
+_logfile = _gtLogs / f"Testing-{datetime.now().strftime('%Y%j%H%M%S')}.log"
 
 logger = logging.getLogger()
-handler = logging.StreamHandler()
-conFormat = logging.Formatter(
-    ' %(name)-16s %(levelname)-8s %(message)s')
-handler.setFormatter(conFormat)
-handler.setLevel(logging.INFO)
-logger.addHandler(handler)
-
-fileHandler = logging.FileHandler(_gtLogs / 'testing.log')
-fileFormat = logging.Formatter(
+logger.setLevel(logging.DEBUG)
+# Log formats
+# simpleFormat = logging.Formatter(
+#     ' %(name)-16s %(levelname)-8s %(message)s')
+simpleFormat = logging.Formatter(
+    ' %(levelname)-8s:%(name)s.%(funcName)s: %(message)s')
+detailFormat = logging.Formatter(
     '%(asctime)s %(levelname)-8s:%(name)s.%(funcName)s: %(message)s')
 
-fileHandler.setFormatter(fileFormat)
+# Log Handlers
+conHandler = logging.StreamHandler()
+conHandler.setFormatter(simpleFormat)
+conHandler.setLevel(logging.INFO)
+logger.addHandler(conHandler)
+
+
+# fileHandler = logging.FileHandler(
+#     _gtLogs / f"Testing-{datetime.now().strftime('%Y%j%H%M%S')}.log")
+fileHandler = logging.FileHandler(_logfile)
+fileHandler.setFormatter(detailFormat)
 fileHandler.setLevel(logging.DEBUG)
 logger.addHandler(fileHandler)
 
-logger.setLevel(logging.DEBUG)
-
-print("Logging test test.log. You may see warnings below which are normal")
+print(
+    f"Logging to {_logfile}. You may see warnings below which are normal")
 
 
 class TestMfg(unittest.TestCase):
 
     def test_mfg_add(self):
+        """Test various adding a manufacture scenerios
+        """
         logger.info(
-            "==== BEGIN Add Manufacture (Must have unique name, and a country)")
+            "==== BEGIN Add Manufacture (Requirements: Name is unique. Required to have a country)")
         countryExist = GTClass.Country(
             cntryID=235, cntryName='United Kingdom of Great Britain and Northern Ireland', alpha2='GB', alpha3='GBR', region='Europe')
         countryNonExist = GTClass.Country(
@@ -53,7 +65,9 @@ class TestMfg(unittest.TestCase):
         testMfg = GTClass.Manufacture(
             id=0, name='NEW Manufacture', countryObj=countryExist)
         result = dbConn1.mfg_add(testMfg)
-        self.assertEqual(result[0], 0)
+        logger.info(f"result is {result}")
+        self.assertEqual(
+            result[0], 0, "Result should have been zero 0")
         del dbConn1
 
         logger.info("Add Manufacture - Name: Existing, Country ID: Existing")
@@ -113,8 +127,6 @@ class TestMfg(unittest.TestCase):
         result = dbConn1.mfg_add(testMfg)
         self.assertNotEqual(result[0], 0)
         del dbConn1
-
-        logger.info(f"====END Manufacture\n")
 
     def test_getMfg(self):
         logger.info("==== BEGIN Get/read Manufacture")
@@ -227,8 +239,6 @@ class TestMfg(unittest.TestCase):
         result = dbConn1.mfg_update(testMfg)
         self.assertNotEqual(result[0], 0)  # Should save
         del dbConn1
-
-    logger.info(f"==== END UPDATE Manufacture\n")
 
 
 class TestTrack(unittest.TestCase):
@@ -381,10 +391,19 @@ class TestTrack(unittest.TestCase):
         testTrack = dbConn1.getTrack(value=4)
         testTrack.country = countryNonExist
         result = dbConn1.updateTrack(testTrack)
-        self.assertNotEqual(result[0], 0)  # Record should not save
+        self.assertNotEqual(result[0], 0, "Record should not have been saved")
         del dbConn1
 
-        # TODO: Need to test Name: Change, Country ID: No Change, ID: Non Existing.
+        logging.info(
+            "Update Track - Name: Change, Country ID: No change, ID: Non Existing")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        testTrack = dbConn1.getTrack(value=99999)
+        testTrack.name = "Track Name change test"
+        result = dbConn1.updateTrack(testTrack)
+        logger.debug(f"result={result}")
+        self.assertNotEqual(result[0], 0, "Record should not have been saved")
+        del dbConn1
 
         logger.info(f"==== END Upate Track test\n")
 
