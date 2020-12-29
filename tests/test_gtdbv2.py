@@ -10,9 +10,8 @@ from datetime import datetime
 
 # App Testing requirements
 from GranT import gtdbV2
-from GranT import gtclasses as GTClass
+from GranT import gtclasses as GT
 
-# TODO: Add delete Manufacture where mfg relationship may break
 _gtPath = Path.cwd()
 _gtLogs = _gtPath / 'Logs'
 _gtScripts = _gtPath / 'Scripts'
@@ -40,7 +39,7 @@ fileHandler.setFormatter(detailFormat)
 fileHandler.setLevel(logging.DEBUG)
 logger.addHandler(fileHandler)
 
-print(f"Logging to {_logfile}.")
+print(f"Logging to {_logfile}")
 
 
 class TestMfg(unittest.TestCase):
@@ -50,11 +49,11 @@ class TestMfg(unittest.TestCase):
         """
         logger.info(
             "==== BEGIN Add Manufacture (Requirements: Name is unique. Required to have a country)")
-        countryExist = GTClass.Country(
+        countryExist = GT.Country(
             cntryID=235, cntryName='United Kingdom of Great Britain and Northern Ireland', alpha2='GB', alpha3='GBR', region='Europe')
-        countryNonExist = GTClass.Country(
+        countryNonExist = GT.Country(
             cntryID=999, cntryName=None, alpha2=None, alpha3=None, region=None)
-        countryNull = GTClass.Country(
+        countryNull = GT.Country(
             cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)
 
         logger.info(
@@ -62,7 +61,7 @@ class TestMfg(unittest.TestCase):
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         mfgName = 'NEW Manufacture'
-        testMfg = GTClass.Manufacture(
+        testMfg = GT.Manufacture(
             id=0, name=mfgName, countryObj=countryExist)
         result = dbConn1.addMfg(testMfg)
         logger.info(f"result is {result}")
@@ -78,7 +77,7 @@ class TestMfg(unittest.TestCase):
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         mfgName = 'Honda'
-        testMfg = GTClass.Manufacture(
+        testMfg = GT.Manufacture(
             id=0, name=mfgName, countryObj=countryExist)
         result = dbConn1.addMfg(testMfg)
         self.assertNotEqual(result[0], 0)
@@ -89,7 +88,7 @@ class TestMfg(unittest.TestCase):
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         mfgName = 'HONDA'
-        testMfg = GTClass.Manufacture(
+        testMfg = GT.Manufacture(
             id=0, name=mfgName, countryObj=countryExist)
         result = dbConn1.addMfg(testMfg)
         self.assertNotEqual(result[0], 0)
@@ -100,7 +99,7 @@ class TestMfg(unittest.TestCase):
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         mfgName = 'NEW manufacture'
-        testMfg = GTClass.Manufacture(
+        testMfg = GT.Manufacture(
             id=0, name=mfgName, countryObj=countryNonExist)
         result = dbConn1.addMfg(testMfg)
         self.assertNotEqual(result[0], 0)
@@ -110,7 +109,7 @@ class TestMfg(unittest.TestCase):
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         mfgName = 'Honda'
-        testMfg = GTClass.Manufacture(
+        testMfg = GT.Manufacture(
             id=0, name=mfgName, countryObj=countryNull)
         result = dbConn1.addMfg(testMfg)
         self.assertNotEqual(result[0], 0)
@@ -121,7 +120,7 @@ class TestMfg(unittest.TestCase):
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         mfgName = 'new Manufacture'
-        testMfg = GTClass.Manufacture(
+        testMfg = GT.Manufacture(
             id=0, name=mfgName, countryObj=countryNull)
         result = dbConn1.addMfg(testMfg)
         self.assertNotEqual(result[0], 0)
@@ -132,7 +131,7 @@ class TestMfg(unittest.TestCase):
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         mfgName = 'Another new one that should fail'
-        testMfg = GTClass.Manufacture(
+        testMfg = GT.Manufacture(
             id=0, name=mfgName, countryObj=countryNonExist)
         result = dbConn1.addMfg(testMfg)
         self.assertNotEqual(result[0], 0)
@@ -198,11 +197,11 @@ class TestMfg(unittest.TestCase):
     def test_updateMfg(self):
         logger.info(
             "==== BEGIN UPDATE Manufacture (Assuming Get manufacture works)")
-        countryExist = GTClass.Country(
+        countryExist = GT.Country(
             cntryID=235, cntryName='', alpha2='', alpha3='', region='')
-        countryNonExist = GTClass.Country(
+        countryNonExist = GT.Country(
             cntryID=999, cntryName=None, alpha2=None, alpha3=None, region=None)
-        countryNull = GTClass.Country(
+        countryNull = GT.Country(
             cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)
 
         logger.info(
@@ -267,91 +266,177 @@ class TestTrack(unittest.TestCase):
 
     def test_trackAdd(self):
         logger.info(
-            "==== BEGIN TEST Add Track (Must have unique name, country not required)")
-        countryExist = GTClass.Country(
-            cntryID=235, cntryName='United Kingdom of Great Britain and Northern Ireland', alpha2='GB', alpha3='GBR', region='Europe')
-        countryNonExist = GTClass.Country(
-            cntryID=999, cntryName=None, alpha2=None, alpha3=None, region=None)
-        countryNull = GTClass.Country(
-            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)
+            "==== BEGIN TEST Adding a Track")
+        cntryExist = GT.Country(
+            cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)
+        cntryNonExist = GT.Country(
+            cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)
 
-        logger.info("Add Track - Name: Non-Existing, Country ID: Existing")
+        # Existing Track is picked as it has a null and non null layouts
+        tExist = GT.Track(7, "Blue Moon Bay Speedway", cntryExist)
+        tNonExist = GT.Track(9999, "I dont exist", cntryExist)
+
+        circuitExist = GT.Circuit(id=1, name=None)
+        circuitNonExist = GT.Circuit(id=9999, name="I do not exist")
+
+        tlNameExist = "Infield B"
+        tlNameNonExist = "Layout name that does not exist"
+
+        logger.info(
+            "0 Track Name Existing:No, Circuit ID Existing:No, Miles empty:No, Track Layout.Name Exist for Track:No")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        testVal = 'New Track name'
-        testTrack = GTClass.Track(
-            id=0, name=testVal, countryObj=countryExist)
-        result = dbConn1.addTrack(testTrack)
-        logger.info(f"result is {result}")
-        self.assertEqual(result[0], 0)
-        # Confirm added to db
-        logger.info("Confirming new record saved")
-        testTrack = dbConn1.getTrack(key='track', value=testVal)
-        logger.info(f"testTrack = {testTrack}")
-        self.assertEqual(testTrack.name, testVal)
-        self.assertNotEqual(testTrack.id, 0)
-        del dbConn1
-
-        logger.info("Add Track - Name: Existing, Country ID: Existing")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        testTrack = GTClass.Track(
-            id=0, name='Nurburgring', countryObj=countryExist)
-        result = dbConn1.addTrack(testTrack)
-        self.assertNotEqual(result[0], 0)
+        xTlayout = GT.TrackLayout(
+            None, tlNameNonExist, miles=.1, trackObj=tNonExist, circuitObj=circuitNonExist)
+        logger.info(f"{xTlayout}")
+        result = dbConn1.addTrack(xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
         del dbConn1
 
         logger.info(
-            "Add Track - Name: Existing (all caps), Country ID: Existing")
+            "2 Track Name Existing:No, Circuit ID Existing:No, Miles empty:Yes, Track Layout.Name Exist for Track:No")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        testTrack = GTClass.Track(
-            id=0, name='NURBURGRING', countryObj=countryExist)
-        result = dbConn1.addTrack(testTrack)
-        self.assertNotEqual(result[0], 0)
+        xTlayout = GT.TrackLayout(
+            None, tlNameNonExist, .1, tExist, circuitNonExist)
+
+        logger.info(f"{xTlayout}")
+        result = dbConn1.addTrack(xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
         del dbConn1
 
-        logger.info("Add Track - Name: Non-Existing, Country ID: Non-Existing")
+        logger.info(
+            "4 Track Name Existing:No, Circuit ID Existing:Yes, Miles empty:No, Track Layout.Name Exist for Track:No")
+        # - Expect success
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        testTrack = GTClass.Track(
-            id=0, name='New Track name', countryObj=countryNonExist)
-        result = dbConn1.addTrack(testTrack)
-        self.assertNotEqual(result[0], 0)
+        xTlayout = GT.TrackLayout(
+            None, tlNameNonExist, .1, tNonExist, circuitExist)
+        logger.info(f"{xTlayout}")
+        logger.critical("Successfull save testing not ready. Was not executed")
+        # result = dbConn1.addTrack(xTlayout)
+        # logger.info(f"result = {result}")
+        # self.assertEqual(result[0], 0, "Records should be saved")
         del dbConn1
 
-        logger.info("Add Track - Name: Existing, Country ID: Null/None")
+        logger.info(
+            "6 Track Name Existing:No, Circuit ID Existing:Yes, Miles empty:Yes, Track Layout.Name Exist for Track:No")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        testTrack = GTClass.Track(
-            id=0, name='Nurburgring', countryObj=countryNull)
-        result = dbConn1.addTrack(testTrack)
-        self.assertNotEqual(result[0], 0)
+        miles = None
+        xTlayout = GT.TrackLayout(
+            None, tlNameNonExist, miles, tNonExist, circuitExist)
+        logger.info(f"{xTlayout}")
+        result = dbConn1.addTrack(xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
         del dbConn1
 
-        logger.info("Add Track - Name: Non-Existing, Country ID: Null/None")
+        logger.info(
+            "8 Track Name Existing:Yes, Circuit ID Existing:No, Miles empty:No, Track Layout.Name Exist for Track:No")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        testVal = 'New Track Name'
-        testTrack = GTClass.Track(
-            id=0, name=testVal, countryObj=countryNull)
-        result = dbConn1.addTrack(testTrack)
-        self.assertEqual(result[0], 0)
-        # Confirm added to db
-        logger.info("Confirming new record saved")
-        testTrack = dbConn1.getTrack(key='track', value=testVal)
-        logger.info(f"testTrack = {testTrack}")
-        self.assertEqual(testTrack.name, testVal)
-        self.assertNotEqual(testTrack.id, 0)
+        miles = .1
+        xTlayout = GT.TrackLayout(
+            None, tlNameNonExist, miles, tExist, circuitNonExist)
+        logger.info(f"{xTlayout}")
+        result = dbConn1.addTrack(xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
         del dbConn1
 
-        logger.info("Add Track - Name: Non-Existing, Country ID: Non-Existing")
+        logging.info(
+            "9 Track Name Existing:Yes, Circuit ID Existing:No, Miles empty:No, Track Layout.Name Exist for Track:Yes")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        testTrack = GTClass.Track(
-            id=0, name='New Track Name', countryObj=countryNonExist)
-        result = dbConn1.addTrack(testTrack)
-        self.assertNotEqual(result[0], 0)
+        miles = .1
+        xTlayout = GT.TrackLayout(
+            None, tlNameExist, miles, tExist, circuitNonExist)
+        logger.info(f"{xTlayout}")
+        result = dbConn1.addTrack(xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
+        del dbConn1
+
+        logger.info(
+            "10 Track Name Existing:Yes, Circuit ID Existing:No, Miles empty:Yes, Track Layout.Name Exist for Track:No")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        miles = None
+        xTlayout = GT.TrackLayout(
+            None, tlNameNonExist, miles, tExist, circuitNonExist)
+        logger.info(f"{xTlayout}")
+        result = dbConn1.addTrack(xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
+        del dbConn1
+
+        logger.info(
+            "11 Track Name Existing: Yes, Circuit ID Existing: No, Miles empty: Yes, Track Layout.Name Exist for Track: Yes")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        miles = None
+        xTlayout = GT.TrackLayout(
+            None, tlNameExist, miles, tExist, circuitNonExist)
+        logger.info(f"{xTlayout}")
+        result = dbConn1.addTrack(xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
+        del dbConn1
+
+        logger.info(
+            "12 Track Name Existing:Yes, Circuit ID Existing:Yes, Miles empty:No, Track Layout.Name Exist for Track:No")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        miles = .1
+        xTlayout = GT.TrackLayout(
+            None, tlNameNonExist, miles, tExist, circuitExist)
+        logger.info(f"{xTlayout}")
+        result = dbConn1.addTrack(xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
+        del dbConn1
+
+        logger.info(
+            "13 Track Name Existing:Yes, Circuit ID Existing:Yes, Miles empty:No, Track Layout.Name Exist for Track:Yes")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        miles = .1
+        xTlayout = GT.TrackLayout(
+            None, tlNameExist, miles, tExist, circuitExist)
+        logger.info(f"{xTlayout}")
+        result = dbConn1.addTrack(xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
+        del dbConn1
+
+        logger.info(
+            "14 Track Name Existing:Yes, Circuit ID Existing:Yes, Miles empty:Yes, Track Layout.Name Exist for Track:No")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        miles = None
+        xTlayout = GT.TrackLayout(
+            None, tlNameNonExist, miles, tExist, circuitExist)
+        logger.info(f"{xTlayout}")
+        result = dbConn1.addTrack(xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
+        del dbConn1
+
+        logger.info(
+            "15 Track Name Existing:Yes, Circuit ID Existing:Yes, Miles empty:Yes, Track Layout.Name Exist for Track:Yes")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        miles = None
+        xTlayout = GT.TrackLayout(
+            None, tlNameExist, miles, tExist, circuitExist)
+        logger.info(f"{xTlayout}")
+        result = dbConn1.addTrack(xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
+        del dbConn1
 
         logger.info("==== END TEST Add Track")
 
@@ -386,11 +471,11 @@ class TestTrack(unittest.TestCase):
 
     def test_trackUpdate(self):
         logger.info("===== BEGIN Update Track (Assumption getTrack works)")
-        countryExist = GTClass.Country(
+        countryExist = GT.Country(
             cntryID=235, cntryName='', alpha2='', alpha3='', region='')
-        countryNonExist = GTClass.Country(
+        countryNonExist = GT.Country(
             cntryID=999, cntryName=None, alpha2=None, alpha3=None, region=None)
-        countryNull = GTClass.Country(
+        countryNull = GT.Country(
             cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)
 
         logger.info("Update Track - Name: Change, Country ID: No change")
@@ -460,7 +545,7 @@ class TestTrack(unittest.TestCase):
 
     def test_trackDelete(self):
         logger.info("===== BEGIN Delete Track (Assumption getTrack works)")
-        countryExist = GTClass.Country(
+        countryExist = GT.Country(
             cntryID=235, cntryName='United Kingdom of Great Britain and Northern Ireland', alpha2='GB', alpha3='GBR', region='Europe')
 
         dbConn1 = gtdbV2.GTdb(name=':memory:')
@@ -473,7 +558,7 @@ class TestTrack(unittest.TestCase):
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         logger.info("Create new track, will have no track layouts")
         xTrackName = 'New Track name to delete'
-        testTrack = GTClass.Track(
+        testTrack = GT.Track(
             id=0, name=xTrackName, countryObj=countryExist)
         result = dbConn1.addTrack(testTrack)
         if result[0] != 0:  # Unsuccessfull test add
@@ -512,20 +597,96 @@ class TestTrack(unittest.TestCase):
 
 class TestTrackLayout(unittest.TestCase):
 
-    def test_trackLayoutGet(self):
+    def test_getLayout(self):
         logger.info("==== BEGIN Get/Read track Layout")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
 
-        logger.info("Get Track Layout - Track Layout ID: Exists")
+        logger.info("Get Track Layout by Track Layout ID: Exists")
         testVal = 2
-        testLayout = dbConn1.getTrackLayout(value=testVal)
+        testLayout = dbConn1.getLayout(testVal)
+        logger.debug(f"testLayout={testLayout}")
         self.assertEqual(testLayout.id, testVal)
 
-        logger.info("Get Track Layout - Track Layout ID: Non Exists")
+        logger.info("Get Track Layout by Track Layout ID: Non Exists")
         testVal = 999
-        testLayout = dbConn1.getTrackLayout(value=testVal)
-        self.assertEqual(testLayout.id, 0)  # No record found
-
+        testLayout = dbConn1.getLayout(testVal)
+        logger.debug(f"testLayout={testLayout}")
+        self.assertEqual(testLayout.id, 0)
         del dbConn1
         logger.info("==== END Get/Read track Layout\n")
+
+    def test_getLayoutList(self):
+        logger.info("==== BEGIN get Layout List")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Get Layout List by trackId")
+        testVal = 2
+        layoutList = dbConn1.getLayoutList('trackId', testVal)
+        logger.info(f"layoutList={layoutList}")
+        self.assertGreaterEqual(len(layoutList), 1)
+
+        logger.info("Get Layout List by layoutId")
+        testVal = 1
+        layoutList = dbConn1.getLayoutList('layoutId', testVal)
+        logger.info(f"layoutList={layoutList}")
+        self.assertEqual(len(layoutList), 1)
+
+        logger.info("Get Layout List by circuitId")
+        testVal = 2
+        layoutList = dbConn1.getLayoutList('circuitId', testVal)
+        logger.info(f"layoutList={layoutList}")
+        self.assertGreaterEqual(len(layoutList), 1)
+
+        logger.info("Get Layout List by cntryId")
+        testVal = 237
+        layoutList = dbConn1.getLayoutList('cntryId', testVal)
+        logger.info(f"layoutList={layoutList}")
+        self.assertGreaterEqual(len(layoutList), 1)
+        logger.info("==== END get Layout List")
+
+    def test_trackLayoutAdd(self):
+        logger.info("==== BEGIN Add Track Layout")
+        xCircuit = GT.Circuit(id=0, name=None)
+        xCountry = GT.Country(
+            cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)
+        xTrack = GT.Track(id=0, name=None, countryObj=xCountry)
+        blank_track_layout = GT.TrackLayout(
+            id=0, name=None, miles=None, trackObj=xTrack, circuitObj=xCircuit)
+
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info(
+            "Add Track Layout : Layout name Dupe for same track")
+        testLayout = blank_track_layout
+        testLayout.name = "Infield B"
+        testLayout.miles = 9999
+        testLayout.track.id = 7
+        testLayout.circuit.id = 3
+        result = dbConn1.addLayout(testLayout)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(result[0], 0)
+
+        logger.info(
+            "Add Track Layout : Layout name Dupe 'None' for same track")
+        testLayout = blank_track_layout
+        testLayout.name = None
+        testLayout.miles = 9999
+        testLayout.track.id = 7
+        testLayout.circuit.id = 3
+        result = dbConn1.addLayout(testLayout)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(result[0], 0)
+
+        logger.info(
+            "Add Track Layout : Layout name non existant for same track")
+        testLayout = blank_track_layout
+        testLayout.name = "I am a new track layout"
+        testLayout.miles = 9999
+        testLayout.track.id = 7
+        testLayout.circuit.id = 3
+        result = dbConn1.addLayout(testLayout)
+        logger.info(f"result is {result}")
+        self.assertEqual(result[0], 0)
