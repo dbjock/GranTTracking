@@ -283,11 +283,12 @@ class TestTrack(unittest.TestCase):
         tlNameNonExist = "Layout name that does not exist"
 
         logger.info(
-            "0 Track Name Existing:No, Circuit ID Existing:No, Miles empty:No, Track Layout.Name Exist for Track:No")
+            "0 - Circuit ID Existing: No, Miles empty: No, Track Name Existing: No")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        miles = .1
         xTlayout = GT.TrackLayout(
-            None, tlNameNonExist, miles=.1, trackObj=tNonExist, circuitObj=circuitNonExist)
+            None, tlNameExist, miles, tNonExist, circuitNonExist)
         logger.info(f"{xTlayout}")
         result = dbConn1.addTrack(xTlayout)
         logger.info(f"result = {result}")
@@ -295,12 +296,12 @@ class TestTrack(unittest.TestCase):
         del dbConn1
 
         logger.info(
-            "2 Track Name Existing:No, Circuit ID Existing:No, Miles empty:Yes, Track Layout.Name Exist for Track:No")
+            "1 - Circuit ID Existing: No, Miles empty: No, Track Name Existing: Yes")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        miles = .1
         xTlayout = GT.TrackLayout(
-            None, tlNameNonExist, .1, tExist, circuitNonExist)
-
+            None, tlNameExist, miles, tExist, circuitNonExist)
         logger.info(f"{xTlayout}")
         result = dbConn1.addTrack(xTlayout)
         logger.info(f"result = {result}")
@@ -308,13 +309,40 @@ class TestTrack(unittest.TestCase):
         del dbConn1
 
         logger.info(
-            "4 Track Name Existing:No, Circuit ID Existing:Yes, Miles empty:No, Track Layout.Name Exist for Track:No")
-        # - Expect success
+            "2 - Circuit ID Existing: No, Miles empty: Yes, Track Name Existing: No")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        miles = None
         xTlayout = GT.TrackLayout(
-            None, tlNameNonExist, .1, tNonExist, circuitExist)
+            None, tlNameExist, miles, tNonExist, circuitNonExist)
         logger.info(f"{xTlayout}")
+        result = dbConn1.addTrack(xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
+        del dbConn1
+
+        logger.info(
+            "3 - Circuit ID Existing: No, Miles empty: Yes, Track Name Existing: Yes")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        miles = None
+        xTlayout = GT.TrackLayout(
+            None, tlNameExist, miles, tExist, circuitNonExist)
+        logger.info(f"{xTlayout}")
+        result = dbConn1.addTrack(xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
+        del dbConn1
+
+        logger.info(
+            "4 - Circuit ID Existing: Yes, Miles empty: No, Track Name Existing: No")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        miles = .1
+        xTlayout = GT.TrackLayout(
+            None, tlNameExist, miles, tNonExist, circuitExist)
+        logger.info(f"{xTlayout}")
+
         logger.critical("Successfull save testing not ready. Was not executed")
         # result = dbConn1.addTrack(xTlayout)
         # logger.info(f"result = {result}")
@@ -322,85 +350,7 @@ class TestTrack(unittest.TestCase):
         del dbConn1
 
         logger.info(
-            "6 Track Name Existing:No, Circuit ID Existing:Yes, Miles empty:Yes, Track Layout.Name Exist for Track:No")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        miles = None
-        xTlayout = GT.TrackLayout(
-            None, tlNameNonExist, miles, tNonExist, circuitExist)
-        logger.info(f"{xTlayout}")
-        result = dbConn1.addTrack(xTlayout)
-        logger.info(f"result = {result}")
-        self.assertNotEqual(result[0], 0, "No records should be created")
-        del dbConn1
-
-        logger.info(
-            "8 Track Name Existing:Yes, Circuit ID Existing:No, Miles empty:No, Track Layout.Name Exist for Track:No")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        miles = .1
-        xTlayout = GT.TrackLayout(
-            None, tlNameNonExist, miles, tExist, circuitNonExist)
-        logger.info(f"{xTlayout}")
-        result = dbConn1.addTrack(xTlayout)
-        logger.info(f"result = {result}")
-        self.assertNotEqual(result[0], 0, "No records should be created")
-        del dbConn1
-
-        logging.info(
-            "9 Track Name Existing:Yes, Circuit ID Existing:No, Miles empty:No, Track Layout.Name Exist for Track:Yes")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        miles = .1
-        xTlayout = GT.TrackLayout(
-            None, tlNameExist, miles, tExist, circuitNonExist)
-        logger.info(f"{xTlayout}")
-        result = dbConn1.addTrack(xTlayout)
-        logger.info(f"result = {result}")
-        self.assertNotEqual(result[0], 0, "No records should be created")
-        del dbConn1
-
-        logger.info(
-            "10 Track Name Existing:Yes, Circuit ID Existing:No, Miles empty:Yes, Track Layout.Name Exist for Track:No")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        miles = None
-        xTlayout = GT.TrackLayout(
-            None, tlNameNonExist, miles, tExist, circuitNonExist)
-        logger.info(f"{xTlayout}")
-        result = dbConn1.addTrack(xTlayout)
-        logger.info(f"result = {result}")
-        self.assertNotEqual(result[0], 0, "No records should be created")
-        del dbConn1
-
-        logger.info(
-            "11 Track Name Existing: Yes, Circuit ID Existing: No, Miles empty: Yes, Track Layout.Name Exist for Track: Yes")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        miles = None
-        xTlayout = GT.TrackLayout(
-            None, tlNameExist, miles, tExist, circuitNonExist)
-        logger.info(f"{xTlayout}")
-        result = dbConn1.addTrack(xTlayout)
-        logger.info(f"result = {result}")
-        self.assertNotEqual(result[0], 0, "No records should be created")
-        del dbConn1
-
-        logger.info(
-            "12 Track Name Existing:Yes, Circuit ID Existing:Yes, Miles empty:No, Track Layout.Name Exist for Track:No")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        miles = .1
-        xTlayout = GT.TrackLayout(
-            None, tlNameNonExist, miles, tExist, circuitExist)
-        logger.info(f"{xTlayout}")
-        result = dbConn1.addTrack(xTlayout)
-        logger.info(f"result = {result}")
-        self.assertNotEqual(result[0], 0, "No records should be created")
-        del dbConn1
-
-        logger.info(
-            "13 Track Name Existing:Yes, Circuit ID Existing:Yes, Miles empty:No, Track Layout.Name Exist for Track:Yes")
+            "5 - Circuit ID Existing: Yes, Miles empty: No, Track Name Existing: Yes")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         miles = .1
@@ -413,12 +363,12 @@ class TestTrack(unittest.TestCase):
         del dbConn1
 
         logger.info(
-            "14 Track Name Existing:Yes, Circuit ID Existing:Yes, Miles empty:Yes, Track Layout.Name Exist for Track:No")
+            "6 - Circuit ID Existing: Yes, Miles empty: Yes, Track Name Existing: No")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         miles = None
         xTlayout = GT.TrackLayout(
-            None, tlNameNonExist, miles, tExist, circuitExist)
+            None, tlNameExist, miles, tNonExist, circuitExist)
         logger.info(f"{xTlayout}")
         result = dbConn1.addTrack(xTlayout)
         logger.info(f"result = {result}")
@@ -426,7 +376,7 @@ class TestTrack(unittest.TestCase):
         del dbConn1
 
         logger.info(
-            "15 Track Name Existing:Yes, Circuit ID Existing:Yes, Miles empty:Yes, Track Layout.Name Exist for Track:Yes")
+            "7 - Circuit ID Existing: Yes, Miles empty: Yes, Track Name Existing: Yes")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         miles = None
