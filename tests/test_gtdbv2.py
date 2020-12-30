@@ -10,7 +10,7 @@ from datetime import datetime
 
 # App Testing requirements
 from GranT import gtdbV2
-from GranT import gtclasses as GT
+from GranT import GTClasses as GT
 
 _gtPath = Path.cwd()
 _gtLogs = _gtPath / 'Logs'
@@ -20,9 +20,6 @@ _logfile = _gtLogs / f"Testing-{datetime.now().strftime('%Y%j%H%M%S')}.log"
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-# Log formats
-# simpleFormat = logging.Formatter(
-#     ' %(name)-16s %(levelname)-8s %(message)s')
 simpleFormat = logging.Formatter(
     ' %(levelname)-8s:%(name)s.%(funcName)s: %(message)s')
 detailFormat = logging.Formatter(
@@ -264,7 +261,7 @@ class TestMfg(unittest.TestCase):
 
 class TestTrack(unittest.TestCase):
 
-    def test_trackAdd(self):
+    def test_addTrack(self):
         logger.info(
             "==== BEGIN TEST Adding a Track")
         cntryExist = GT.Country(
@@ -342,11 +339,9 @@ class TestTrack(unittest.TestCase):
         xTlayout = GT.TrackLayout(
             None, tlNameExist, miles, tNonExist, circuitExist)
         logger.info(f"{xTlayout}")
-
-        logger.critical("Successfull save testing not ready. Was not executed")
-        # result = dbConn1.addTrack(xTlayout)
-        # logger.info(f"result = {result}")
-        # self.assertEqual(result[0], 0, "Records should be saved")
+        result = dbConn1.addTrack(xTlayout)
+        logger.info(f"result = {result}")
+        self.assertEqual(result[0], 0, "Records should be saved")
         del dbConn1
 
         logger.info(
@@ -493,56 +488,56 @@ class TestTrack(unittest.TestCase):
 
         logger.info(f"==== END Upate Track test\n")
 
-    def test_trackDelete(self):
-        logger.info("===== BEGIN Delete Track (Assumption getTrack works)")
-        countryExist = GT.Country(
-            cntryID=235, cntryName='United Kingdom of Great Britain and Northern Ireland', alpha2='GB', alpha3='GBR', region='Europe')
+    # def test_trackDelete(self):
+    #     logger.info("===== BEGIN Delete Track (Assumption getTrack works)")
+    #     countryExist = GT.Country(
+    #         cntryID=235, cntryName='United Kingdom of Great Britain and Northern Ireland', alpha2='GB', alpha3='GBR', region='Europe')
 
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+    #     dbConn1 = gtdbV2.GTdb(name=':memory:')
+    #     dbConn1.initDB(scriptPath=f'{_gtScripts}')
 
-        # Delete Track - Track ID: Existing, Track Layout: No relation
-        logger.info(
-            "Delete Track - Track ID: Existing, Track Layout: No relation")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        logger.info("Create new track, will have no track layouts")
-        xTrackName = 'New Track name to delete'
-        testTrack = GT.Track(
-            id=0, name=xTrackName, countryObj=countryExist)
-        result = dbConn1.addTrack(testTrack)
-        if result[0] != 0:  # Unsuccessfull test add
-            logger.critical(
-                "Unable to test track delete as test track was unable to be created.")
-            sys.exit(1)
-        # Getting new test track ID
-        testTrack = dbConn1.getTrack(key='track', value=xTrackName)
-        logger.info("Deleting the new track")
-        result = dbConn1.deleteTrack(testTrack.id)
-        self.assertEqual(result[0], 0)
-        logger.info("Confirming record does not exist in db")
-        testTrack = dbConn1.getTrack(value=testTrack.id)
-        self.assertEqual(testTrack.id, 0)
+    #     # Delete Track - Track ID: Existing, Track Layout: No relation
+    #     logger.info(
+    #         "Delete Track - Track ID: Existing, Track Layout: No relation")
+    #     dbConn1 = gtdbV2.GTdb(name=':memory:')
+    #     dbConn1.initDB(scriptPath=f'{_gtScripts}')
+    #     logger.info("Create new track, will have no track layouts")
+    #     xTrackName = 'New Track name to delete'
+    #     testTrack = GT.Track(
+    #         id=0, name=xTrackName, countryObj=countryExist)
+    #     result = dbConn1.addTrack(testTrack)
+    #     if result[0] != 0:  # Unsuccessfull test add
+    #         logger.critical(
+    #             "Unable to test track delete as test track was unable to be created.")
+    #         sys.exit(1)
+    #     # Getting new test track ID
+    #     testTrack = dbConn1.getTrack(key='track', value=xTrackName)
+    #     logger.info("Deleting the new track")
+    #     result = dbConn1.deleteTrack(testTrack.id)
+    #     self.assertEqual(result[0], 0)
+    #     logger.info("Confirming record does not exist in db")
+    #     testTrack = dbConn1.getTrack(value=testTrack.id)
+    #     self.assertEqual(testTrack.id, 0)
 
-        # Delete Track - Track ID: Existing, Track Layout: Related
-        logger.info(
-            "Delete Track - Track ID: Existing, Track Layout: Related")
-        # Track id 2, 'Dragon Tail' has several Track Layouts
-        xTrackId = 2
-        result = dbConn1.deleteTrack(xTrackId)
-        logger.debug(f"result={result}")
-        self.assertNotEqual(result[0], 0)
+    #     # Delete Track - Track ID: Existing, Track Layout: Related
+    #     logger.info(
+    #         "Delete Track - Track ID: Existing, Track Layout: Related")
+    #     # Track id 2, 'Dragon Tail' has several Track Layouts
+    #     xTrackId = 2
+    #     result = dbConn1.deleteTrack(xTrackId)
+    #     logger.debug(f"result={result}")
+    #     self.assertNotEqual(result[0], 0)
 
-        # Delete Track - Track ID: Non Existing
-        logger.info("Delete Track - Track ID: Non Existing")
-        xTrackId = 999999
-        result = dbConn1.deleteTrack(xTrackId)
-        # Sqlite.. the delete works, even if record doesn't exist.
-        self.assertEqual(result[0], 0)
-        logger.info("Confirming record does not exist in db")
-        testTrack = dbConn1.getTrack(value=testTrack.id)
-        self.assertEqual(testTrack.id, 0)
-        logger.info("===== End Delete Track\n")
+    #     # Delete Track - Track ID: Non Existing
+    #     logger.info("Delete Track - Track ID: Non Existing")
+    #     xTrackId = 999999
+    #     result = dbConn1.deleteTrack(xTrackId)
+    #     # Sqlite.. the delete works, even if record doesn't exist.
+    #     self.assertEqual(result[0], 0)
+    #     logger.info("Confirming record does not exist in db")
+    #     testTrack = dbConn1.getTrack(value=testTrack.id)
+    #     self.assertEqual(testTrack.id, 0)
+    #     logger.info("===== End Delete Track\n")
 
 
 class TestTrackLayout(unittest.TestCase):
@@ -640,3 +635,40 @@ class TestTrackLayout(unittest.TestCase):
         result = dbConn1.addLayout(testLayout)
         logger.info(f"result is {result}")
         self.assertEqual(result[0], 0)
+
+
+class TestCircuit(unittest.TestCase):
+    def test_getCircuit(self):
+        logger.info("==== BEGIN Get Circuit")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Get Circuit by ID - Exist")
+        testVal = 1
+        logger.info(f"Circuit ID = {testVal}")
+        xCircuit = dbConn1.getCircuit(key='id', value=testVal)
+        logger.info(f"result is {xCircuit}")
+        self.assertNotEqual(xCircuit.id, 0)
+
+        logger.info("Get Circuit by ID - Non Exist")
+        testVal = 999
+        logger.info(f"Circuit ID = {testVal}")
+        xCircuit = dbConn1.getCircuit(key='id', value=testVal)
+        logger.info(f"result is {xCircuit}")
+        self.assertEqual(xCircuit.id, 0)
+
+        logger.info("Get Circuit by name - Exist")
+        testVal = "Dirt / Snow"
+        logger.info(f"Circuit name = {testVal}")
+        xCircuit = dbConn1.getCircuit(key='name', value=testVal)
+        logger.info(f"result is {xCircuit}")
+        self.assertNotEqual(xCircuit.id, 0)
+
+        logger.info("Get Circuit by name - Non Exist")
+        testVal = "I donot exist"
+        logger.info(f"Circuit name = {testVal}")
+        xCircuit = dbConn1.getCircuit(key='id', value=testVal)
+        logger.info(f"result is {xCircuit}")
+        self.assertEqual(xCircuit.id, 0)
+
+        logger.info("==== END Get Circuit")
