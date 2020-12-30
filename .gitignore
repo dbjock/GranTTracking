@@ -12,5 +12,5 @@ Snippings.txt
 Logs/
 Data/
 *.conf
-gen_test.py
+gen_test*.py
 test-*
