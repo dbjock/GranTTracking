@@ -12,7 +12,7 @@ class Country(object):
         self.region = region
 
     def __repr__(self):
-        return f"Country(cntryID={self.id}, cntryName='{self.cntryName}', alpha2='{self.alpha2}', alpha3='{self.alpha3}', region='{self.region}')"
+        return f"country(cntryID={self.id}, cntryName='{self.cntryName}', alpha2='{self.alpha2}', alpha3='{self.alpha3}', region='{self.region}')"
 
 
 class Manufacture(object):
@@ -28,7 +28,7 @@ class Manufacture(object):
         self.country = countryObj
 
     def __repr__(self):
-        return f"Manufacture(id={self.id},name='{self.name}', countryObj={self.country})"
+        return f"Manufacture(id={self.id},name='{self.name}', {self.country})"
 
 
 class DriveTrain(object):
@@ -77,7 +77,7 @@ class Circuit(object):
         self.name = name
 
     def __repr__(self):
-        return f"Circuit(id={self.id}, name='{self.name}')"
+        return f"circuit(id={self.id}, name='{self.name}')"
 
 
 class League(object):
@@ -112,7 +112,7 @@ class Track(object):
         self.country = countryObj
 
     def __repr__(self):
-        return f"Track(id={self.id},name='{self.name}', countryObj={self.country})"
+        return f"track(id={self.id},name='{self.name}', {self.country})"
 
 
 class TrackLayout(object):
@@ -130,4 +130,4 @@ class TrackLayout(object):
         self.miles = miles
 
     def __repr__(self):
-        return f"TrackLayout=(id={self.id},name='{self.name}',miles={self.miles},trackObj={self.track}, circuitObj={self.circuit}"
+        return f"tracklayout(id={self.id},name='{self.name}',miles={self.miles}), {self.track}, {self.circuit}"
