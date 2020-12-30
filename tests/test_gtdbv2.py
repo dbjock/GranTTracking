@@ -482,7 +482,7 @@ class TestTrack(unittest.TestCase):
         testTrack = dbConn1.getTrack(value=99999)
         testTrack.name = "Track Name change test"
         result = dbConn1.updateTrack(testTrack)
-        logger.debug(f"result={result}")
+        logger.info(f"result={result}")
         self.assertNotEqual(result[0], 0, "Record should not have been saved")
         del dbConn1
 
@@ -512,13 +512,13 @@ class TestTrackLayout(unittest.TestCase):
         logger.info("Get Track Layout by Track Layout ID: Exists")
         testVal = 2
         testLayout = dbConn1.getLayout(testVal)
-        logger.debug(f"testLayout={testLayout}")
+        logger.info(f"testLayout={testLayout}")
         self.assertEqual(testLayout.id, testVal)
 
         logger.info("Get Track Layout by Track Layout ID: Non Exists")
         testVal = 999
         testLayout = dbConn1.getLayout(testVal)
-        logger.debug(f"testLayout={testLayout}")
+        logger.info(f"testLayout={testLayout}")
         self.assertEqual(testLayout.id, 0)
         del dbConn1
         logger.info("==== END Get/Read track Layout\n")
