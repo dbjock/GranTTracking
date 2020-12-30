@@ -1,5 +1,5 @@
 --
--- 4/15/2020
+-- 12/30/2020
 --
 -- Text encoding used: System
 --
@@ -50,7 +50,7 @@ CREATE TABLE country (
                         NOT NULL,
     alpha3 CHAR (3)     NOT NULL
                         UNIQUE,
-    region VARCHAR (32) 
+    region VARCHAR (32)
 );
 
 -- Table: drivetrain
@@ -77,14 +77,37 @@ CREATE TABLE manufacture (
     name       VARCHAR (32) UNIQUE
                             NOT NULL
                             COLLATE NOCASE,
-    country_id INTEGER      REFERENCES country (ID) 
+    country_id INTEGER      REFERENCES country (ID) ON DELETE RESTRICT
                             NOT NULL
 );
 -- Table: race
-CREATE TABLE race (ID INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR (18) COLLATE NOCASE, tl_id INTEGER REFERENCES track_layout (id) ON DELETE RESTRICT NOT NULL, time TIME, weather_id INTEGER REFERENCES weather (id) ON DELETE RESTRICT, laps INTEGER, type_id INTEGER REFERENCES race_type (ID) ON DELETE RESTRICT NOT NULL, time_limit TIME, cat_id INTEGER REFERENCES category (id) ON DELETE RESTRICT, cars INTEGER, start_grid INTEGER, prize1 INTEGER, prize2 INTEGER, prize3 INTEGER, notes TEXT);
+CREATE TABLE race (
+    ID         INTEGER      PRIMARY KEY AUTOINCREMENT,
+    name       VARCHAR (18) COLLATE NOCASE,
+    tl_id      INTEGER      REFERENCES track_layout (id) ON DELETE RESTRICT
+                            NOT NULL,
+    time       TIME,
+    weather_id INTEGER      REFERENCES weather (id) ON DELETE RESTRICT,
+    laps       INTEGER,
+    type_id    INTEGER      REFERENCES race_type (ID) ON DELETE RESTRICT
+                            NOT NULL,
+    time_limit TIME,
+    cat_id     INTEGER      REFERENCES category (id) ON DELETE RESTRICT,
+    cars       INTEGER,
+    start_grid INTEGER,
+    prize1     INTEGER,
+    prize2     INTEGER,
+    prize3     INTEGER,
+    notes      TEXT
+);
 
 -- Table: race_collection
-CREATE TABLE race_collection (id INTEGER PRIMARY KEY AUTOINCREMENT, league_id INTEGER REFERENCES league (id) ON DELETE RESTRICT NOT NULL, name VARCHAR (16));
+CREATE TABLE race_collection (
+    id        INTEGER      PRIMARY KEY AUTOINCREMENT,
+    league_id INTEGER      REFERENCES league (id) ON DELETE RESTRICT
+                           NOT NULL,
+    name      VARCHAR (16)
+);
 
 -- Table: race_type
 CREATE TABLE race_type (
