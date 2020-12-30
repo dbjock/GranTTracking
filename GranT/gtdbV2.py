@@ -6,7 +6,7 @@ from pathlib import Path
 # TODO: Put logger.warning for add/update/delete. Should just rely on _exeSQL for warning. Not sure what called it.
 # TODO: got to work on TrackLayout stuff
 # Custom App modules
-from GranT import gtclasses as gtClass
+from GranT import GTClasses as gtClass
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 class GTdb:
     def __init__(self, name=None):
         self.conn = None
-        self._selectTrackLayoutSQL = """SELECT t.id as trackId, t.name AS track, l.id AS layouId, l.name AS layout, l.miles AS Miles, c.id as circuitId, c.name AS Circuit, cntry.ID as cntryId, cntry.name as Country, cntry.alpha2, cntry.alpha3, cntry.region as Region FROM track as t INNER JOIN track_layout as l ON t.id = l.track_id LEFT JOIN country as cntry ON t.country_id = cntry.ID INNER JOIN circuit AS c ON l.circuit_id = c.id"""
         if name:
             logging.debug(f"attempt open db {name}")
             try:
@@ -82,6 +81,23 @@ class GTdb:
         self.conn.commit()
         logging.debug(f"script commited")
 
+    def _addLayoutRec(self, tLayout):
+        """Internal use only. Add layout rec to db with no checks
+
+        Args:
+            tLayout (TrackLayout Object)
+
+        Returns:
+            list: ResultCode, ResultText
+            ResultCode = 0 Successfull
+            ResultCode != 0 See ResultText for details
+        """
+        logger.debug(f"trackobj = {tLayout}")
+        theVals = {'layoutName': tLayout.name, 'miles': tLayout.miles,
+                   'circuitId': tLayout.circuit.id, 'trackId': tLayout.track.id}
+        sql = 'INSERT INTO track_layout (name, miles, track_id, circuit_id) VALUES (:layoutName, :miles, :trackId, :circuitId)'
+        return self._exeSQL(sql, theVals)
+
     def getMfg(self, key='mfgId', value=None):
         """
         Gets the manufacture record from the database based on the key being used.
@@ -122,7 +138,7 @@ class GTdb:
         except:
             logger.critical(
                 f'Unexpected error executing sql: {sql}', exc_info=True)
-            return None
+            sys.exit(1)
 
         if row:
             # Place results into Manufacture object
@@ -179,7 +195,7 @@ class GTdb:
         except:
             logger.critical(
                 f'Unexpected error executing sql: {sql}', exc_info=True)
-            return None
+            sys.exit(1)
 
     def initDB(self, scriptPath=None):
         """Create tables, views, indexes
@@ -224,20 +240,125 @@ class GTdb:
         logger.debug(f"returning {r}")
         return r
 
-    def addTrack(self, trackObj):
-        """Adding a Track record to the database
+    def addTrack(self, layout):
+        """Adding a Track and a Layout for it
 
-        ARGS
-        trackObj : Track class object
-        Returns - list (ResultCode, ResultText)
-                 ResultCode 0 = Success Add
-                 Resultcode <> 0 - See ResultText for details
+        Args:
+            layout : Track layout object
+
+        Returns:
+            list: ResultCode, ResultText
+            ResultCode = 0 Successfull
+            ResultCode != 0 See ResultText for details
         """
-        logger.debug(f"addTrack: trackObj={trackObj}")
-        theVals = {'trackName': trackObj.name, 'cntryID': trackObj.country.id}
-        sql = "INSERT INTO track (name, country_id) VALUES (:trackName, :cntryID)"
+        logger.info(f"Adding a new track {layout}")
+        xtrack = self.getTrack('track', layout.track.name)
+        if xtrack.id != 0:  # track with same name exists - ReturnCode 100
+            msg = f"Unable to save. Track name already in db. Track name = {layout.track.name}"
+            logger.warning(msg)
+            result = (100, msg)
+            logger.debug(f"returning: {result}")
+            return result
+        else:
+            logger.info("Confirmed track doesn't exist")
 
-        return self._exeSQL(sql, theVals)
+        xcircuit = self.getCircuit('id', layout.circuit.id)
+        if xcircuit.id == 0:  # circuit does not exist -ReturnCode 102
+            msg = f'Unable to save. Circuit does not exist'
+            logger.warning(msg)
+            result = (102, msg)
+            logger.debug(f"returning: {result}")
+            return result
+        else:
+            logger.info("Confirmed circuit exists")
+
+        if not layout.miles:  # Miles must have a value - ReturnCode 103.
+            msg = f"Unable to save. Invalid miles value {layout.miles}"
+            logger.warning(msg)
+            result = (103, msg)
+            logger.debug(f"returning: {result}")
+            return result
+        else:
+            logger.info("Confirmed miles has a value")
+
+        # Tests Passed. Now we add records
+        # Add track record
+        logger.info("Saving new track record")
+        theVals = {'trackName': layout.track.name,
+                   'cntryID': layout.track.country.id}
+        sql = "INSERT INTO track (name, country_id) VALUES (:trackName, :cntryID)"
+        logger.debug(f"sql={sql}")
+        logger.debug(f"theVals={theVals}")
+        result = self._exeSQL(sql, theVals)
+        if result[0] == 2:  # integrity error
+            msg = f"error saving track record. error: {result}"
+            logger.error(msg)
+            result = (104, msg)
+            logger.debug(f"returning: {result}")
+            return result
+        else:
+
+            # Get new track.id from db to update layout object
+            logger.debug("Getting new track.id")
+            uTrack = self.getTrack("track", layout.track.name)
+            logger.info(f"Successfully saved new track record {uTrack}")
+            logger.debug(
+                "update trackLayout object with new track.id {uTrack.id}")
+            layout.track.id = uTrack.id
+
+        # Add track layout record
+        logger.info("Saving track_layout record")
+        result = self._addLayoutRec(layout)
+        if result[0] == 2:  # integrity error
+            msg = f"error saving track_layout record. error: {result}"
+            logger.error(msg)
+            result = (105, msg)
+            logger.debug(f"returning: {result}")
+            return result
+        else:
+            logger.info("Successfully saved new track_layout record")
+
+        logger.debug(f"returning: {result}")
+        return result
+
+    def addLayout(self, trackLayout):
+        """Adds a Track Layout record
+
+        Args:
+            trackLayout : TrackLayout Object
+
+        Returns:
+            list: ResultCode, ResultText
+                ResultCode 0 = Success
+                ResultCode != 0 = see ResultText for details
+        """
+        logger.debug(f"addTrackLayout: trackLayout={trackLayout}")
+        #  A track must not have multiple layout’s with identical names.
+        #    For example a track named "Test Track" should not have 2 layouts
+        #    named "Layout A".
+        logger.info(
+            f"Checking if layout [{trackLayout.name}] already exists for track (case insensitve test)")
+        layoutList = self.getLayoutList('trackId', trackLayout.track.id)
+        if trackLayout.name:  # layout name exists go uppercase
+            xLayoutName = trackLayout.name.upper()
+        else:
+            xLayoutName = trackLayout.name
+        logger.debug(f"testing for [{xLayoutName}]")
+        for row in layoutList:
+            logger.debug(f"check {row[3]}")
+            if row[3]:  # layout name exists go uppercase
+                testName = row[3].upper()
+            else:
+                testName = row[3]
+
+            if testName == xLayoutName:
+                msg = f"Layout name [{trackLayout.name}] for Track [{row[1]}] already exists"
+                logger.warning(msg)
+                return [1, msg]
+
+        logger.info(f"Layout name [{trackLayout.name}] is new for track")
+
+        return self._addLayoutRec(trackLayout)
 
     def deleteMfg(self, mfgId):
         """Delete manufacture record from database
@@ -283,22 +404,67 @@ class GTdb:
 
         return result
 
-    def getTrackLayout(self, key='layoutId', value=None):
-        """
-        Gets a single Track Layout record from database based on key and value passed.
+    def getCircuit(self, key, value):
+        """Get circuit record from db
 
-        ARGS:
-        value : Is the value being search for.
-        key   : the column to search on. layoutId, or Layout. Default is layoutId
-        Returns : TrackLayout Object. IF TrackLayoutObject.id == 0 then nothing found
-        """
-        if key == 'layoutId':
-            whereSQL = "WHERE l.id = ?"
-        elif key == 'Layout':
-            whereSQL = "WHERE l.name = ?"
+        Args:
+            key (str): key to search for value.
+                'id' or 'name'
+            value : Value to search for in key
 
-        sql = self._selectTrackLayoutSQL + " " + whereSQL
+        Returns:
+            CircuitObject
+        """
+        logger.info(f"Getting a circuit key={key}, value={value}")
+        selectSQL = "SELECT c.id as circuitId, c.name AS Circuit FROM circuit AS c"
+
+        if key == 'id':
+            whereSQL = "WHERE c.id = ?"
+        elif key == 'name':
+            whereSQL = "WHERE c.name = ?"
+        else:  # no key passed
+            logger.critical("Invalid or missing key value passed.")
+            sys.exit(1)
+
+        sql = f"{selectSQL} {whereSQL}"
         theVals = (value,)
+        logger.debug(f"sql = {sql}")
+        logger.debug(f"theVals = {theVals}")
+        try:
+            self.conn.row_factory = sqlite3.Row  # .keys() enabled for column names
+            # enable full sql trackback to logger.debug
+            self.conn.set_trace_callback(logger.debug)
+            c = self.conn.cursor()
+            c.execute(sql, theVals)
+            row = c.fetchone()
+            # Disable full sql traceback
+            self.conn.set_trace_callback(None)
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
+
+        if row:  # populate ciruit object
+            logger.info(f"Circuit found")
+            xCircuit = gtClass.Circuit(row['circuitId'], row['Circuit'])
+        else:  # create blank ciruit object
+            logger.info(f"Circuit not found")
+            xCircuit = gtClass.Circuit(id=0, name=None)
+
+        logger.debug(f"returning: {xCircuit}")
+        return xCircuit
+
+    def getLayout(self, layoutId):
+        """Gets a single Track Layout record from database.
+
+        Args:
+            layoutId (int): Track layoutID number to get from database.
+        Returns:
+            TrackLayout Object: IF TrackLayoutObject.id == 0 then nothing found
+        """
+        logger.info(f"Getting track layout id {layoutId}")
+        sql = """SELECT t.id as trackId, t.name AS track, l.id AS layoutId, l.name AS layout, l.miles AS Miles, c.id as circuitId, c.name AS Circuit, cntry.ID as cntryId, cntry.name as Country, cntry.alpha2, cntry.alpha3, cntry.region as Region FROM track as t INNER JOIN track_layout as l ON t.id = l.track_id LEFT JOIN country as cntry ON t.country_id = cntry.ID INNER JOIN circuit AS c ON l.circuit_id = c.id WHERE l.id = ?"""
+        theVals = (layoutId,)
         # Execute the SQL
         logger.debug(f"sql: {sql}")
         try:
@@ -314,21 +480,25 @@ class GTdb:
         except:
             logger.critical(
                 f'Unexpected error executing sql: {sql}', exc_info=True)
-            return None
+            sys.exit(1)
 
         if row:  # Populate trackLayout obj
-            logger.debug("track layout found")
+            logger.info(f"Found track layout id {layoutId}")
             xCircuit = gtClass.Circuit(row['circuitId'], row['Circuit'])
+            logger.debug(f"xCircuit={xCircuit}")
             xCountry = gtClass.Country(
                 cntryID=row['cntryId'], cntryName=row['Country'],
                 alpha2=row['alpha2'], alpha3=row['alpha3'], region=row['region'])
+            logger.debug(f"xCountry={xCountry}")
             xTrack = gtClass.Track(
                 row['trackId'], name=row['track'], countryObj=xCountry)
+            logger.debug(f"xTrack={xTrack}")
             xTrackLayout = gtClass.TrackLayout(
-                row['layouId'], row['layout'], miles=row['Miles'], trackObj=xTrack, circuitObj=xCircuit)
+                row['layoutId'], row['layout'], miles=row['Miles'], trackObj=xTrack, circuitObj=xCircuit)
 
         else:  # Create blank trackLayout obj (no data returned)
-            logger.debug("track layout not found")
+            logger.info(f"Unable to find track layout id {layoutId}")
+            logger.debug(f"creating empty tracklayout object")
             xCircuit = gtClass.Circuit(id=0, name=None)
             xCountry = gtClass.Country(
                 cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)
@@ -336,7 +506,52 @@ class GTdb:
             xTrackLayout = gtClass.TrackLayout(
                 id=0, name=None, miles=None, trackObj=xTrack, circuitObj=xCircuit)
 
+        logger.debug(f"returning object xTrackLayout={xTrackLayout} ")
         return xTrackLayout
+
+    def getLayoutList(self, key, value):
+        """Get a list track layouts by key/column
+
+        Args:
+            key (str): The key/column to search for value. Defaults to 'trackId'.
+            value: Value to search for in key/column.
+
+        Returns:
+            list: (trackId,track,layoutId,layout,Miles,circuitId,
+                   Circuit,cntryId,Country,alpha2,alpha3,Region)
+        """
+        logger.info(f"Getting track layout list: key={key}, value={value}")
+        selectSQL = """SELECT t.id as trackId, t.name AS track, l.id AS layoutId, l.name AS layout, l.miles AS Miles, c.id as circuitId, c.name AS Circuit, cntry.ID as cntryId, cntry.name as Country, cntry.alpha2, cntry.alpha3, cntry.region as Region FROM track as t INNER JOIN track_layout as l ON t.id = l.track_id LEFT JOIN country as cntry ON t.country_id = cntry.ID INNER JOIN circuit AS c ON l.circuit_id = c.id"""
+        if key == 'trackId':
+            whereSQL = "WHERE trackId = ?"
+        elif key == 'layoutId':
+            whereSQL = "WHERE layoutId = ?"
+        elif key == 'circuitId':
+            whereSQL = "WHERE circuitId = ?"
+        elif key == 'cntryId':
+            whereSQL = "WHERE cntryId = ?"
+        else:  # no key value passed
+            logger.critical("Invalid or missing key value passed.")
+            sys.exit(1)
+
+        sql = f"{selectSQL} {whereSQL}"
+        theVals = (value,)
+        logger.debug(f"sql = {sql}")
+        logger.debug(f"theVals = {theVals}")
+        try:
+            dbCursor = self.conn.cursor()
+            # Enabling full sql traceback to logger.debug
+            self.conn.set_trace_callback(logger.debug)
+            dbCursor.execute(sql, theVals)
+            result = dbCursor.fetchall()
+            logger.info(f"Returning {len(result)} rows")
+            # Disable full sql traceback to logger.debug
+            self.conn.set_trace_callback(None)
+            return result
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
 
     def getTrack(self, key='trackId', value=None):
         """
@@ -353,7 +568,6 @@ class GTdb:
             whereSQL = "WHERE track = ?"
 
         sqlSelect = """SELECT t.id as trackId, t.name AS track, cntry.ID as cntryId, cntry.name as Country, cntry.alpha2, cntry.alpha3, cntry.region as Region FROM track as t LEFT JOIN country as cntry ON t.country_id = cntry.ID"""
-        # sql = self._selectTrackLayoutSQL + " " + whereSQL
         sql = sqlSelect + " " + whereSQL
         theVals = (value,)
         logger.debug(f"sql = {sql}")
@@ -371,7 +585,7 @@ class GTdb:
         except:
             logger.critical(
                 f'Unexpected error executing sql: {sql}', exc_info=True)
-            return None
+            sys.exit(1)
         if row:  # Populate the track object
             logger.debug("track found")
             xCountry = gtClass.Country(
