@@ -297,7 +297,6 @@ class GTdb:
             logger.debug(f"returning: {result}")
             return result
         else:
-
             # Get new track.id from db to update layout object
             logger.debug("Getting new track.id")
             uTrack = self.getTrack("track", layout.track.name)
@@ -382,7 +381,7 @@ class GTdb:
         return r
 
     def deleteTrack(self, trackId):
-        """Delete track record from db based on trackId
+        """Delete track and all related track layouts from db
 
         Args:
             trackId (int): UniqueID of the track in the db
@@ -392,16 +391,64 @@ class GTdb:
                 ResultCode 0 : successfull
                 Resultcode != 0 : See ResultText for details
         """
-        logger.debug(f"delete track trackId = {trackId}")
+        logger.info(
+            f"Delete track trackId={trackId} and related track layouts.")
+        result = (1, "method is not ready yet")
+        # 1-Get and delete track_layout records for track id
+        #   Get list of track_layouts for trackid
+        logger.info(f"Getting track layouts for trackid {trackId}")
+        trackLayouts = self.getLayoutList(key='trackId', value=trackId)
+        logger.info(f"track layouts to delete: {len(trackLayouts)}")
+        logger.info(f"trackLayouts = {trackLayouts}")
+        #   Delete each track layout
+        for tLayout in trackLayouts:
+            layoutId = tLayout[2]
+            logger.debug(f"Deleting trackLayoutID {layoutId}: {tLayout}")
+            result = self.deleteTrackLayout(layoutId)
+            if result[0] != 0:  # error with delete. Stop deleting
+                logger.warning(
+                    f"problem deleting track layout id={layoutId}. See {result}.")
+                return result
+
+        # 2-If that was successfull then delete track
         sql = "DELETE FROM track WHERE id = ?"
         theVals = (trackId,)
+        logger.debug(f"sql={sql}")
+        logger.debug(f"theVals={theVals}")
         result = self._exeSQL(sql, theVals)
-        if result[0] == 0:  # Successful
-            result[1] = f"track deleted trackId = {trackId}"
-        else:  # Unsuccessfull
+        if result[0] == 0:
+            result[1] = f"track id={trackId} deleted"
+        else:
             logger.warning(
-                f"Problem with deleting track record. trackId={trackId}. Results: {result}")
+                f"problem deleting track id={trackId}. See {result}.")
 
+        return result
+
+    def deleteTrackLayout(self, layoutId):
+        """Delete track layout from db
+
+        Args:
+            layoutId (int): UniqueID of the track layout in the db
+
+        Returns:
+            list: ResultCode, ResultText
+                ResultCode 0 : successfull
+                Resultcode != 0 : See ResultText for details
+        """
+        logger.info(f"Delete track layout id={layoutId}.")
+        result = (1, "method is not ready yet")
+        sql = "DELETE FROM track_layout WHERE id = ?"
+        theVals = (layoutId,)
+        logger.debug(f"sql={sql}")
+        logger.debug(f"theVals={theVals}")
+        result = self._exeSQL(sql, theVals)
+        if result[0] == 0:
+            result[1] = f"track layout id={layoutId} deleted"
+        else:
+            logger.warning(
+                f"problem deleting track layout id={layoutId}. See {result}.")
+
+        logger.info(f"returning {result}")
         return result
 
     def getCircuit(self, key, value):

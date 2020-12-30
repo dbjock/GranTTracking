@@ -488,56 +488,18 @@ class TestTrack(unittest.TestCase):
 
         logger.info(f"==== END Upate Track test\n")
 
-    # def test_trackDelete(self):
-    #     logger.info("===== BEGIN Delete Track (Assumption getTrack works)")
-    #     countryExist = GT.Country(
-    #         cntryID=235, cntryName='United Kingdom of Great Britain and Northern Ireland', alpha2='GB', alpha3='GBR', region='Europe')
-
-    #     dbConn1 = gtdbV2.GTdb(name=':memory:')
-    #     dbConn1.initDB(scriptPath=f'{_gtScripts}')
-
-    #     # Delete Track - Track ID: Existing, Track Layout: No relation
-    #     logger.info(
-    #         "Delete Track - Track ID: Existing, Track Layout: No relation")
-    #     dbConn1 = gtdbV2.GTdb(name=':memory:')
-    #     dbConn1.initDB(scriptPath=f'{_gtScripts}')
-    #     logger.info("Create new track, will have no track layouts")
-    #     xTrackName = 'New Track name to delete'
-    #     testTrack = GT.Track(
-    #         id=0, name=xTrackName, countryObj=countryExist)
-    #     result = dbConn1.addTrack(testTrack)
-    #     if result[0] != 0:  # Unsuccessfull test add
-    #         logger.critical(
-    #             "Unable to test track delete as test track was unable to be created.")
-    #         sys.exit(1)
-    #     # Getting new test track ID
-    #     testTrack = dbConn1.getTrack(key='track', value=xTrackName)
-    #     logger.info("Deleting the new track")
-    #     result = dbConn1.deleteTrack(testTrack.id)
-    #     self.assertEqual(result[0], 0)
-    #     logger.info("Confirming record does not exist in db")
-    #     testTrack = dbConn1.getTrack(value=testTrack.id)
-    #     self.assertEqual(testTrack.id, 0)
-
-    #     # Delete Track - Track ID: Existing, Track Layout: Related
-    #     logger.info(
-    #         "Delete Track - Track ID: Existing, Track Layout: Related")
-    #     # Track id 2, 'Dragon Tail' has several Track Layouts
-    #     xTrackId = 2
-    #     result = dbConn1.deleteTrack(xTrackId)
-    #     logger.debug(f"result={result}")
-    #     self.assertNotEqual(result[0], 0)
-
-    #     # Delete Track - Track ID: Non Existing
-    #     logger.info("Delete Track - Track ID: Non Existing")
-    #     xTrackId = 999999
-    #     result = dbConn1.deleteTrack(xTrackId)
-    #     # Sqlite.. the delete works, even if record doesn't exist.
-    #     self.assertEqual(result[0], 0)
-    #     logger.info("Confirming record does not exist in db")
-    #     testTrack = dbConn1.getTrack(value=testTrack.id)
-    #     self.assertEqual(testTrack.id, 0)
-    #     logger.info("===== End Delete Track\n")
+    def test_trackDelete(self):
+        logger.info("===== BEGIN Delete Track")
+        # Delete Track - Track Exist: Yes, Track Layouts: Yes
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        trackId = 6
+        logger.info(f"Deleting trackId={trackId}")
+        result = dbConn1.deleteTrack(trackId)
+        logger.info(f"result={result}")
+        errMsg = "delete track unsuccessful"
+        self.assertEqual(result[0], 0, errMsg)
+        logger.info("===== END Delete Track")
 
 
 class TestTrackLayout(unittest.TestCase):
@@ -635,6 +597,32 @@ class TestTrackLayout(unittest.TestCase):
         result = dbConn1.addLayout(testLayout)
         logger.info(f"result is {result}")
         self.assertEqual(result[0], 0)
+        logger.info("==== END Add Track Layout")
+
+    def test_deleteTrackLayout(self):
+        logger.info("==== BEGIN Deleting Track Layout")
+
+        logger.info("Delete track layout exists : yes")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        layoutId = 29
+        logger.info(f"layoutId={layoutId}")
+        result = dbConn1.deleteTrackLayout(layoutId)
+        logger.info(f"result={result}")
+        errMsg = "delete existing track layout unsuccessful"
+        self.assertEqual(result[0], 0, errMsg)
+
+        logger.info("Delete track layout exists : no")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        layoutId = 99999
+        logger.info(f"layoutId={layoutId}")
+        result = dbConn1.deleteTrackLayout(layoutId)
+        logger.info(f"result={result}")
+        errMsg = "delete non existing track layout unsuccessful"
+        self.assertEqual(result[0], 0, errMsg)
+
+        logger.info("==== END Deleting Track Layout")
 
 
 class TestCircuit(unittest.TestCase):
