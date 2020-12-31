@@ -489,14 +489,24 @@ class TestTrack(unittest.TestCase):
     def test_trackDelete(self):
         logger.info("===== BEGIN Delete Track")
         # Delete Track - Track Exist: Yes, Track Layouts: Yes
+        testmsg = '1 - Delete existing TrackId'
+        logger.info(testmsg)
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        trackId = 6
-        logger.info(f"Deleting trackId={trackId}")
+        trackId = 6  # Track has multiple layouts
         result = dbConn1.deleteTrack(trackId)
         logger.info(f"result={result}")
-        errMsg = "delete track unsuccessful"
-        self.assertEqual(result[0], 0, errMsg)
+        self.assertEqual(result[0], 0)
+
+        testmsg = '2 - Delete existing TrackId'
+        logger.info(testmsg)
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        trackId = 99999  # Track has multiple layouts
+        result = dbConn1.deleteTrack(trackId)
+        logger.info(f"result={result}")
+        self.assertEqual(result[0], 0)
+
         logger.info("===== END Delete Track")
 
 
