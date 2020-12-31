@@ -415,7 +415,7 @@ class TestTrack(unittest.TestCase):
         logger.info(f"==== END Get/read Track\n")
 
     def test_trackUpdate(self):
-        logger.info("===== BEGIN Update Track (Assumption getTrack works)")
+        logger.info("===== BEGIN Update Track")
         countryExist = GT.Country(
             cntryID=235, cntryName='', alpha2='', alpha3='', region='')
         countryNonExist = GT.Country(
@@ -423,67 +423,65 @@ class TestTrack(unittest.TestCase):
         countryNull = GT.Country(
             cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)
 
-        logger.info("Update Track - Name: Change, Country ID: No change")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        xTrackID = 4
-        xTrackNewName = "Track Name change test"
-        testTrack = dbConn1.getTrack(value=xTrackID)
-        testTrack.name = xTrackNewName
-        result = dbConn1.updateTrack(testTrack)
-        self.assertEqual(result[0], 0)
-        # Confirm of record updated in db
-        logger.info("Confirming record updated in db")
-        newTrack = dbConn1.getTrack(key='track', value=xTrackNewName)
-        logger.info(f"newTrack = {newTrack}")
-        self.assertEqual(newTrack.name, xTrackNewName)
-        self.assertEqual(newTrack.id, xTrackID)
-        del dbConn1
+        tExistName = "Red Bull Ring"
+        tNonExistName = "IM the New Name"
+        # trackIdExist must not be trackId of tExistName for valid testing
+        trackIdExist = 1
+        trackIdNonExist = 99999
 
-        logger.info(
-            "Update Track - Name: Change to Existing, Country ID: No change")
+        testmsg = '1 - TrackId Exist: No.'
+        logger.info(testmsg)
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        testTrack = dbConn1.getTrack(value=4)
-        testTrack.name = "Nurburgring"
-        result = dbConn1.updateTrack(testTrack)
-        self.assertNotEqual(result[0], 0)  # Record should not save
-        del dbConn1
-
-        logger.info(
-            "Update Track - Name: No change, Country ID: Change to null")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        xTrackID = 4
-        testTrack = dbConn1.getTrack(value=xTrackID)
-        testTrack.country = countryNull
-        result = dbConn1.updateTrack(testTrack)
-        self.assertEqual(result[0], 0)
-        # Confirm of record updated in db
-        logger.info("Confirming record updated in db")
-        newTrack = dbConn1.getTrack(value=xTrackID)
-        self.assertEqual(newTrack.country.id, None)
-        del dbConn1
-
-        logger.info(
-            "Update Track - Name: No change, Country ID: Change to Non Existing")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        testTrack = dbConn1.getTrack(value=4)
-        testTrack.country = countryNonExist
-        result = dbConn1.updateTrack(testTrack)
-        self.assertNotEqual(result[0], 0, "Record should not have been saved")
-        del dbConn1
-
-        logger.info(
-            "Update Track - Name: Change, Country ID: No change, ID: Non Existing")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        testTrack = dbConn1.getTrack(value=99999)
-        testTrack.name = "Track Name change test"
+        testTrack = GT.Track(trackIdNonExist, tNonExistName, countryExist)
+        logger.info(testTrack)
         result = dbConn1.updateTrack(testTrack)
         logger.info(f"result={result}")
-        self.assertNotEqual(result[0], 0, "Record should not have been saved")
+        self.assertNotEqual(result[0], 0)
+        del dbConn1
+
+        testmsg = '2 - Unique Name for existing TrackId: No'
+        logger.info(testmsg)
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        testTrack = GT.Track(trackIdExist, tExistName, countryExist)
+        logger.info(testTrack)
+        result = dbConn1.updateTrack(testTrack)
+        logger.info(f"result={result}")
+        self.assertNotEqual(result[0], 0)
+        del dbConn1
+
+        testmsg = '3 - Country Exist for existing TrackId: No'
+        logger.info(testmsg)
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        testTrack = GT.Track(trackIdExist, tNonExistName, countryNonExist)
+        logger.info(testTrack)
+        result = dbConn1.updateTrack(testTrack)
+        logger.info(f"result={result}")
+        self.assertNotEqual(result[0], 0)
+        del dbConn1
+
+        testmsg = '4 - Existing TrackId with a Unique Name and Existing Country: Yes'
+        logger.info(testmsg)
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        testTrack = GT.Track(trackIdExist, tNonExistName, countryExist)
+        logger.info(testTrack)
+        result = dbConn1.updateTrack(testTrack)
+        logger.info(f"result={result}")
+        self.assertEqual(result[0], 0)
+        del dbConn1
+
+        testmsg = "A - Null CountryId for existing TrackId: Yes"
+        logger.info(testmsg)
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        testTrack = GT.Track(trackIdExist, tNonExistName, countryNull)
+        logger.info(testTrack)
+        result = dbConn1.updateTrack(testTrack)
+        logger.info(f"result={result}")
+        self.assertEqual(result[0], 0)
         del dbConn1
 
         logger.info(f"==== END Upate Track test\n")
