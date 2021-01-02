@@ -98,6 +98,53 @@ class GTdb:
         sql = 'INSERT INTO track_layout (name, miles, track_id, circuit_id) VALUES (:layoutName, :miles, :trackId, :circuitId)'
         return self._exeSQL(sql, theVals)
 
+    def trackLayoutTests(self, trackLayout):
+        """Tests to save/update a track layout
+
+        Args:
+            trackLayout (TrackLayout object): Track Layout that is being saved
+
+        Returns:
+            list: (True/False, msg)
+            True = Tests passed
+            False = See msg for what did not pass
+        """
+        logger.debug(f"trackLayout={trackLayout}")
+        # Layout name must be unique for the Track
+        logger.info(
+            f"Checking if layout [{trackLayout.name}] already exists for track (case insensitve)")
+        layoutList = self.getLayoutList('trackId', trackLayout.track.id)
+        if trackLayout.name:  # layout name exists go uppercase
+            xLayoutName = trackLayout.name.upper()
+        else:
+            xLayoutName = trackLayout.name
+
+        for row in layoutList:
+            logger.debug(f"check {row[3]}")
+            if row[3]:  # layout name exists go uppercase
+                testName = row[3].upper()
+            else:
+                testName = row[3]
+            if testName == xLayoutName:  # layout name exist for track
+                msg = f"Layout name [{trackLayout.name}] for Track [{row[1]}] already exists"
+                result = (False, msg)
+                logger.info(f"returning = {result}")
+                return result
+
+        # Miles is not a string. (Null is allowed in this test)
+        logger.info(f"Checking miles [{trackLayout.miles}] is not a string")
+        if isinstance(trackLayout.miles, str):  # miles is a string
+            result = (False, f"Miles must not contain letters")
+            logger.info(f"returning = {result}")
+            return result
+        # Miles is not null. not tested. DB should provide integrity error: NOT NULL constraint failed
+        # Circuit ID existance not tested. DB should provide integrity error: FOREIGN KEY constraint failed
+        # Track ID existance not tested. DB should provide integrity error: FOREIGN KEY constraint failed
+        # All tests passed
+        result = (True, "Track Layout Tests Passed")
+        logger.info(f"returning = {result}")
+        return result
+
     def getMfg(self, key='mfgId', value=None):
         """
         Gets the manufacture record from the database based on the key being used.
@@ -332,32 +379,17 @@ class GTdb:
                 ResultCode != 0 = see ResultText for details
         """
         logger.debug(f"addTrackLayout: trackLayout={trackLayout}")
-        #  A track must not have multiple layout’s with identical names.
-        #    For example a track named "Test Track" should not have 2 layouts
-        #    named "Layout A".
         logger.info(
-            f"Checking if layout [{trackLayout.name}] already exists for track (case insensitve test)")
-        layoutList = self.getLayoutList('trackId', trackLayout.track.id)
-        if trackLayout.name:  # layout name exists go uppercase
-            xLayoutName = trackLayout.name.upper()
+            f"Adding track layout {trackLayout.name} for track {trackLayout.track.name}.")
+        tResult = self.trackLayoutTests(trackLayout)
+        if tResult[0]:  # Tests passed
+            result = self._addLayoutRec(trackLayout)
         else:
-            xLayoutName = trackLayout.name
-        logger.debug(f"testing for [{xLayoutName}]")
-        for row in layoutList:
-            logger.debug(f"check {row[3]}")
-            if row[3]:  # layout name exists go uppercase
-                testName = row[3].upper()
-            else:
-                testName = row[3]
+            logger.warning(tResult[1])
+            result = (1, tResult[1])
 
-            if testName == xLayoutName:
-                msg = f"Layout name [{trackLayout.name}] for Track [{row[1]}] already exists"
-                logger.warning(msg)
-                return [1, msg]
-
-        logger.info(f"Layout name [{trackLayout.name}] is new for track")
-
-        return self._addLayoutRec(trackLayout)
+        logger.debug(f"returning: {result}")
+        return result
 
     def deleteMfg(self, mfgId):
         """Delete manufacture record from database
@@ -704,3 +736,32 @@ class GTdb:
         sql = "UPDATE track SET name = :trackName, country_id = :cntryID WHERE id = :trackID"
 
         return self._exeSQL(sql, theVals)
+
+    def updateTrackLayout(self, uLayout):
+        """Update the track layout record in database
+
+        Args:
+            uLayout (TrackLayout Object) : Updated TrackLayout Object
+
+        Returns:
+            list: ResultCode, ResultText
+                ResultCode 0 = Success
+                ResultCode != 0 = see ResultText for details
+        """
+        logger.info(f"Updating Track Layout {uLayout}")
+
+        tResult = self.trackLayoutTests(uLayout)
+        if tResult[0]:  # Tests passed
+            logger.info("Updating track layout id: {uLayout.id}")
+            sql = "UPDATE track_layout SET name = :layoutName, miles = :miles, track_id = :trackId, circuit_id = :circuitId"
+            theVals = {'layoutName': uLayout.name, 'miles': uLayout.miles,
+                       'circuitId': uLayout.circuit.id, 'trackId': uLayout.track.id}
+            logger.debug("sql={sql}")
+            logger.debug("theVals = {theVals}")
+            result = self._exeSQL(sql, theVals)
+        else:
+            logger.warning(tResult[1])
+            result = (1, tResult[1])
+
+        logger.debug(f"returning: {result}")
+        return result
