@@ -609,37 +609,39 @@ class TestTrackLayout(unittest.TestCase):
 
     def test_trackLayoutUpdate(self):
         logger.info("===== BEGIN Track Layout Update ")
-        # cIdNonExist = GT.Circuit(id=0, name=None)
-        cIdExists = GT.Circuit(id=1, name=None)  # circuit name not tested
-        xCountry = GT.Country(
-            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)
-        xTrack = GT.Track(1, "Not appliable", xCountry)
-        # Test will be using existing:
-        #   Track.id 1, 'Blue Moon Bay Speedway' for testing
-        #   TrackLayout.id 33, 'Infield B'
-        #   TrackLayout name 'Infield B II' exists with a different TrackLayout.id
-        orgLayout = GT.TrackLayout(33, 'Infield B', 4, xTrack, cIdExists)
-
         testmsg = '1 - Circuit ID Exist: No, Miles a number: Yes, Unique name for Track: Yes'
         logger.info(testmsg)
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        xLayout = orgLayout
+        xLayout = GT.TrackLayout(33, 'IamUnique', 4, GT.Track(7, "Note Tested", GT.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(1, "Note Tested"))
         xLayout.circuit.id = 0
-        logger.info(f'orgLayout={orgLayout}')
         logger.info(f'xLayout={xLayout}')
         result = dbConn1.updateTrackLayout(xLayout)
         logger.info(f"result={result}")
         self.assertNotEqual(result[0], 0)
         del dbConn1
 
-        testmsg = '2 - Circuit ID Exist: Yes, Miles a number: No, Unique name for Track: Yes'
+        testmsg = '2 - Circuit ID Exist: Yes, Miles a number: No (Null), Unique name for Track: Yes'
         logger.info(testmsg)
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        xLayout = orgLayout
+        xLayout = GT.TrackLayout(33, 'IamUnique', 4, GT.Track(7, "Note Tested", GT.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(1, "Note Tested"))
         xLayout.miles = None
-        logger.info(f'orgLayout={orgLayout}')
+        logger.info(f'xLayout={xLayout}')
+        result = dbConn1.updateTrackLayout(xLayout)
+        logger.info(f"result={result}")
+        self.assertNotEqual(result[0], 0)
+        del dbConn1
+
+        testmsg = '2a - Circuit ID Exist: Yes, Miles a number: No (string), Unique name for Track: Yes'
+        logger.info(testmsg)
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        xLayout = GT.TrackLayout(33, 'IamUnique', 4, GT.Track(7, "Note Tested", GT.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(1, "Note Tested"))
+        xLayout.miles = '1 mile'
         logger.info(f'xLayout={xLayout}')
         result = dbConn1.updateTrackLayout(xLayout)
         logger.info(f"result={result}")
@@ -650,9 +652,9 @@ class TestTrackLayout(unittest.TestCase):
         logger.info(testmsg)
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        xLayout = orgLayout
+        xLayout = GT.TrackLayout(33, 'IamUnique', 4, GT.Track(7, "Note Tested", GT.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(1, "Note Tested"))
         xLayout.name = 'Infield B II'
-        logger.info(f'orgLayout={orgLayout}')
         logger.info(f'xLayout={xLayout}')
         result = dbConn1.updateTrackLayout(xLayout)
         logger.info(f"result={result}")
@@ -663,9 +665,8 @@ class TestTrackLayout(unittest.TestCase):
         logger.info(testmsg)
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        xLayout = orgLayout
-        xLayout.name = 'East Inner Loop'
-        logger.info(f'orgLayout={orgLayout}')
+        xLayout = GT.TrackLayout(33, 'IamUnique', 4, GT.Track(7, "Note Tested", GT.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(1, "Note Tested"))
         logger.info(f'xLayout={xLayout}')
         result = dbConn1.updateTrackLayout(xLayout)
         logger.info(f"result={result}")
@@ -676,13 +677,25 @@ class TestTrackLayout(unittest.TestCase):
         logger.info(testmsg)
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        xLayout = orgLayout
+        xLayout = GT.TrackLayout(33, 'IamUnique', 4, GT.Track(7, "Note Tested", GT.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(1, "Note Tested"))
         xLayout.name = None
-        logger.info(f'orgLayout={orgLayout}')
         logger.info(f'xLayout={xLayout}')
         result = dbConn1.updateTrackLayout(xLayout)
         logger.info(f"result={result}")
-        self.assertEqual(result[0], 0)
+        self.assertNotEqual(result[0], 0)
+        del dbConn1
+
+        testmsg = '6 - Track Id does not exist'
+        logger.info(testmsg)
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        xLayout = GT.TrackLayout(33, 'IamUnique', 4, GT.Track(0, "Note Tested", GT.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(1, "Note Tested"))
+        logger.info(f'xLayout={xLayout}')
+        result = dbConn1.updateTrackLayout(xLayout)
+        logger.info(f"result={result}")
+        self.assertNotEqual(result[0], 0)
         del dbConn1
 
     def test_deleteTrackLayout(self):
