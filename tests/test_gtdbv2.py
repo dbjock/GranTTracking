@@ -179,12 +179,6 @@ class TestMfg(unittest.TestCase):
     def test_updateMfg(self):
         logger.info(
             "==== BEGIN UPDATE Manufacture (Assuming Get manufacture works)")
-        countryExist = GT.Country(
-            cntryID=235, cntryName='', alpha2='', alpha3='', region='')
-        countryNonExist = GT.Country(
-            cntryID=999, cntryName=None, alpha2=None, alpha3=None, region=None)
-        countryNull = GT.Country(
-            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)
 
         logger.info(
             "Update Manufacture: Name: Change, Country ID: No change.")
@@ -207,7 +201,8 @@ class TestMfg(unittest.TestCase):
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         testMfg = dbConn1.getMfg(value=4)
-        testMfg.country = countryNull
+        testMfg.country = GT.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)
         result = dbConn1.updateMfg(testMfg)
         self.assertNotEqual(result[0], 0)
         del dbConn1
@@ -238,7 +233,8 @@ class TestMfg(unittest.TestCase):
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         testMfg = dbConn1.getMfg(value=14)
-        testMfg.country = countryNonExist
+        testMfg.country = GT.Country(
+            cntryID=999, cntryName=None, alpha2=None, alpha3=None, region=None)
         result = dbConn1.updateMfg(testMfg)
         self.assertNotEqual(result[0], 0)
         del dbConn1
