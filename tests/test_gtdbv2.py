@@ -245,18 +245,7 @@ class TestTrack(unittest.TestCase):
     def test_addTrack(self):
         logger.info(
             "==== BEGIN TEST Adding a Track")
-        cntryExist = GT.Country(
-            cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)
-        cntryNonExist = GT.Country(
-            cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)
-
         # Existing Track is picked as it has a null and non null layouts
-        tExist = GT.Track(7, "Blue Moon Bay Speedway", cntryExist)
-        tNonExist = GT.Track(9999, "I dont exist", cntryExist)
-
-        circuitExist = GT.Circuit(id=1, name=None)
-        circuitNonExist = GT.Circuit(id=9999, name="I do not exist")
-
         tlNameExist = "Infield B"
         tlNameNonExist = "Layout name that does not exist"
 
@@ -266,7 +255,7 @@ class TestTrack(unittest.TestCase):
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         miles = .1
         xTlayout = GT.TrackLayout(
-            None, tlNameExist, miles, tNonExist, circuitNonExist)
+            None, tlNameExist, miles, GT.Track(9999, "I dont exist", GT.Country(cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(id=9999, name="I do not exist"))
         logger.info(f"{xTlayout}")
         result = dbConn1.addTrack(xTlayout)
         logger.info(f"result = {result}")
@@ -279,7 +268,7 @@ class TestTrack(unittest.TestCase):
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         miles = .1
         xTlayout = GT.TrackLayout(
-            None, tlNameExist, miles, tExist, circuitNonExist)
+            None, tlNameExist, miles, GT.Track(7, "Blue Moon Bay Speedway", GT.Country(cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(id=9999, name="I do not exist"))
         logger.info(f"{xTlayout}")
         result = dbConn1.addTrack(xTlayout)
         logger.info(f"result = {result}")
@@ -292,7 +281,7 @@ class TestTrack(unittest.TestCase):
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         miles = None
         xTlayout = GT.TrackLayout(
-            None, tlNameExist, miles, tNonExist, circuitNonExist)
+            None, tlNameExist, miles, GT.Track(9999, "I dont exist", GT.Country(cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(id=9999, name="I do not exist"))
         logger.info(f"{xTlayout}")
         result = dbConn1.addTrack(xTlayout)
         logger.info(f"result = {result}")
@@ -305,7 +294,7 @@ class TestTrack(unittest.TestCase):
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         miles = None
         xTlayout = GT.TrackLayout(
-            None, tlNameExist, miles, tExist, circuitNonExist)
+            None, tlNameExist, miles, GT.Track(7, "Blue Moon Bay Speedway", GT.Country(cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(id=9999, name="I do not exist"))
         logger.info(f"{xTlayout}")
         result = dbConn1.addTrack(xTlayout)
         logger.info(f"result = {result}")
@@ -318,7 +307,7 @@ class TestTrack(unittest.TestCase):
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         miles = .1
         xTlayout = GT.TrackLayout(
-            None, tlNameExist, miles, tNonExist, circuitExist)
+            None, tlNameExist, miles, GT.Track(9999, "I dont exist", GT.Country(cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(id=1, name=None))
         logger.info(f"{xTlayout}")
         result = dbConn1.addTrack(xTlayout)
         logger.info(f"result = {result}")
@@ -331,7 +320,7 @@ class TestTrack(unittest.TestCase):
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         miles = .1
         xTlayout = GT.TrackLayout(
-            None, tlNameExist, miles, tExist, circuitExist)
+            None, tlNameExist, miles, GT.Track(7, "Blue Moon Bay Speedway", GT.Country(cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(id=1, name=None))
         logger.info(f"{xTlayout}")
         result = dbConn1.addTrack(xTlayout)
         logger.info(f"result = {result}")
@@ -344,7 +333,7 @@ class TestTrack(unittest.TestCase):
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         miles = None
         xTlayout = GT.TrackLayout(
-            None, tlNameExist, miles, tNonExist, circuitExist)
+            None, tlNameExist, miles, GT.Track(9999, "I dont exist", GT.Country(cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(id=1, name=None))
         logger.info(f"{xTlayout}")
         result = dbConn1.addTrack(xTlayout)
         logger.info(f"result = {result}")
@@ -357,7 +346,7 @@ class TestTrack(unittest.TestCase):
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
         miles = None
         xTlayout = GT.TrackLayout(
-            None, tlNameExist, miles, tExist, circuitExist)
+            None, tlNameExist, miles, GT.Track(7, "Blue Moon Bay Speedway", GT.Country(cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(id=1, name=None))
         logger.info(f"{xTlayout}")
         result = dbConn1.addTrack(xTlayout)
         logger.info(f"result = {result}")
@@ -366,7 +355,7 @@ class TestTrack(unittest.TestCase):
 
         logger.info("==== END TEST Add Track")
 
-    def test_trackGet(self):
+    def test_getTrack(self):
         logger.info("==== BEGIN Get/read Track")
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
@@ -395,10 +384,8 @@ class TestTrack(unittest.TestCase):
         del dbConn1
         logger.info(f"==== END Get/read Track\n")
 
-    def test_trackUpdate(self):
+    def test_updateTrack(self):
         logger.info("===== BEGIN Update Track")
-        countryExist = GT.Country(
-            cntryID=235, cntryName='', alpha2='', alpha3='', region='')
         countryNonExist = GT.Country(
             cntryID=999, cntryName=None, alpha2=None, alpha3=None, region=None)
         countryNull = GT.Country(
@@ -414,7 +401,8 @@ class TestTrack(unittest.TestCase):
         logger.info(testmsg)
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        testTrack = GT.Track(trackIdNonExist, tNonExistName, countryExist)
+        testTrack = GT.Track(trackIdNonExist, tNonExistName, GT.Country(
+            cntryID=235, cntryName='', alpha2='', alpha3='', region=''))
         logger.info(testTrack)
         result = dbConn1.updateTrack(testTrack)
         logger.info(f"result={result}")
@@ -425,7 +413,8 @@ class TestTrack(unittest.TestCase):
         logger.info(testmsg)
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        testTrack = GT.Track(trackIdExist, tExistName, countryExist)
+        testTrack = GT.Track(trackIdExist, tExistName, GT.Country(
+            cntryID=235, cntryName='', alpha2='', alpha3='', region=''))
         logger.info(testTrack)
         result = dbConn1.updateTrack(testTrack)
         logger.info(f"result={result}")
@@ -447,7 +436,8 @@ class TestTrack(unittest.TestCase):
         logger.info(testmsg)
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
-        testTrack = GT.Track(trackIdExist, tNonExistName, countryExist)
+        testTrack = GT.Track(trackIdExist, tNonExistName, GT.Country(
+            cntryID=235, cntryName='', alpha2='', alpha3='', region=''))
         logger.info(testTrack)
         result = dbConn1.updateTrack(testTrack)
         logger.info(f"result={result}")
@@ -467,7 +457,7 @@ class TestTrack(unittest.TestCase):
 
         logger.info(f"==== END Upate Track test\n")
 
-    def test_trackDelete(self):
+    def test_deleteTrack(self):
         logger.info("===== BEGIN Delete Track")
         # Delete Track - Track Exist: Yes, Track Layouts: Yes
         testmsg = '1 - Delete existing TrackId'
