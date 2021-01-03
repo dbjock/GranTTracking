@@ -532,21 +532,15 @@ class TestTrackLayout(unittest.TestCase):
         self.assertGreaterEqual(len(layoutList), 1)
         logger.info("==== END get Layout List")
 
-    def test_trackLayoutAdd(self):
+    def test_addTrackLayout(self):
         logger.info("==== BEGIN Add Track Layout")
-        xCircuit = GT.Circuit(id=0, name=None)
-        xCountry = GT.Country(
-            cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)
-        xTrack = GT.Track(id=0, name=None, countryObj=xCountry)
-        blank_track_layout = GT.TrackLayout(
-            id=0, name=None, miles=None, trackObj=xTrack, circuitObj=xCircuit)
-
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
 
         logger.info(
             "Add Track Layout : Layout name Dupe for same track")
-        testLayout = blank_track_layout
+        testLayout = GT.TrackLayout(id=0, name=None, miles=None, trackObj=GT.Track(id=0, name=None, countryObj=GT.Country(
+            cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)), circuitObj=GT.Circuit(id=0, name=None))
         testLayout.name = "Infield B"
         testLayout.miles = 9999
         testLayout.track.id = 7
@@ -557,7 +551,8 @@ class TestTrackLayout(unittest.TestCase):
 
         logger.info(
             "Add Track Layout : Layout name Dupe 'None' for same track")
-        testLayout = blank_track_layout
+        testLayout = GT.TrackLayout(id=0, name=None, miles=None, trackObj=GT.Track(id=0, name=None, countryObj=GT.Country(
+            cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)), circuitObj=GT.Circuit(id=0, name=None))
         testLayout.name = None
         testLayout.miles = 9999
         testLayout.track.id = 7
@@ -568,7 +563,8 @@ class TestTrackLayout(unittest.TestCase):
 
         logger.info(
             "Add Track Layout : Layout name non existant for same track")
-        testLayout = blank_track_layout
+        testLayout = GT.TrackLayout(id=0, name=None, miles=None, trackObj=GT.Track(id=0, name=None, countryObj=GT.Country(
+            cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)), circuitObj=GT.Circuit(id=0, name=None))
         testLayout.name = "I am a new track layout"
         testLayout.miles = 9999
         testLayout.track.id = 7
@@ -578,7 +574,7 @@ class TestTrackLayout(unittest.TestCase):
         self.assertEqual(result[0], 0)
         logger.info("==== END Add Track Layout")
 
-    def test_trackLayoutUpdate(self):
+    def test_updateTrackLayout(self):
         logger.info("===== BEGIN Track Layout Update ")
         testmsg = '1 - Circuit ID Exist: No, Miles a number: Yes, Unique name for Track: Yes'
         logger.info(testmsg)
