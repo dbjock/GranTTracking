@@ -14,8 +14,9 @@ logger = logging.getLogger(__name__)
 class GTdb:
     def __init__(self, name=None):
         self.conn = None
+        logger.debug(f'name is {name}')
         if name:
-            logging.debug(f"attempt open db {name}")
+            logger.debug(f"attempt open db {name}")
             try:
                 self.conn = sqlite3.connect(
                     name, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
@@ -26,7 +27,7 @@ class GTdb:
             c = self.conn.cursor()
             c.execute("PRAGMA database_list;")
             xtmp = c.fetchall()
-            logging.debug(f"{xtmp}")
+            logger.debug(f"database_list={xtmp}")
             self.dbfile = xtmp[0][2]
 
     def _exeSQL(self, sql, theVals):
@@ -66,7 +67,7 @@ class GTdb:
         Executes a Script file. (internal use only)
         scriptFileName : SQL script file to run
         """
-        logging.debug(f"loading script {scriptFileName} to memory")
+        logger.debug(f"loading script {scriptFileName} to memory")
         scriptFile = open(scriptFileName, 'r')
         script = scriptFile.read()
         scriptFile.close()
@@ -79,7 +80,7 @@ class GTdb:
             sys.exit(1)
 
         self.conn.commit()
-        logging.debug(f"script commited")
+        logger.debug(f"script commited")
 
     def _addLayoutRec(self, tLayout):
         """Internal use only. Add layout rec to db with no checks
@@ -609,28 +610,37 @@ class GTdb:
             whereSQL = "WHERE circuitId = ?"
         elif key == 'cntryId':
             whereSQL = "WHERE cntryId = ?"
-        else:  # no key value passed
-            logger.critical("Invalid or missing key value passed.")
-            sys.exit(1)
 
-        sql = f"{selectSQL} {whereSQL}"
-        theVals = (value,)
-        logger.debug(f"sql = {sql}")
-        logger.debug(f"theVals = {theVals}")
-        try:
-            dbCursor = self.conn.cursor()
-            # Enabling full sql traceback to logger.debug
-            self.conn.set_trace_callback(logger.debug)
-            dbCursor.execute(sql, theVals)
-            result = dbCursor.fetchall()
-            logger.info(f"Returning {len(result)} rows")
-            # Disable full sql traceback to logger.debug
-            self.conn.set_trace_callback(None)
-            return result
-        except:
-            logger.critical(
-                f'Unexpected error executing sql: {sql}', exc_info=True)
-            sys.exit(1)
+        dbCursor = self.conn.cursor()
+        # Enabling full sql traceback to logger.debug
+        self.conn.set_trace_callback(logger.debug)
+        if key == None:
+            sql = f"{selectSQL}"
+            logger.debug(f"NO KEY PROVIDED")
+            logger.debug(f"sql = {sql}")
+            try:
+                dbCursor.execute(sql)
+            except:
+                logger.critical(
+                    f'Unexpected error executing sql: {sql}', exc_info=True)
+                sys.exit(1)
+        else:
+            logger.debug(f"KEY PROVIDED")
+            sql = f"{selectSQL} {whereSQL}"
+            theVals = (value,)
+            logger.debug(f"sql = {sql}")
+            logger.debug(f"theVals = {theVals}")
+            try:
+                dbCursor.execute(sql, theVals)
+            except:
+                logger.critical(
+                    f'Unexpected error executing sql: {sql}', exc_info=True)
+                sys.exit(1)
+
+        result = dbCursor.fetchall()
+        # Disable full sql traceback to logger.debug
+        self.conn.set_trace_callback(None)
+        return result
 
     def getTrack(self, key='trackId', value=None):
         """
@@ -765,3 +775,12 @@ class GTdb:
 
         logger.debug(f"returning: {result}")
         return result
+
+    def _logtest(self):
+        """Test logging by sending text to all levels
+        """
+        logger.info("Log Test - info level")
+        logger.warning("Log Test - info warning")
+        logger.error("Log Test - info error")
+        logger.critical("Log Test - info critical")
+        logger.debug("Log Test - info debug")
