@@ -12,7 +12,7 @@ class Country(object):
         self.region = region
 
     def __repr__(self):
-        return f"country(cntryID={self.id}, cntryName='{self.cntryName}', alpha2='{self.alpha2}', alpha3='{self.alpha3}', region='{self.region}')"
+        return f"country(id={self.id}, cntryName='{self.cntryName}', alpha2='{self.alpha2}', alpha3='{self.alpha3}', region='{self.region}')"
 
 
 class Manufacture(object):
