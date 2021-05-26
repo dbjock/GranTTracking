@@ -1,6 +1,6 @@
-# python -m unittest Tests.test_gtdbv2
+# python -m unittest tests.test_gtdbv2
 # If you want to run specific tests:
-# python -m unittest Tests.test_gtdbv2.Class.method
+# python -m unittest tests.test_gtdbv2.Class.method
 import unittest
 from pathlib import Path
 import logging
@@ -245,7 +245,7 @@ class TestTrack(unittest.TestCase):
     def test_addTrack(self):
         logger.info(
             "==== BEGIN TEST Adding a Track")
-        # Existing Track is picked as it has a null and non null layouts
+        # Existing Track Layout name
         tlNameExist = "Infield B"
         tlNameNonExist = "Layout name that does not exist"
 
@@ -550,7 +550,7 @@ class TestTrackLayout(unittest.TestCase):
         self.assertNotEqual(result[0], 0)
 
         logger.info(
-            "Add Track Layout : Layout name Dupe 'None' for same track")
+            "Add Track Layout : Layout name null/'None' for same track")
         testLayout = GT.TrackLayout(id=0, name=None, miles=None, trackObj=GT.Track(id=0, name=None, countryObj=GT.Country(
             cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)), circuitObj=GT.Circuit(id=0, name=None))
         testLayout.name = None

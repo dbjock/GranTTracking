@@ -1,5 +1,5 @@
 --
--- 12/30/2020
+-- 05/26/2021
 --
 -- Text encoding used: System
 --
@@ -131,7 +131,8 @@ CREATE TABLE track_layout (
     id         INTEGER      PRIMARY KEY AUTOINCREMENT,
     track_id   INTEGER      REFERENCES track (id) ON DELETE RESTRICT
                             NOT NULL,
-    name       VARCHAR (16) COLLATE NOCASE,
+    name       VARCHAR (16) COLLATE NOCASE
+                            NOT NULL,
     miles      DECIMAL      NOT NULL,
     circuit_id INTEGER      REFERENCES circuit (id) ON DELETE RESTRICT
                             NOT NULL
