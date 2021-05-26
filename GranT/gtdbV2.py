@@ -25,6 +25,7 @@ class GTdb:
                     f"Database connection failure. ", exc_info=True)
                 sys.exit(1)
             c = self.conn.cursor()
+            logger.debug(f"Connected {name}")
             c.execute("PRAGMA database_list;")
             xtmp = c.fetchall()
             logger.debug(f"database_list={xtmp}")
@@ -602,6 +603,7 @@ class GTdb:
         """
         logger.info(f"Getting track layout list: key={key}, value={value}")
         selectSQL = """SELECT t.id as trackId, t.name AS track, l.id AS layoutId, l.name AS layout, l.miles AS Miles, c.id as circuitId, c.name AS Circuit, cntry.ID as cntryId, cntry.name as Country, cntry.alpha2, cntry.alpha3, cntry.region as Region FROM track as t INNER JOIN track_layout as l ON t.id = l.track_id LEFT JOIN country as cntry ON t.country_id = cntry.ID INNER JOIN circuit AS c ON l.circuit_id = c.id"""
+        orderBySQL = "ORDER BY t.name, l.name"
         if key == 'trackId':
             whereSQL = "WHERE trackId = ?"
         elif key == 'layoutId':
@@ -615,7 +617,7 @@ class GTdb:
         # Enabling full sql traceback to logger.debug
         self.conn.set_trace_callback(logger.debug)
         if key == None:
-            sql = f"{selectSQL}"
+            sql = f"{selectSQL} {orderBySQL}"
             logger.debug(f"NO KEY PROVIDED")
             logger.debug(f"sql = {sql}")
             try:
@@ -626,7 +628,7 @@ class GTdb:
                 sys.exit(1)
         else:
             logger.debug(f"KEY PROVIDED")
-            sql = f"{selectSQL} {whereSQL}"
+            sql = f"{selectSQL} {whereSQL} {orderBySQL}"
             theVals = (value,)
             logger.debug(f"sql = {sql}")
             logger.debug(f"theVals = {theVals}")
