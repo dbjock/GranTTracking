@@ -78,6 +78,7 @@ def main():
                  'tracks': None},
         'list': {
             'circuits': None,
+            'manufactures': {'orderBy=': None},
             'track': {
                 'id=': None,
                 'name=': None
@@ -159,10 +160,29 @@ def listAction(cmd):
                 HTML(f'<ansired>ERROR</ansired> - id= or name= are required.'))
     elif listObj == 'circuits':
         displayCircuits()
+    elif listObj == 'manufactures':
+        if cmd.find(' ') != -1:  # Args provided
+            objArgs = cmd[cmd.find(' '):].lstrip()
+            log.debug(f"objArgs: {objArgs}")
+            if objArgs.split('=')[0].strip() == 'orderBy':
+                orderBy = objArgs.split('=')[1].strip()
+                displayMfgs(GTDBConn1.getAllMfg(orderBy=orderBy))
+            else:  # invalid argument for mfgs
+                log.info(
+                    f"Unknown list manufactures argument {objArgs.split('=')[0].strip()}")
+                print_formatted_text(
+                    HTML(f"<ansired>ERROR</ansired> - Unknown list manufactures argument <b>{objArgs.split('=')[0].strip()}</b>."))
+        else:
+            displayMfgs(GTDBConn1.getAllMfg())
     else:
         print_formatted_text(
             HTML(f'<ansired>ERROR</ansired> - Unknown <ansigreen>list</ansigreen> object <b>{listObj}</b>'))
         log.info("Unknown list object")
+
+
+def displayMfgs(mfgList):
+    for r in mfgList:
+        print(r)
 
 
 def displayCircuits():

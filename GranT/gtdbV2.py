@@ -216,20 +216,17 @@ class GTdb:
     def getAllMfg(self, orderBy='id'):
         """Returns manufacture records ordered by choice.
 
-        PARMS
-        orderBy : Column to order by
-        returns a list
+        Args:
+            orderBy (str, optional): Column to sort by. Defaults to 'id'.
+
+        Returns:
+            list: (id,Make,cntryId,Country,alpha2,alpha3,Region)
         """
         logger.info(f"Getting all manufactures, orderd by {orderBy}")
-        selectSQL = """SELECT mfg.id as id,
-                    mfg.name AS Make,
-                    c.alpha2,
-                    c.name AS Country,
-                    c.region
-                FROM manufacture AS mfg
-                LEFT JOIN country AS c ON mfg.country_id = c.ID """
+        selectSQL = """SELECT mfg.id as id, mfg.name AS Make, cntry.ID as cntryId, cntry.name as Country, cntry.alpha2, cntry.alpha3, cntry.region as Region FROM manufacture AS mfg LEFT JOIN country AS cntry ON mfg.country_id = cntry.ID"""
+        orderBySQL = f"ORDER BY {orderBy}"
 
-        sql = selectSQL + f"ORDER BY {orderBy}"
+        sql = f"{selectSQL} {orderBySQL}"
 
         # Ready to execute SQL
         logger.debug(f"sql: {sql}")
