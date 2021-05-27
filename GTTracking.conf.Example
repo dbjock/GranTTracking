@@ -5,3 +5,8 @@
 [database]
 # dbFile =Path and filename of database
 dbFile = C:\Users\Pops\Code\GTurismoTracking\Data\GTTracking.db
+
+[logging]
+#configuration for logging
+#logDir = Path to existing directory where logs will be placed
+#level = logging level (CRITICAL | WARN | ERROR | INFO | DEBUG)
