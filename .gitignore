@@ -16,5 +16,6 @@ Snippings.txt
 Logs/
 Data/
 *.conf
+*.lnk
 gen_test*.py
 test-*
