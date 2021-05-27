@@ -195,8 +195,7 @@ def displayTrack(trackObj):
         print("No Track found matching the criteria")
         return
 
-    print(f"==Track Info===========")
-    t = Template(' $tName ID: $id')
+    t = Template('Track: $tName ID: $id')
     id = str(trackObj.id)
     tName = trackObj.name
     rowStr = t.substitute(id=id[0:4].rjust(4),
