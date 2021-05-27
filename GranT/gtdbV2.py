@@ -182,6 +182,8 @@ class GTdb:
             c = self.conn.cursor()
             c.execute(sql, theVars)
             row = c.fetchone()
+            # Disable the .keys() to get column names
+            self.conn.row_factory = None
             # Disable full sql traceback to logger.debug
             self.conn.set_trace_callback(None)
         except:
@@ -512,12 +514,15 @@ class GTdb:
         logger.debug(f"sql = {sql}")
         logger.debug(f"theVals = {theVals}")
         try:
-            self.conn.row_factory = sqlite3.Row  # .keys() enabled for column names
+            # Enable the .keys() to get column names
+            self.conn.row_factory = sqlite3.Row
             # enable full sql trackback to logger.debug
             self.conn.set_trace_callback(logger.debug)
             c = self.conn.cursor()
             c.execute(sql, theVals)
             row = c.fetchone()
+            # Disable the .keys() to get column names
+            self.conn.row_factory = None
             # Disable full sql traceback
             self.conn.set_trace_callback(None)
         except:
@@ -534,6 +539,34 @@ class GTdb:
 
         logger.debug(f"returning: {xCircuit}")
         return xCircuit
+
+    def getCircuits(self):
+        """Get a list of all the circuits
+
+        Returns: list(id, name)
+        """
+        logger.info("Getting list of Circuits")
+        selectSQL = "SELECT c.id as id, c.name as name from circuit as c"
+        orderbySQL = "ORDER by name"
+        sql = f"{selectSQL} {orderbySQL}"
+        logger.debug(f"sql = {sql}")
+
+        dbCursor = self.conn.cursor()
+        # Want to return a true list for results
+        self.conn.row_factory = None
+        # Enabling full sql traceback to logger.debug
+        self.conn.set_trace_callback(logger.debug)
+        try:
+            dbCursor.execute(sql)
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
+
+        result = dbCursor.fetchall()
+        # Disable full sql traceback to logger.debug
+        self.conn.set_trace_callback(None)
+        return result
 
     def getLayout(self, layoutId):
         """Gets a single Track Layout record from database.
@@ -556,6 +589,8 @@ class GTdb:
             c = self.conn.cursor()
             c.execute(sql, theVals)
             row = c.fetchone()
+            # Disable the .keys() to get column names
+            self.conn.row_factory = None
             # Disable full sql traceback to logger.debug
             self.conn.set_trace_callback(None)
         except:
@@ -614,6 +649,8 @@ class GTdb:
             whereSQL = "WHERE cntryId = ?"
 
         dbCursor = self.conn.cursor()
+        # Make sure no special row_factory. What a pure list.
+        self.conn.row_factory = None
         # Enabling full sql traceback to logger.debug
         self.conn.set_trace_callback(logger.debug)
         if key == None:
@@ -664,13 +701,15 @@ class GTdb:
         logger.debug(f"sql = {sql}")
         logger.debug(f"theVals = {theVals}")
         try:
-            # Enable the .keys() to get column names.
+            # Enable the .keys() to get column names
             self.conn.row_factory = sqlite3.Row
             # Enabling full sql traceback to logger.debug
             self.conn.set_trace_callback(logger.debug)
             c = self.conn.cursor()
             c.execute(sql, theVals)
             row = c.fetchone()
+            # Disable the .keys() to get column names
+            self.conn.row_factory = None
             # Disable full sql traceback to logger.debug
             self.conn.set_trace_callback(None)
         except:
