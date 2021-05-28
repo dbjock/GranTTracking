@@ -100,168 +100,29 @@ class GTdb:
         sql = 'INSERT INTO track_layout (name, miles, track_id, circuit_id) VALUES (:layoutName, :miles, :trackId, :circuitId)'
         return self._exeSQL(sql, theVals)
 
-    def trackLayoutTests(self, trackLayout):
-        """Tests to save/update a track layout
+    def addLayout(self, trackLayout):
+        """Adds a Track Layout record
 
         Args:
-            trackLayout (TrackLayout object): Track Layout that is being saved
+            trackLayout : TrackLayout Object
 
         Returns:
-            list: (True/False, msg)
-            True = Tests passed
-            False = See msg for what did not pass
+            list: ResultCode, ResultText
+                ResultCode 0 = Success
+                ResultCode != 0 = see ResultText for details
         """
-        logger.debug(f"trackLayout={trackLayout}")
-        # Layout name must be unique for the Track
+        logger.debug(f"addTrackLayout: trackLayout={trackLayout}")
         logger.info(
-            f"Checking if layout [{trackLayout.name}] already exists for track (case insensitve)")
-        layoutList = self.getLayoutList('trackId', trackLayout.track.id)
-        if trackLayout.name:  # layout name exists go uppercase
-            xLayoutName = trackLayout.name.upper()
+            f"Adding track layout {trackLayout.name} for track {trackLayout.track.name}.")
+        tResult = self.validateTrackLayout(trackLayout)
+        if tResult[0]:  # Tests passed
+            result = self._addLayoutRec(trackLayout)
         else:
-            xLayoutName = trackLayout.name
+            logger.warning(tResult[1])
+            result = (1, tResult[1])
 
-        for row in layoutList:
-            logger.debug(f"check {row[3]}")
-            if row[3]:  # layout name exists go uppercase
-                testName = row[3].upper()
-            else:
-                testName = row[3]
-            if testName == xLayoutName:  # layout name exist for track
-                msg = f"Layout name [{trackLayout.name}] for Track [{row[1]}] already exists"
-                result = (False, msg)
-                logger.info(f"returning = {result}")
-                return result
-
-        # Miles is not a string. (Null is allowed in this test)
-        logger.info(f"Checking miles [{trackLayout.miles}] is not a string")
-        if isinstance(trackLayout.miles, str):  # miles is a string
-            result = (False, f"Miles must not contain letters")
-            logger.info(f"returning = {result}")
-            return result
-        # Miles is not null. not tested. DB should provide integrity error: NOT NULL constraint failed
-        # Circuit ID existance not tested. DB should provide integrity error: FOREIGN KEY constraint failed
-        # Track ID existance not tested. DB should provide integrity error: FOREIGN KEY constraint failed
-        # All tests passed
-        result = (True, "Track Layout Tests Passed")
-        logger.info(f"returning = {result}")
+        logger.debug(f"returning: {result}")
         return result
-
-    def getMfg(self, key='mfgId', value=None):
-        """
-        Gets the manufacture record from the database based on the key being used.
-
-        ARGS:
-        value : Is the value being search for.
-        key   : the column to search on. mfgId, or Make. Default is mfgid
-        Returns : ManufactureObject. IF ManufactureObject.mfgid = 0 then nothing found
-        """
-        logger.debug(f"Getting Manufacture: {key}={value}")
-        selectSQL = """SELECT mfg.id as mfgId,
-                mfg.name AS Make,
-                c.id as cntryId,
-                c.name AS Country,
-                c.alpha2,
-                c.alpha3,
-                c.region
-                FROM manufacture AS mfg
-                LEFT JOIN country AS c ON mfg.country_id = c.ID """
-
-        whereSQL = f" WHERE {key} = ?"
-
-        theVars = (value,)
-        sql = selectSQL + whereSQL
-        # Ready to execute SQL
-        logger.debug(f"{theVars}")
-        logger.debug(f"sql: {sql}")
-        try:
-            # Enable the .keys() to get column names.
-            self.conn.row_factory = sqlite3.Row
-            # Enabling full sql traceback to logger.debug
-            self.conn.set_trace_callback(logger.debug)
-            c = self.conn.cursor()
-            c.execute(sql, theVars)
-            row = c.fetchone()
-            # Disable the .keys() to get column names
-            self.conn.row_factory = None
-            # Disable full sql traceback to logger.debug
-            self.conn.set_trace_callback(None)
-        except:
-            logger.critical(
-                f'Unexpected error executing sql: {sql}', exc_info=True)
-            sys.exit(1)
-
-        if row:
-            # Place results into Manufacture object
-            logger.debug("manufacture found.")
-            xCountry = gtClass.Country(
-                cntryID=row['cntryId'], cntryName=row['Country'],
-                alpha2=row['alpha2'], alpha3=row['alpha3'], region=row['region'])
-
-            xMake = gtClass.Manufacture(
-                id=row['mfgid'], name=row['Make'], countryObj=xCountry)
-            logger.debug(f"returning manufacture object")
-        else:
-            # Create blank Manufacture object
-            logger.debug("manufacture not found.")
-            xCountry = gtClass.Country(
-                cntryID=0, cntryName='', alpha2='', alpha3='', region='')
-
-            xMake = gtClass.Manufacture(
-                id=0, name='', countryObj=xCountry)
-            logger.debug(f"returning blank manufacture object")
-
-        return xMake
-
-    def getAllMfg(self, orderBy='id'):
-        """Returns manufacture records ordered by choice.
-
-        Args:
-            orderBy (str, optional): Column to sort by. Defaults to 'id'.
-
-        Returns:
-            list: (id,Make,cntryId,Country,alpha2,alpha3,Region)
-        """
-        logger.info(f"Getting all manufactures, ordered by {orderBy}")
-        selectSQL = """SELECT mfg.id as id, mfg.name AS Make, cntry.ID as cntryId, cntry.name as Country, cntry.alpha2, cntry.alpha3, cntry.region as Region FROM manufacture AS mfg LEFT JOIN country AS cntry ON mfg.country_id = cntry.ID"""
-        orderBySQL = f"ORDER BY {orderBy}"
-
-        sql = f"{selectSQL} {orderBySQL}"
-
-        # Ready to execute SQL
-        logger.debug(f"sql: {sql}")
-        try:
-            dbCursor = self.conn.cursor()
-            # Enabling full sql traceback to logger.debug
-            self.conn.set_trace_callback(logger.debug)
-            dbCursor.execute(sql)
-            result = dbCursor.fetchall()
-            logger.info(f"Returning all Manufacture results")
-            # Disable full sql traceback to logger.debug
-            self.conn.set_trace_callback(None)
-            return result
-        except:
-            logger.critical(
-                f'Unexpected error executing sql: {sql}', exc_info=True)
-            sys.exit(1)
-
-    def initDB(self, scriptPath=None):
-        """Create tables, views, indexes
-
-        PARM
-        scriptPath : path to script files *Required
-        """
-        logger.debug(f"scriptPath={scriptPath}")
-        scripts = ['createTables.sql',
-                   'LoadLookUpData.sql',
-                   'LoadOtherData.sql']
-
-        gtScripts = Path(scriptPath)
-
-        for sFile in scripts:
-            scriptFile = gtScripts / sFile
-            logger.debug(f"Executing {scriptFile}")
-            self._exeScriptFile(scriptFileName=f'{scriptFile}')
 
     def addMfg(self, mfgObj):
         """Adding a manufacture record to database.
@@ -368,30 +229,6 @@ class GTdb:
         logger.debug(f"returning: {result}")
         return result
 
-    def addLayout(self, trackLayout):
-        """Adds a Track Layout record
-
-        Args:
-            trackLayout : TrackLayout Object
-
-        Returns:
-            list: ResultCode, ResultText
-                ResultCode 0 = Success
-                ResultCode != 0 = see ResultText for details
-        """
-        logger.debug(f"addTrackLayout: trackLayout={trackLayout}")
-        logger.info(
-            f"Adding track layout {trackLayout.name} for track {trackLayout.track.name}.")
-        tResult = self.trackLayoutTests(trackLayout)
-        if tResult[0]:  # Tests passed
-            result = self._addLayoutRec(trackLayout)
-        else:
-            logger.warning(tResult[1])
-            result = (1, tResult[1])
-
-        logger.debug(f"returning: {result}")
-        return result
-
     def deleteMfg(self, mfgId):
         """Delete manufacture record from database
 
@@ -483,6 +320,38 @@ class GTdb:
 
         logger.info(f"returning {result}")
         return result
+
+    def getAllMfg(self, orderBy='id'):
+        """Returns manufacture records ordered by choice.
+
+        Args:
+            orderBy (str, optional): Column to sort by. Defaults to 'id'.
+
+        Returns:
+            list: (id,Make,cntryId,Country,alpha2,alpha3,Region)
+        """
+        logger.info(f"Getting all manufactures, ordered by {orderBy}")
+        selectSQL = """SELECT mfg.id as id, mfg.name AS Make, cntry.ID as cntryId, cntry.name as Country, cntry.alpha2, cntry.alpha3, cntry.region as Region FROM manufacture AS mfg LEFT JOIN country AS cntry ON mfg.country_id = cntry.ID"""
+        orderBySQL = f"ORDER BY {orderBy}"
+
+        sql = f"{selectSQL} {orderBySQL}"
+
+        # Ready to execute SQL
+        logger.debug(f"sql: {sql}")
+        try:
+            dbCursor = self.conn.cursor()
+            # Enabling full sql traceback to logger.debug
+            self.conn.set_trace_callback(logger.debug)
+            dbCursor.execute(sql)
+            result = dbCursor.fetchall()
+            logger.info(f"Returning all Manufacture results")
+            # Disable full sql traceback to logger.debug
+            self.conn.set_trace_callback(None)
+            return result
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
 
     def getCircuit(self, key, value):
         """Get circuit record from db
@@ -710,6 +579,72 @@ class GTdb:
         self.conn.set_trace_callback(None)
         return result
 
+    def getMfg(self, key='mfgId', value=None):
+        """
+        Gets the manufacture record from the database based on the key being used.
+
+        ARGS:
+        value : Is the value being search for.
+        key   : the column to search on. mfgId, or Make. Default is mfgid
+        Returns : ManufactureObject. IF ManufactureObject.mfgid = 0 then nothing found
+        """
+        logger.debug(f"Getting Manufacture: {key}={value}")
+        selectSQL = """SELECT mfg.id as mfgId,
+                mfg.name AS Make,
+                c.id as cntryId,
+                c.name AS Country,
+                c.alpha2,
+                c.alpha3,
+                c.region
+                FROM manufacture AS mfg
+                LEFT JOIN country AS c ON mfg.country_id = c.ID """
+
+        whereSQL = f" WHERE {key} = ?"
+
+        theVars = (value,)
+        sql = selectSQL + whereSQL
+        # Ready to execute SQL
+        logger.debug(f"{theVars}")
+        logger.debug(f"sql: {sql}")
+        try:
+            # Enable the .keys() to get column names.
+            self.conn.row_factory = sqlite3.Row
+            # Enabling full sql traceback to logger.debug
+            self.conn.set_trace_callback(logger.debug)
+            c = self.conn.cursor()
+            c.execute(sql, theVars)
+            row = c.fetchone()
+            # Disable the .keys() to get column names
+            self.conn.row_factory = None
+            # Disable full sql traceback to logger.debug
+            self.conn.set_trace_callback(None)
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
+
+        if row:
+            # Place results into Manufacture object
+            logger.debug("manufacture found.")
+            xCountry = gtClass.Country(
+                cntryID=row['cntryId'], cntryName=row['Country'],
+                alpha2=row['alpha2'], alpha3=row['alpha3'], region=row['region'])
+
+            xMake = gtClass.Manufacture(
+                id=row['mfgid'], name=row['Make'], countryObj=xCountry)
+            logger.debug(f"returning manufacture object")
+        else:
+            # Create blank Manufacture object
+            logger.debug("manufacture not found.")
+            xCountry = gtClass.Country(
+                cntryID=0, cntryName='', alpha2='', alpha3='', region='')
+
+            xMake = gtClass.Manufacture(
+                id=0, name='', countryObj=xCountry)
+            logger.debug(f"returning blank manufacture object")
+
+        return xMake
+
     def getTrack(self, key='trackId', value=None):
         """
         Gets a single Track record from database based on key and value passed.
@@ -760,6 +695,24 @@ class GTdb:
 
         logger.debug(f'track = {xTrack}')
         return xTrack
+
+    def initDB(self, scriptPath=None):
+        """Create tables, views, indexes
+
+        PARM
+        scriptPath : path to script files *Required
+        """
+        logger.debug(f"scriptPath={scriptPath}")
+        scripts = ['createTables.sql',
+                   'LoadLookUpData.sql',
+                   'LoadOtherData.sql']
+
+        gtScripts = Path(scriptPath)
+
+        for sFile in scripts:
+            scriptFile = gtScripts / sFile
+            logger.debug(f"Executing {scriptFile}")
+            self._exeScriptFile(scriptFileName=f'{scriptFile}')
 
     def updateMfg(self, mfgObj):
         """Update a manufacture record in database
@@ -830,7 +783,7 @@ class GTdb:
         """
         logger.info(f"Updating Track Layout {uLayout}")
 
-        tResult = self.trackLayoutTests(uLayout)
+        tResult = self.validateTrackLayout(uLayout)
         if tResult[0]:  # Tests passed
             logger.info("Updating track layout id: {uLayout.id}")
             sql = "UPDATE track_layout SET name = :layoutName, miles = :miles, track_id = :trackId, circuit_id = :circuitId"
@@ -844,6 +797,53 @@ class GTdb:
             result = (1, tResult[1])
 
         logger.debug(f"returning: {result}")
+        return result
+
+    def validateTrackLayout(self, trackLayout):
+        """Validates TrackLayout rules and returns results
+
+        Args:
+            trackLayout (TrackLayout object): Track Layout that is being saved
+
+        Returns:
+            list: (True/False, msg)
+            True = Tests passed
+            False = See msg for what did not pass
+        """
+        logger.debug(f"trackLayout={trackLayout}")
+        # Layout name must be unique for the Track
+        logger.info(
+            f"Checking if layout [{trackLayout.name}] already exists for track (case insensitve)")
+        layoutList = self.getLayoutList('trackId', trackLayout.track.id)
+        if trackLayout.name:  # layout name exists go uppercase
+            xLayoutName = trackLayout.name.upper()
+        else:
+            xLayoutName = trackLayout.name
+
+        for row in layoutList:
+            logger.debug(f"check {row[3]}")
+            if row[3]:  # layout name exists go uppercase
+                testName = row[3].upper()
+            else:
+                testName = row[3]
+            if testName == xLayoutName:  # layout name exist for track
+                msg = f"Layout name [{trackLayout.name}] for Track [{row[1]}] already exists"
+                result = (False, msg)
+                logger.info(f"returning = {result}")
+                return result
+
+        # Miles is not a string. (Null is allowed in this test)
+        logger.info(f"Checking miles [{trackLayout.miles}] is not a string")
+        if isinstance(trackLayout.miles, str):  # miles is a string
+            result = (False, f"Miles must not contain letters")
+            logger.info(f"returning = {result}")
+            return result
+        # Miles is not null. not tested. DB should provide integrity error: NOT NULL constraint failed
+        # Circuit ID existance not tested. DB should provide integrity error: FOREIGN KEY constraint failed
+        # Track ID existance not tested. DB should provide integrity error: FOREIGN KEY constraint failed
+        # All tests passed
+        result = (True, "Track Layout Tests Passed")
+        logger.info(f"returning = {result}")
         return result
 
     def _logtest(self):
