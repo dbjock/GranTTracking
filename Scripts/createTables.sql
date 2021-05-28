@@ -1,5 +1,5 @@
 --
--- 05/26/2021
+-- 05/28/2021
 --
 -- Text encoding used: System
 --
@@ -31,8 +31,9 @@ CREATE TABLE category (
     id          INTEGER      PRIMARY KEY,
     name        VARCHAR (16) UNIQUE
                              NOT NULL
-							 COLLATE NOCASE,
-    description TEXT
+                             COLLATE NOCASE,
+    description TEXT,
+    sortOrder   INTEGER
 );
 
 -- Table: circuit

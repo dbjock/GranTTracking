@@ -742,3 +742,19 @@ class TestCircuit(unittest.TestCase):
         self.assertEqual(xCircuit.id, 0)
 
         logger.info("==== END Get Circuit")
+
+
+class TestCarCat(unittest.TestCase):
+    def test_getCarCats(self):
+        logger.info("==== BEGIN Get Car category tests")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Getting all car category/classes")
+        testVal = 1  # First row, first element should be this
+        testList = dbConn1.getCarCats()
+        logger.info(f"testList = {testList}")
+        self.assertEqual(testList[0][0], testVal,
+                         "Failed getting car category and classes")
+
+        logger.info("==== END Get Car category tests")

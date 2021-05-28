@@ -77,6 +77,7 @@ def main():
         'help': {'exit': None, 'list': None,
                  'tracks': None},
         'list': {
+            'classes': None,
             'circuits': None,
             'drivetrains': None,
             'manufactures': {'orderBy=': None},
@@ -159,6 +160,8 @@ def listAction(cmd):
             log.info("Missing required args for track action")
             print_formatted_text(
                 HTML(f'<ansired>ERROR</ansired> - id= or name= are required.'))
+    elif listObj == 'classes':
+        displayCarCats(GTDBConn1.getCarCats())
     elif listObj == 'circuits':
         displayCircuits()
     elif listObj == 'drivetrains':
@@ -181,6 +184,12 @@ def listAction(cmd):
         print_formatted_text(
             HTML(f'<ansired>ERROR</ansired> - Unknown <ansigreen>list</ansigreen> object <b>{listObj}</b>'))
         log.info("Unknown list object")
+
+
+def displayCarCats(theList):
+    """Display all the Car Categories/Classes"""
+    for r in theList:
+        print(r)
 
 
 def displayMfgs(theList):

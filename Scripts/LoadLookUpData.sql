@@ -5,22 +5,22 @@
 --
 PRAGMA foreign_keys = off;
 -- Table: category
-INSERT INTO category (id, name, description) VALUES (1, 'Gr.1', 'Racing cars with bodies and engines specially developed to provide higher performance. This group also includes prototype sports cars etc.');
-INSERT INTO category (id, name, description) VALUES (2, 'Gr.2', 'Racing cars that represent the highest peak of the touring car category. This group corresponds to the GT500 class that runs in the Japanese SUPER GT.');
-INSERT INTO category (id, name, description) VALUES (3, 'Gr.3', 'Racing cars with special bodywork for greater aerodynamic performance. This group corresponds to the FIA''s GT3 class.');
-INSERT INTO category (id, name, description) VALUES (4, 'Gr.4', 'Racing cars with basic performance enhancements, such as additional safety equipment or weight optimization. This group corresponds to the FIA''s GT4 class.');
-INSERT INTO category (id, name, description) VALUES (5, 'Gr.B', 'Rally cars that have been modified for dirt racing, with improved suspension systems, body height control, and so on.');
-INSERT INTO category (id, name, description) VALUES (6, 'Gr.X', 'Extreme cars that don''t fit into any racing category.');
-INSERT INTO category (id, name, description) VALUES (7, 'N100', 'Power level 0 to 150 PS (148 hp; 110 kW)');
-INSERT INTO category (id, name, description) VALUES (8, 'N200', 'Power level 150 PS (148 hp; 110 kW) to 250 PS (247 hp; 184 kW)');
-INSERT INTO category (id, name, description) VALUES (9, 'N300', 'Power level 251 PS (248 hp; 185 kW) to 350 PS (345 hp; 257 kW) ');
-INSERT INTO category (id, name, description) VALUES (10, 'N400', 'Power level 351 PS (346 hp; 258 kW) to 450 PS (444 hp; 331 kW)');
-INSERT INTO category (id, name, description) VALUES (11, 'N500', 'Power level 451 PS (445 hp; 332 kW) to 550 PS (542 hp; 405 kW)');
-INSERT INTO category (id, name, description) VALUES (12, 'N600', 'Power level 551 PS (543 hp; 405 kW) to 650 PS (641 hp; 478 kW)');
-INSERT INTO category (id, name, description) VALUES (13, 'N700', 'Power level 651 PS (642 hp; 479 kW) to 750 PS (740 hp; 552 kW) ');
-INSERT INTO category (id, name, description) VALUES (14, 'N800', 'Power level 751 PS (741 hp; 552 kW) to 850 PS (838 hp; 625 kW)');
-INSERT INTO category (id, name, description) VALUES (15, 'N900', 'Power level 851 PS (839 hp; 626 kW) to 950 PS (937 hp; 699 kW)');
-INSERT INTO category (id, name, description) VALUES (16, 'N1000', 'Power level 951 PS (938 hp; 699 kW) to Infinite ');
+INSERT INTO category (id, name, description, sortOrder) VALUES (1, 'Gr.1', 'Racing cars with bodies and engines specially developed to provide higher performance. This group also includes prototype sports cars etc.', 10);
+INSERT INTO category (id, name, description, sortOrder) VALUES (2, 'Gr.2', 'Racing cars that represent the highest peak of the touring car category. This group corresponds to the GT500 class that runs in the Japanese SUPER GT.', 20);
+INSERT INTO category (id, name, description, sortOrder) VALUES (3, 'Gr.3', 'Racing cars with special bodywork for greater aerodynamic performance. This group corresponds to the FIA''s GT3 class.', 30);
+INSERT INTO category (id, name, description, sortOrder) VALUES (4, 'Gr.4', 'Racing cars with basic performance enhancements, such as additional safety equipment or weight optimization. This group corresponds to the FIA''s GT4 class.', 40);
+INSERT INTO category (id, name, description, sortOrder) VALUES (5, 'Gr.B', 'Rally cars that have been modified for dirt racing, with improved suspension systems, body height control, and so on.', 50);
+INSERT INTO category (id, name, description, sortOrder) VALUES (6, 'Gr.X', 'Extreme cars that don''t fit into any racing category.', 60);
+INSERT INTO category (id, name, description, sortOrder) VALUES (7, 'N100', 'Power level 0 to 150 PS (148 hp; 110 kW)', 100);
+INSERT INTO category (id, name, description, sortOrder) VALUES (8, 'N200', 'Power level 150 PS (148 hp; 110 kW) to 250 PS (247 hp; 184 kW)', 200);
+INSERT INTO category (id, name, description, sortOrder) VALUES (9, 'N300', 'Power level 251 PS (248 hp; 185 kW) to 350 PS (345 hp; 257 kW)', 300);
+INSERT INTO category (id, name, description, sortOrder) VALUES (10, 'N400', 'Power level 351 PS (346 hp; 258 kW) to 450 PS (444 hp; 331 kW)', 400);
+INSERT INTO category (id, name, description, sortOrder) VALUES (11, 'N500', 'Power level 451 PS (445 hp; 332 kW) to 550 PS (542 hp; 405 kW)', 500);
+INSERT INTO category (id, name, description, sortOrder) VALUES (12, 'N600', 'Power level 551 PS (543 hp; 405 kW) to 650 PS (641 hp; 478 kW)', 600);
+INSERT INTO category (id, name, description, sortOrder) VALUES (13, 'N700', 'Power level 651 PS (642 hp; 479 kW) to 750 PS (740 hp; 552 kW)', 700);
+INSERT INTO category (id, name, description, sortOrder) VALUES (14, 'N800', 'Power level 751 PS (741 hp; 552 kW) to 850 PS (838 hp; 625 kW)', 800);
+INSERT INTO category (id, name, description, sortOrder) VALUES (15, 'N900', 'Power level 851 PS (839 hp; 626 kW) to 950 PS (937 hp; 699 kW)', 900);
+INSERT INTO category (id, name, description, sortOrder) VALUES (16, 'N1000', 'Power level 951 PS (938 hp; 699 kW) to Infinite', 1000);
 
 -- Table: circuit
 INSERT INTO circuit (id, name) VALUES (1, 'Original Circuit');

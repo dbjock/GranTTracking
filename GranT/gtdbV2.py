@@ -321,6 +321,34 @@ class GTdb:
         logger.info(f"returning {result}")
         return result
 
+    def getCarCats(self):
+        """Gets all the car category/classes in db and returns as a list
+
+        Returns: list(id, carClass, desc, sortorder)
+
+        """
+        logger.info("Getting list of all the car categories")
+        selectSQL = "SELECT c.id as id, c.name as carClass, c.description as desc, c.sortOrder as sortorder FROM category as c ORDER BY c.sortOrder"
+        sql = selectSQL
+        logger.debug(f"sql = {sql}")
+
+        dbCursor = self.conn.cursor()
+        # Want to return a true list for results
+        self.conn.row_factory = None
+        # Enabling full sql traceback to logger.debug
+        self.conn.set_trace_callback(logger.debug)
+        try:
+            dbCursor.execute(sql)
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
+
+        result = dbCursor.fetchall()
+        # Disable full sql traceback to logger.debug
+        self.conn.set_trace_callback(None)
+        return result
+
     def getCircuit(self, key, value):
         """Get circuit record from db
 
