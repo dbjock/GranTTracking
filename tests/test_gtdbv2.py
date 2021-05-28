@@ -508,28 +508,32 @@ class TestTrackLayout(unittest.TestCase):
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
 
         logger.info("Get Layout List by trackId")
-        testVal = 2
+        testVal = 5  # Track ID 5
         layoutList = dbConn1.getLayoutList('trackId', testVal)
         logger.info(f"layoutList={layoutList}")
-        self.assertGreaterEqual(len(layoutList), 1)
+        self.assertEqual(layoutList[0][0], testVal,
+                         "Failed getting the track id from track list")
 
         logger.info("Get Layout List by layoutId")
-        testVal = 1
+        testVal = 10  # Layout id 10
         layoutList = dbConn1.getLayoutList('layoutId', testVal)
         logger.info(f"layoutList={layoutList}")
-        self.assertEqual(len(layoutList), 1)
+        self.assertEqual(layoutList[0][2], testVal,
+                         "Failed getting the layoutId from track list")
 
         logger.info("Get Layout List by circuitId")
-        testVal = 2
+        testVal = 2  # Circuit id 2
         layoutList = dbConn1.getLayoutList('circuitId', testVal)
         logger.info(f"layoutList={layoutList}")
-        self.assertGreaterEqual(len(layoutList), 1)
+        self.assertEqual(layoutList[0][5], testVal,
+                         "Failed getting the circuitId from track list")
 
         logger.info("Get Layout List by cntryId")
-        testVal = 237
+        testVal = 237  # Country id 237
         layoutList = dbConn1.getLayoutList('cntryId', testVal)
         logger.info(f"layoutList={layoutList}")
-        self.assertGreaterEqual(len(layoutList), 1)
+        self.assertEqual(layoutList[0][7], testVal,
+                         "Failed getting the cntryId from track list")
         logger.info("==== END get Layout List")
 
     def test_addTrackLayout(self):
