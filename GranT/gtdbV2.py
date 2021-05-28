@@ -724,6 +724,32 @@ class GTdb:
         logger.debug(f'track = {xTrack}')
         return xTrack
 
+    def getTrackList(self):
+        """Returns a list of all the tracks in db
+
+        Returns: list (trackId, trackName)
+        """
+        logger.info("Getting list of Tracks")
+        selectSQL = "select id, name from track order by name"
+        sql = f"{selectSQL}"
+        logger.debug(f"sql = {sql}")
+        dbCursor = self.conn.cursor()
+        # Want to return a true list for results
+        self.conn.row_factory = None
+        # Enabling full sql traceback to logger.debug
+        self.conn.set_trace_callback(logger.debug)
+        try:
+            dbCursor.execute(sql)
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
+
+        result = dbCursor.fetchall()
+        # Disable full sql traceback to logger.debug
+        self.conn.set_trace_callback(None)
+        return result
+
     def initDB(self, scriptPath=None):
         """Create tables, views, indexes
 

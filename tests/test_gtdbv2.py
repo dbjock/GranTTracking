@@ -396,6 +396,21 @@ class TestTrack(unittest.TestCase):
         del dbConn1
         logger.info(f"==== END Get/read Track\n")
 
+    def test_getTrackList(self):
+        logger.info("==== BEGIN get Tracks")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Getting a list of tracks")
+        testVal = 17  # First element should be trackid 17
+        testList = dbConn1.getTrackList()
+        logger.info(f"testList={testList}")
+        self.assertEqual(
+            testList[0][0], testVal, "Failed. First track or should have track id 17")
+
+        del dbConn1
+        logger.info(f"==== END get Tracks\n")
+
     def test_updateTrack(self):
         logger.info("===== BEGIN Update Track")
         countryNonExist = GT.Country(
