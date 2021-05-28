@@ -78,6 +78,7 @@ def main():
                  'tracks': None},
         'list': {
             'circuits': None,
+            'drivetrains': None,
             'manufactures': {'orderBy=': None},
             'track': {
                 'id=': None,
@@ -160,6 +161,8 @@ def listAction(cmd):
                 HTML(f'<ansired>ERROR</ansired> - id= or name= are required.'))
     elif listObj == 'circuits':
         displayCircuits()
+    elif listObj == 'drivetrains':
+        displayDriveTrains(GTDBConn1.getDriveTrains())
     elif listObj == 'manufactures':
         if cmd.find(' ') != -1:  # Args provided
             objArgs = cmd[cmd.find(' '):].lstrip()
@@ -180,8 +183,13 @@ def listAction(cmd):
         log.info("Unknown list object")
 
 
-def displayMfgs(mfgList):
-    for r in mfgList:
+def displayMfgs(theList):
+    for r in theList:
+        print(r)
+
+
+def displayDriveTrains(theList):
+    for r in theList:
         print(r)
 
 
@@ -256,6 +264,17 @@ def displayTrack(trackObj):
         print(rowStr)
 
     print("=" * 78)
+
+
+def _sortTuple(tup, key):
+    """Returns a tuple sorted by the key
+
+    Args:
+        tup (tuple list): example [(1,"zzd"),(3,"azd")]
+        key (int): The key/index to sort.
+            example: 1 for results: [(3,"azd"),(1,"zzd")]
+    """
+    return(sorted(tup, key=lambda x: x[key]))
 
 
 if __name__ == '__main__':

@@ -222,7 +222,7 @@ class GTdb:
         Returns:
             list: (id,Make,cntryId,Country,alpha2,alpha3,Region)
         """
-        logger.info(f"Getting all manufactures, orderd by {orderBy}")
+        logger.info(f"Getting all manufactures, ordered by {orderBy}")
         selectSQL = """SELECT mfg.id as id, mfg.name AS Make, cntry.ID as cntryId, cntry.name as Country, cntry.alpha2, cntry.alpha3, cntry.region as Region FROM manufacture AS mfg LEFT JOIN country AS cntry ON mfg.country_id = cntry.ID"""
         orderBySQL = f"ORDER BY {orderBy}"
 
@@ -560,6 +560,38 @@ class GTdb:
                 f'Unexpected error executing sql: {sql}', exc_info=True)
             sys.exit(1)
 
+        result = dbCursor.fetchall()
+        # Disable full sql traceback to logger.debug
+        self.conn.set_trace_callback(None)
+        return result
+
+    def getDriveTrains(self, orderBy='code'):
+        """[summary]
+
+        Args:
+            orderBy (str, optional): The field for the list to be ordered by
+            Defaults to 'code'.
+
+        Returns:
+            tuple list: (id, code, description)
+        """
+        logger.info(f"Getting all drive trains ordered by {orderBy} ")
+        selectSQL = "select id, code, description FROM drivetrain"
+        orderBySQL = f"ORDER BY {orderBy}"
+        sql = f"{selectSQL} {orderBySQL}"
+        logger.debug(f"sql: {sql}")
+
+        dbCursor = self.conn.cursor()
+        # Make sure no special row_factory. What a pure list.
+        self.conn.row_factory = None
+        # Enabling full sql traceback to logger.debug
+        self.conn.set_trace_callback(logger.debug)
+        try:
+            dbCursor.execute(sql)
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
         result = dbCursor.fetchall()
         # Disable full sql traceback to logger.debug
         self.conn.set_trace_callback(None)
