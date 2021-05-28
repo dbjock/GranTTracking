@@ -123,23 +123,16 @@ def displayCarCats(theList):
         print(r)
 
 
-def displayCircuits():
+def displayCircuits(theList):
     """Display all the circuits"""
-    cList = GTDBConn1.getCircuits()
-    print(f"Number of circuits: {len(cList)}")
-    t = Template(' $id | $cName')
-    id = "ID"
-    cName = "Circuit"
-    hdrStr = t.substitute(id=id[0:4].rjust(4),
-                          cName=cName[0:30].ljust(30))
-    print(hdrStr)
+    print(f"Number of circuits: {len(theList)}")
+    print(f"  ID  | Circuit")
     print("-" * 78)  # header seperator
-    for r in cList:
-        id = str(r[0])
-        cName = r[1]
-        rowStr = t.substitute(id=id[0:4].rjust(4),
-                              cName=cName[0:30].ljust(30))
-        print(rowStr)
+
+    for r in theList:
+        # {r[0]:>4} -- This means the value of r[0] will be right justified with 4 spaces
+        print(f" {r[0]:>4} | {r[1][0:30].ljust(30)}")
+
     print("=" * 78)
 
 
@@ -271,7 +264,7 @@ def listAction(cmd):
     elif listObj == 'classes':
         displayCarCats(GTDBConn1.getCarCats())
     elif listObj == 'circuits':
-        displayCircuits()
+        displayCircuits(GTDBConn1.getCircuits())
     elif listObj == 'drivetrains':
         displayDriveTrains(GTDBConn1.getDriveTrains())
     elif listObj == 'manufactures':
