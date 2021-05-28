@@ -12,9 +12,8 @@ from prompt_toolkit import prompt
 from prompt_toolkit import PromptSession
 from prompt_toolkit import print_formatted_text, HTML
 from prompt_toolkit.completion import NestedCompleter
-from prompt_toolkit.shortcuts import input_dialog
 from prompt_toolkit.shortcuts import radiolist_dialog
-from prompt_toolkit.shortcuts import clear as clearScreen
+from prompt_toolkit.shortcuts import input_dialog
 
 # App specific required
 from GranT import gtdbV2 as gtdb
@@ -66,6 +65,8 @@ def _sortTuple(tup, key):
 
 
 def main():
+
+    cls()
     print("enter Exit or Help for more info")
     completer = NestedCompleter.from_nested_dict({
         'help': {'exit': None, 'list': None,
@@ -117,6 +118,10 @@ def main():
                     HTML(f'Unknown command Please enter a command'))
 
     print('GoodBye!')
+
+
+def cls():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 
 def displayCarCats(theList):
@@ -288,20 +293,28 @@ def listTrackCmd(args):
             print_formatted_text(
                 HTML(f"<ansired>ERROR</ansired> - Unknown list track argument <b>{args.split('=')[0].strip()}</b>."))
     else:  # No args passed
-        log.info("No args passed.. Time for something special")
-        print_formatted_text(
-            HTML(f'<ansiyellow>WARNING</ansiyellow> - I am suppose be doing something special.'))
-        print()
-        pickList = GTDBConn1.getTrackList()
-        # Have user select the track
-        result = radiolist_dialog(
-            title="Tracks",
-            text="Which Track would you like to get info on ?",
-            values=pickList
-        ).run()
-        # Getting the track info
-        trackRec = GTDBConn1.getTrack(key='trackId', value=result)
-        displayTrack(trackRec)
+        log.info("No args passed. Have user select a track to get info")
+        result = pickTrack()
+        log.debug(f"result={result}")
+        if result != None:  # User selected a track
+            trackRec = GTDBConn1.getTrack(key='trackId', value=result)
+            displayTrack(trackRec)
+
+
+def pickTrack():
+    """Dialog box for user to select a a track
+    Returns: the trackID user picked
+    """
+    log.debug("get tracks into picklist")
+    pickList = GTDBConn1.getTrackList()
+    log.debug("display tracks for user to choose")
+    result = radiolist_dialog(
+        title="Tracks",
+        text="Which Track would you like to get info on ?",
+        values=pickList
+    ).run()
+    log.info(f"Results from choices: {result}")
+    return result
 
 
 if __name__ == '__main__':
