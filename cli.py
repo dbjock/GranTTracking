@@ -52,23 +52,15 @@ print(f"Connecting to db {gtcfg.dbcfg['dbFile']}")
 GTDBConn1 = gtdb.GTdb(gtcfg.dbcfg['dbFile'])
 
 
-def help(arg):
-    """Display help information
+def _sortTuple(tup, key):
+    """Returns a tuple sorted by the key
 
     Args:
-        arg (string): command looking to get help on
+        tup (tuple list): example [(1,"zzd"),(3,"azd")]
+        key (int): The key/index to sort.
+            example: 1 for results: [(3,"azd"),(1,"zzd")]
     """
-    if arg == 'general':
-        print("Required to provide one of the following")
-        print(" LIST\n CREATE\n EDIT\n DELETE")
-    elif arg == 'list':
-        print(""" Addtional LIST requirements
-          - Tracks : list all tracks
-          - Track [name of track] - list details of track
-          - TrackLayout [name of TrackLayout] - list details of tracklayout""")
-    else:
-        pass
-    sys.exit()
+    return(sorted(tup, key=lambda x: x[key]))
 
 
 def main():
@@ -123,6 +115,122 @@ def main():
                     HTML(f'Unknown command Please enter a command'))
 
     print('GoodBye!')
+
+
+def displayCarCats(theList):
+    """Display all the Car Categories/Classes"""
+    for r in theList:
+        print(r)
+
+
+def displayCircuits():
+    """Display all the circuits"""
+    cList = GTDBConn1.getCircuits()
+    print(f"Number of circuits: {len(cList)}")
+    t = Template(' $id | $cName')
+    id = "ID"
+    cName = "Circuit"
+    hdrStr = t.substitute(id=id[0:4].rjust(4),
+                          cName=cName[0:30].ljust(30))
+    print(hdrStr)
+    print("-" * 78)  # header seperator
+    for r in cList:
+        id = str(r[0])
+        cName = r[1]
+        rowStr = t.substitute(id=id[0:4].rjust(4),
+                              cName=cName[0:30].ljust(30))
+        print(rowStr)
+    print("=" * 78)
+
+
+def displayDriveTrains(theList):
+    for r in theList:
+        print(r)
+
+
+def displayMfgs(theList):
+    for r in theList:
+        print(r)
+
+
+def displayTrack(trackObj):
+    """Print to screen the track object
+
+    Args:
+        trackObj
+    """
+    if trackObj.id == 0:  # No track found
+        print("No Track found matching the criteria")
+        print("=" * 78)
+        return
+
+    tName = trackObj.name[0:50].ljust(50)
+    # rowStr = t.substitute(id=id[0:4].rjust(4),
+    #   tName = tName[0:50].ljust(50))
+    # print(rowStr)
+    print(f"Track: ({trackObj.id}) {tName}")
+
+    # Displaying Country info
+    if trackObj.country.id == None:  # No country info
+        cText = f"No country assigned to this track"
+        region = "N/A"
+    else:  # Country info
+        cText = f"({trackObj.country.id}) {trackObj.country.cntryName[0:50].ljust(50)}"
+        region = trackObj.country.region
+
+    print(f"Country: {cText}\n Region: {region}")
+
+    tLayoutList = GTDBConn1.getLayoutList(key='trackId', value=trackObj.id)
+    print(f"Layouts:")
+    # Layout id column (tlID): width 4, justification right
+    # Layout name column (tlName): width 30, justification left
+    # LayoutCircuitID (cID): width 4, justification right
+    # LayoutCircutName(cName): width 15, justification left
+    t = Template(' $tlID | $tlName | $cID | $cName')
+    tlID = "ID"
+    tlName = "Name"
+    cID = "cID"
+    cName = "Circuit Name"
+    hdrStr = t.substitute(tlID=tlID[0:4].rjust(4),
+                          tlName=tlName[0:30].ljust(30),
+                          cID=cID[0:4].rjust(4),
+                          cName=cName[0:30].ljust(30))
+    print(hdrStr)
+    print("-" * 78)  # header seperator
+    for r in tLayoutList:
+        tlID = str(r[2])
+        if r[3] == None:
+            tlName = "None"
+        else:
+            tlName = r[3]
+        cID = str(r[5])
+        cName = r[6]
+        rowStr = t.substitute(tlID=tlID[0:4].rjust(4),
+                              tlName=tlName[0:30].ljust(30),
+                              cID=cID[0:4].rjust(4),
+                              cName=cName[0:30].ljust(30))
+        print(rowStr)
+
+    print("=" * 78)
+
+
+def help(arg):
+    """Display help information
+
+    Args:
+        arg (string): command looking to get help on
+    """
+    if arg == 'general':
+        print("Required to provide one of the following")
+        print(" LIST\n CREATE\n EDIT\n DELETE")
+    elif arg == 'list':
+        print(""" Addtional LIST requirements
+          - Tracks : list all tracks
+          - Track [name of track] - list details of track
+          - TrackLayout [name of TrackLayout] - list details of tracklayout""")
+    else:
+        pass
+    sys.exit()
 
 
 def listAction(cmd):
@@ -184,106 +292,6 @@ def listAction(cmd):
         print_formatted_text(
             HTML(f'<ansired>ERROR</ansired> - Unknown <ansigreen>list</ansigreen> object <b>{listObj}</b>'))
         log.info("Unknown list object")
-
-
-def displayCarCats(theList):
-    """Display all the Car Categories/Classes"""
-    for r in theList:
-        print(r)
-
-
-def displayMfgs(theList):
-    for r in theList:
-        print(r)
-
-
-def displayDriveTrains(theList):
-    for r in theList:
-        print(r)
-
-
-def displayCircuits():
-    """Display all the circuits"""
-    cList = GTDBConn1.getCircuits()
-    print(f"Number of circuits: {len(cList)}")
-    t = Template(' $id | $cName')
-    id = "ID"
-    cName = "Circuit"
-    hdrStr = t.substitute(id=id[0:4].rjust(4),
-                          cName=cName[0:30].ljust(30))
-    print(hdrStr)
-    print("-" * 78)  # header seperator
-    for r in cList:
-        id = str(r[0])
-        cName = r[1]
-        rowStr = t.substitute(id=id[0:4].rjust(4),
-                              cName=cName[0:30].ljust(30))
-        print(rowStr)
-    print("=" * 78)
-
-
-def displayTrack(trackObj):
-    """Print to screen the track object
-
-    Args:
-        trackObj
-    """
-    if trackObj.id == 0:  # No track found
-        print("No Track found matching the criteria")
-        return
-
-    t = Template('Track: $tName ID: $id')
-    id = str(trackObj.id)
-    tName = trackObj.name
-    rowStr = t.substitute(id=id[0:4].rjust(4),
-                          tName=tName[0:50].ljust(50))
-    print(rowStr)
-    print(
-        f" Country: ({trackObj.country.id}) {trackObj.country.cntryName[0:50].ljust(50)}")
-    print(f" Region: {trackObj.country.region}")
-    tLayoutList = GTDBConn1.getLayoutList(key='trackId', value=trackObj.id)
-    print(f"Layouts:")
-    # Layout id column (tlID): width 4, justification right
-    # Layout name column (tlName): width 30, justification left
-    # LayoutCircuitID (cID): width 4, justification right
-    # LayoutCircutName(cName): width 15, justification left
-    t = Template(' $tlID | $tlName | $cID | $cName')
-    tlID = "ID"
-    tlName = "Name"
-    cID = "cID"
-    cName = "Circuit Name"
-    hdrStr = t.substitute(tlID=tlID[0:4].rjust(4),
-                          tlName=tlName[0:30].ljust(30),
-                          cID=cID[0:4].rjust(4),
-                          cName=cName[0:30].ljust(30))
-    print(hdrStr)
-    print("-" * 78)  # header seperator
-    for r in tLayoutList:
-        tlID = str(r[2])
-        if r[3] == None:
-            tlName = "None"
-        else:
-            tlName = r[3]
-        cID = str(r[5])
-        cName = r[6]
-        rowStr = t.substitute(tlID=tlID[0:4].rjust(4),
-                              tlName=tlName[0:30].ljust(30),
-                              cID=cID[0:4].rjust(4),
-                              cName=cName[0:30].ljust(30))
-        print(rowStr)
-
-    print("=" * 78)
-
-
-def _sortTuple(tup, key):
-    """Returns a tuple sorted by the key
-
-    Args:
-        tup (tuple list): example [(1,"zzd"),(3,"azd")]
-        key (int): The key/index to sort.
-            example: 1 for results: [(3,"azd"),(1,"zzd")]
-    """
-    return(sorted(tup, key=lambda x: x[key]))
 
 
 if __name__ == '__main__':
