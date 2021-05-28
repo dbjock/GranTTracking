@@ -321,38 +321,6 @@ class GTdb:
         logger.info(f"returning {result}")
         return result
 
-    def getAllMfg(self, orderBy='id'):
-        """Returns manufacture records ordered by choice.
-
-        Args:
-            orderBy (str, optional): Column to sort by. Defaults to 'id'.
-
-        Returns:
-            list: (id,Make,cntryId,Country,alpha2,alpha3,Region)
-        """
-        logger.info(f"Getting all manufactures, ordered by {orderBy}")
-        selectSQL = """SELECT mfg.id as id, mfg.name AS Make, cntry.ID as cntryId, cntry.name as Country, cntry.alpha2, cntry.alpha3, cntry.region as Region FROM manufacture AS mfg LEFT JOIN country AS cntry ON mfg.country_id = cntry.ID"""
-        orderBySQL = f"ORDER BY {orderBy}"
-
-        sql = f"{selectSQL} {orderBySQL}"
-
-        # Ready to execute SQL
-        logger.debug(f"sql: {sql}")
-        try:
-            dbCursor = self.conn.cursor()
-            # Enabling full sql traceback to logger.debug
-            self.conn.set_trace_callback(logger.debug)
-            dbCursor.execute(sql)
-            result = dbCursor.fetchall()
-            logger.info(f"Returning all Manufacture results")
-            # Disable full sql traceback to logger.debug
-            self.conn.set_trace_callback(None)
-            return result
-        except:
-            logger.critical(
-                f'Unexpected error executing sql: {sql}', exc_info=True)
-            sys.exit(1)
-
     def getCircuit(self, key, value):
         """Get circuit record from db
 
@@ -581,7 +549,7 @@ class GTdb:
 
     def getMfg(self, key='mfgId', value=None):
         """
-        Gets the manufacture record from the database based on the key being used.
+        Gets a manufacture record from the database based on the key being used.
 
         ARGS:
         value : Is the value being search for.
@@ -644,6 +612,38 @@ class GTdb:
             logger.debug(f"returning blank manufacture object")
 
         return xMake
+
+    def getMfgs(self, orderBy='id'):
+        """Returns All manufacture records ordered by choice.
+
+        Args:
+            orderBy (str, optional): Column to sort by. Defaults to 'id'.
+
+        Returns:
+            list: (id,Make,cntryId,Country,alpha2,alpha3,Region)
+        """
+        logger.info(f"Getting all manufactures, ordered by {orderBy}")
+        selectSQL = """SELECT mfg.id as id, mfg.name AS Make, cntry.ID as cntryId, cntry.name as Country, cntry.alpha2, cntry.alpha3, cntry.region as Region FROM manufacture AS mfg LEFT JOIN country AS cntry ON mfg.country_id = cntry.ID"""
+        orderBySQL = f"ORDER BY {orderBy}"
+
+        sql = f"{selectSQL} {orderBySQL}"
+
+        # Ready to execute SQL
+        logger.debug(f"sql: {sql}")
+        try:
+            dbCursor = self.conn.cursor()
+            # Enabling full sql traceback to logger.debug
+            self.conn.set_trace_callback(logger.debug)
+            dbCursor.execute(sql)
+            result = dbCursor.fetchall()
+            logger.info(f"Returning all Manufacture results")
+            # Disable full sql traceback to logger.debug
+            self.conn.set_trace_callback(None)
+            return result
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
 
     def getTrack(self, key='trackId', value=None):
         """

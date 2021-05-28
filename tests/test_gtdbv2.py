@@ -16,7 +16,7 @@ _gtPath = Path.cwd()
 _gtLogs = _gtPath / 'Logs'
 _gtScripts = _gtPath / 'Scripts'
 _gtData = _gtPath / 'Data'
-_logfile = _gtLogs / f"Testing-{datetime.now().strftime('%Y%j%H%M%S')}.log"
+_logfile = _gtLogs / f"Testing-{datetime.now().strftime('%Y%j-%H%M%S')}.log"
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -238,6 +238,18 @@ class TestMfg(unittest.TestCase):
         result = dbConn1.updateMfg(testMfg)
         self.assertNotEqual(result[0], 0)
         del dbConn1
+
+    def test_getMfgs(self):
+        logger.info("==== BEGIN get AllMfg List")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Get mfg sorted by default (id)")
+        testVal = 1  # first element should be mfgID 1
+        testList = dbConn1.getMfgs()
+        logger.info(f"layoutList={testList}")
+        self.assertEqual(testList[0][0], testVal,
+                         "Failed mfg sorting by id")
 
 
 class TestTrack(unittest.TestCase):

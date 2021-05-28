@@ -169,14 +169,14 @@ def listAction(cmd):
             log.debug(f"objArgs: {objArgs}")
             if objArgs.split('=')[0].strip() == 'orderBy':
                 orderBy = objArgs.split('=')[1].strip()
-                displayMfgs(GTDBConn1.getAllMfg(orderBy=orderBy))
+                displayMfgs(GTDBConn1.getMfgs(orderBy=orderBy))
             else:  # invalid argument for mfgs
                 log.info(
                     f"Unknown list manufactures argument {objArgs.split('=')[0].strip()}")
                 print_formatted_text(
                     HTML(f"<ansired>ERROR</ansired> - Unknown list manufactures argument <b>{objArgs.split('=')[0].strip()}</b>."))
         else:
-            displayMfgs(GTDBConn1.getAllMfg())
+            displayMfgs(GTDBConn1.getMfgs())
     else:
         print_formatted_text(
             HTML(f'<ansired>ERROR</ansired> - Unknown <ansigreen>list</ansigreen> object <b>{listObj}</b>'))
