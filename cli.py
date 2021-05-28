@@ -13,6 +13,8 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit import print_formatted_text, HTML
 from prompt_toolkit.completion import NestedCompleter
 from prompt_toolkit.shortcuts import input_dialog
+from prompt_toolkit.shortcuts import radiolist_dialog
+from prompt_toolkit.shortcuts import clear as clearScreen
 
 # App specific required
 from GranT import gtdbV2 as gtdb
@@ -228,39 +230,17 @@ def help(arg):
 
 def listAction(cmd):
     """List Action.
-    example, list track information for trackid 1
+    example to get track info for trackid 1
     list track id=1
 
     Args:
-        cmd ([string]): The object and its args
+        cmd ([string]): The object and its args to list
     """
     cmd = cmd.strip()
     listObj = cmd.split()[0]
     log.debug(f"listObj={listObj}")
     if listObj == 'track':
-        if cmd.find(' ') != -1:  # Args provided
-            objArgs = cmd[cmd.find(' '):].lstrip()
-            log.debug(f"objArgs: {objArgs}")
-            if objArgs.split('=')[0].strip() == 'id':
-                trackId = objArgs.split('=')[1].strip()
-                log.info(f"Getting track info for track id {trackId}")
-                trackRec = GTDBConn1.getTrack(key='trackId', value=trackId)
-                displayTrack(trackRec)
-            elif objArgs.split('=')[0].strip() == 'name':
-                tName = objArgs.split('=')[1]
-                log.info(f"Getting track info for track name {tName}")
-                trackRec = GTDBConn1.getTrack(key='track', value=tName)
-                displayTrack(trackRec)
-
-            else:
-                log.info(
-                    f"Unknown list track argument {objArgs.split('=')[0].strip()}")
-                print_formatted_text(
-                    HTML(f"<ansired>ERROR</ansired> - Unknown list track argument <b>{objArgs.split('=')[0].strip()}</b>."))
-        else:  # Missing required track args
-            log.info("Missing required args for track action")
-            print_formatted_text(
-                HTML(f'<ansired>ERROR</ansired> - id= or name= are required.'))
+        listTrackCmd(cmd[len(listObj):].strip())
     elif listObj == 'classes':
         displayCarCats(GTDBConn1.getCarCats())
     elif listObj == 'circuits':
@@ -285,6 +265,43 @@ def listAction(cmd):
         print_formatted_text(
             HTML(f'<ansired>ERROR</ansired> - Unknown <ansigreen>list</ansigreen> object <b>{listObj}</b>'))
         log.info("Unknown list object")
+
+
+def listTrackCmd(args):
+    """what to do when ask to list a track"""
+    log.debug(f"args passed: {args}")
+    log.debug(f"length of args: {len(args)}")
+    if len(args) > 0 and args.find("=") > 0:  # Have valid Args
+        if args.split('=')[0].strip() == 'id':
+            trackId = args.split('=')[1].strip()
+            log.info(f"Getting track info for track id {trackId}")
+            trackRec = GTDBConn1.getTrack(key='trackId', value=trackId)
+            displayTrack(trackRec)
+        elif args.split('=')[0].strip() == 'name':
+            tName = args.split('=')[1]
+            log.info(f"Getting track info for track name {tName}")
+            trackRec = GTDBConn1.getTrack(key='track', value=tName)
+            displayTrack(trackRec)
+        else:  # invalid Args passed
+            log.info(
+                f"Unknown list track argument {args.split('=')[0].strip()}")
+            print_formatted_text(
+                HTML(f"<ansired>ERROR</ansired> - Unknown list track argument <b>{args.split('=')[0].strip()}</b>."))
+    else:  # No args passed
+        log.info("No args passed.. Time for something special")
+        print_formatted_text(
+            HTML(f'<ansiyellow>WARNING</ansiyellow> - I am suppose be doing something special.'))
+        print()
+        pickList = GTDBConn1.getTrackList()
+        # Have user select the track
+        result = radiolist_dialog(
+            title="Tracks",
+            text="Which Track would you like to get info on ?",
+            values=pickList
+        ).run()
+        # Getting the track info
+        trackRec = GTDBConn1.getTrack(key='trackId', value=result)
+        displayTrack(trackRec)
 
 
 if __name__ == '__main__':
