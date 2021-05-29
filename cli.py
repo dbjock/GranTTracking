@@ -64,6 +64,10 @@ def _sortTuple(tup, key):
     return(sorted(tup, key=lambda x: x[key]))
 
 
+def _POCtest():
+    print("POC Test")
+
+
 def main():
 
     cls()
@@ -72,8 +76,11 @@ def main():
         'help': {'exit': None, 'list': None,
                  'tracks': None},
         'list': {
-            'classes': None,
             'circuits': None,
+            'classes': None,
+            'collection': {
+                'leagueId=': None
+            },
             'drivetrains': None,
             'manufactures': {'orderBy=': None},
             'track': {
@@ -95,7 +102,7 @@ def main():
             break
         except EOFError:
             break
-        else:
+        else:  # Checking for valid actions
             log.info(f"Command: {userCmd}")
             try:
                 action = userCmd.split()[0]
@@ -112,6 +119,8 @@ def main():
                     print("Must provide an object to list")
             elif action == 'exit':
                 break
+            elif action == 'secret':
+                _POCtest()
             else:
                 log.info('Unknown command Please enter a command')
                 print_formatted_text(
@@ -143,7 +152,19 @@ def displayCircuits(theList):
     print("=" * 78)
 
 
+def displayCollections(theList, leagueObj):
+    print(f"Race Collections for League: ({leagueObj.id}) {leagueObj.name}")
+    for r in theList:
+        print(r)
+
+
 def displayDriveTrains(theList):
+    for r in theList:
+        print(r)
+
+
+def displayLeagues(theList):
+    print("Here are the leagues")
     for r in theList:
         print(r)
 
@@ -180,7 +201,7 @@ def displayTrack(trackObj):
 
     print(f"Country: {cText}\n Region: {region}")
 
-    tLayoutList = GTDBConn1.getLayoutList(key='trackId', value=trackObj.id)
+    tLayoutList = GTDBConn1.getLayoutList(trackObj.id)
     print(f"Layouts:")
     # Layout id column (tlID): width 4, justification right
     # Layout name column (tlName): width 30, justification left
@@ -235,8 +256,9 @@ def help(arg):
 
 def listAction(cmd):
     """List Action.
-    example to get track info for trackid 1
-    list track id=1
+    This will make sure
+    - the objected being listed is valid
+    - and have that objected listed.
 
     Args:
         cmd ([string]): The object and its args to list
@@ -246,12 +268,17 @@ def listAction(cmd):
     log.debug(f"listObj={listObj}")
     if listObj == 'track':
         listTrackCmd(cmd[len(listObj):].strip())
+    elif listObj == 'collection':
+        listRaceCollections(cmd[len(listObj):].strip())
     elif listObj == 'classes':
         displayCarCats(GTDBConn1.getCarCats())
     elif listObj == 'circuits':
-        displayCircuits(GTDBConn1.getCircuits())
+        displayCircuits(GTDBConn1.getCircuitList())
     elif listObj == 'drivetrains':
         displayDriveTrains(GTDBConn1.getDriveTrains())
+    elif listObj == 'leagues':
+        displayLeagues(GTDBConn1.getLeagueList())
+
     elif listObj == 'manufactures':
         if cmd.find(' ') != -1:  # Args provided
             objArgs = cmd[cmd.find(' '):].lstrip()
@@ -266,7 +293,7 @@ def listAction(cmd):
                     HTML(f"<ansired>ERROR</ansired> - Unknown list manufactures argument <b>{objArgs.split('=')[0].strip()}</b>."))
         else:
             displayMfgs(GTDBConn1.getMfgs())
-    else:
+    else:  # Unknown object to list
         print_formatted_text(
             HTML(f'<ansired>ERROR</ansired> - Unknown <ansigreen>list</ansigreen> object <b>{listObj}</b>'))
         log.info("Unknown list object")
@@ -301,19 +328,91 @@ def listTrackCmd(args):
             displayTrack(trackRec)
 
 
+def listRaceCollections(args):
+    """Get a list, and display, race collections for a League
+
+    Args:
+        args ([str]): The args from the list collection command.
+        These are parsed to provide complete the request
+    """
+    log.debug(f"args passed: {args}")
+    log.debug(f"length of args: {len(args)}")
+    if len(args) > 0 and args.find("=") > 0:  # Have valid Args
+        if args.split('=')[0].strip() == 'leagueId':
+            id = args.split('=')[1].strip()
+            log.info(f"Getting collection info for league id {id}")
+        else:  # unknown Args passed
+            log.info(
+                f"Unknown list collection argument {args.split('=')[0].strip()}")
+            print_formatted_text(
+                HTML(f"<ansired>ERROR</ansired> - Unknown list collection argument <b>{args.split('=')[0].strip()}</b>."))
+    else:  # No args passed. Need to ask user some info
+        log.info(
+            "No args passed. Have user select which League to get the collection for")
+        id = pickLeague()
+        log.info(f"User picked league id {id}")
+        if id == None:  # No League picked
+            log.info(f"Cancel for Race Collection")
+            print("Cancel listing of collection")
+            return
+
+    league = GTDBConn1.getLeague(value=id)
+    theList = GTDBConn1.getRaceCollectionList(id)
+    displayCollections(theList, league)
+
+
+def pickLeague():
+    """Dialog box for user to select a League
+
+    Returns:
+        League ID user choose
+    """
+    log.info("Getting leagues for picklist")
+    pickList = GTDBConn1.getLeagueList()
+    log.info("Displaying leagues for user to choose")
+    result = radiolist_dialog(
+        title="Leagues",
+        text="Select a League",
+        values=pickList
+    ).run()
+    log.info(f"User choose: {result}")
+    return result
+
+
 def pickTrack():
     """Dialog box for user to select a a track
     Returns: the trackID user picked
     """
-    log.debug("get tracks into picklist")
+    log.info("Getting tracks for picklist")
     pickList = GTDBConn1.getTrackList()
-    log.debug("display tracks for user to choose")
+    log.info("display tracks for user to choose")
     result = radiolist_dialog(
         title="Tracks",
-        text="Which Track would you like to get info on ?",
+        text="Select a Track",
         values=pickList
     ).run()
-    log.info(f"Results from choices: {result}")
+    log.info(f"User choose: {result}")
+    return result
+
+
+def pickTrackLayout(trackID, trackName):
+    """Dialog box for user to select a track layout from a track
+
+    Args:
+        trackID (int): trackID to get layouts for
+        trackName (str): This is included in the text of the dialog.
+              UX friendly letting them know which track its for.
+
+    Returns:
+        layoutID (int)
+    """
+    log.info("getting track layouts for trackID:{trackID}")
+    pickList = GTDBConn1.getLayoutList(trackID)
+    log.info("Display track layouts for user to choose")
+    result = radiolist_dialog(title="Track Layouts",
+                              text=f"Select a layout for track {trackName}",
+                              values=pickList).run()
+    log.info(f"User choose: {result}")
     return result
 
 
