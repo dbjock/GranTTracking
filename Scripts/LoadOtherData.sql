@@ -174,8 +174,8 @@ INSERT INTO track_layout (id, track_id, name, miles, circuit_id) VALUES (81, 28,
 
 -- Table: race_collection
 
-INSERT INTO race_collection (id, league_id, name, description) VALUES (1, 2, 'Sunday Cup test', 'The grassroots introduction to racing. No restrictions on car models.');
-INSERT INTO race_collection (id, league_id, name, description) VALUES (2, 1, 'Clubman Cup - test', 'An event for beginners just getting the hang of racing. No restrctions on car models.');
-INSERT INTO race_collection (id, league_id, name, description) VALUES (3, 2, 'FF Challenge - test', 'Master Front wheel drive sports cars with understeer.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (1, 2, 'Sunday Cup', 'The grassroots introduction to racing. No restrictions on car models.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (2, 1, 'Clubman Cup', 'An event for beginners just getting the hang of racing. No restrctions on car models.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (3, 2, 'FF Challenge', 'Master Front wheel drive sports cars with understeer.');
 
 PRAGMA foreign_keys = on;

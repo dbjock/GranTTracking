@@ -19,8 +19,8 @@ class Manufacture(object):
     def __init__(self, id, name, countryObj):
         """
         Manufacture object. Used by car, and many other objects
-        mfgid     : type int. Unique for all manufactures in db
-        mfgName   : type str. Unique for all manufactures in db
+        id     : type int. Unique for all manufactures in db
+        Name   : type str. Unique for all manufactures in db
         countryObj: object created from the Country Class.
         """
         self.id = id
@@ -78,6 +78,25 @@ class Circuit(object):
 
     def __repr__(self):
         return f"circuit(id={self.id}, name='{self.name}')"
+
+
+class RaceCollection(object):
+    def __init__(self, id, name, desc, leagueObj):
+        """
+        Race Collection object.
+        id     : type int. ID of the race collection
+        Name   : type str. Name of the Race collection
+        Desc   : Description of the Race Collection
+        leagueObj: object created from the League Class.
+        """
+
+        self.id = id
+        self.name = name
+        self.desc = desc
+        self.league = leagueObj
+
+    def __repr__(self):
+        return f"RaceCollection(id={self.id}, name='{self.name}', desc={self.desc},league={self.league}"
 
 
 class League(object):

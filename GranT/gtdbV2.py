@@ -149,6 +149,36 @@ class GTdb:
         logger.debug(f"returning {r}")
         return r
 
+    def addRaceCollection(self, raceCollection):
+        "This is being worked on"
+        logger.debug(f"raceCollection={raceCollection}")
+        # Collection name must have a value
+        if raceCollection.name == None or raceCollection.name == "":
+            rtrnMsg = [1, "Collection name can not be blank"]
+            logger.debug(f"Return {rtrnMsg}")
+            return rtrnMsg
+
+        # Collection name must be unique for this league
+        xlist = self.getRaceCollectionList(raceCollection.league.id)
+        logger.debug(f"xlist={xlist}")
+        for r in xlist:
+            if raceCollection.name == r[1]:  # match
+                rtrnMsg = [
+                    1, f"Collection name [{raceCollection.name}] already exists for League id [{raceCollection.league.id}]"]
+                logger.debug(f"Return {rtrnMsg}")
+                return rtrnMsg
+
+        # Programable tests passed, so lets try and save
+        logger.info("Attempting to safe the race collection")
+        theVals = {'colName': raceCollection.name, 'colDesc': raceCollection.desc,
+                   'leagueId': raceCollection.league.id}
+        sql = "INSERT INTO race_collection (league_id, name, description) VALUES (:leagueId, :colName, :colDesc)"
+        logger.debug(f"sql={sql}")
+        logger.debug(f"theVals={theVals}")
+        rtrnMsg = self._exeSQL(sql, theVals)
+        logger.debug(f"Return {rtrnMsg}")
+        return rtrnMsg
+
     def addTrack(self, layout):
         """Adding a Track and a Layout for it
 
@@ -723,7 +753,7 @@ class GTdb:
 
     def getRaceCollectionList(self, leagueId):
         logger.info(
-            "Getting list of race collections for a leagueID {leagueId}")
+            f"Getting list of race collections for a leagueID {leagueId}")
         selectSQL = "SELECT id, name from race_collection"
         whereSQL = "WHERE league_id = ?"
         orderBySQL = "Order by name"

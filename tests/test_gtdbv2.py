@@ -15,7 +15,6 @@ from GranT import GTClasses as GT
 _gtPath = Path.cwd()
 _gtLogs = _gtPath / 'Logs'
 _gtScripts = _gtPath / 'Scripts'
-_gtData = _gtPath / 'Data'
 _logfile = _gtLogs / f"Testing-{datetime.now().strftime('%Y%j-%H%M%S')}.log"
 
 logger = logging.getLogger()
@@ -774,7 +773,7 @@ class TestCarCat(unittest.TestCase):
 
 class TestRaceCollection(unittest.TestCase):
     # 5/29/2021 - DB init is WIP. Tests may need to be adjusted.
-    def test_getLayoutList(self):
+    def test_getRaceCollectionList(self):
         logger.info("=== BEGIN getRaceCollectionList testing")
         dbConn1 = gtdbV2.GTdb(name=":memory:")
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
@@ -791,6 +790,72 @@ class TestRaceCollection(unittest.TestCase):
         logger.info(f"testList = {testList}")
         self.assertEqual(len(testList), 0,
                          "Failed. Getting list from non exist League")
+
+    def test_addRaceCollection(self):
+        logger.info("=== BEGIN Add RaceCollection testing")
+        existingLeague = GT.League(id=1, name='NA', sortord=0)
+        dbConn1 = gtdbV2.GTdb(name=":memory:")
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        # Add with existing name for league
+        # Note- League 1 should have race collection = "Clubman Cup"
+        logger.info(
+            "Add Race Collection : name existing for League")
+        testCollection = GT.RaceCollection(
+            id=0, name="Clubman Cup", desc="", leagueObj=existingLeague)
+        logging.info(f"Saving collection={testCollection}")
+        result = dbConn1.addRaceCollection(testCollection)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed. Test with name=none")
+
+        # Add Collection name is null
+        logger.info(
+            "Add Race Collection : name=None, League=existing")
+        testCollection = GT.RaceCollection(
+            id=0, name=None, desc="", leagueObj=existingLeague)
+        logging.info(f"Saving collection={testCollection}")
+        result = dbConn1.addRaceCollection(testCollection)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed. Test with name=none")
+
+        # Add collection with name=""
+        logger.info(
+            "Add Race Collection : name='', League=existing")
+        testCollection = GT.RaceCollection(
+            id=0, name="", desc="", leagueObj=existingLeague)
+        logging.info(f"Saving collection={testCollection}")
+        result = dbConn1.addRaceCollection(testCollection)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed. Test with name=''")
+
+        # Add with existing collection ID
+        # Not tested as the collection id provided in the collection
+        # object is ignored/not used. The SQL to add/insert the collection
+        # object does not provide the id so db will auto generate
+
+        # Add with with non existing league id
+        logger.info(
+            "Add Race Collection : Non existing League")
+        xLeague = GT.League(id=99999, name='NA', sortord=0)
+        testCollection = GT.RaceCollection(
+            id=0, name="I am brand new", desc="", leagueObj=xLeague)
+        logging.info(f"Saving collection={testCollection}")
+        result = dbConn1.addRaceCollection(testCollection)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed. Test with non existing League")
+
+        logger.info(
+            "Add Race Collection : non existant name, existing League")
+        goodCollection = GT.RaceCollection(
+            id=0, name="I am brand new", desc="", leagueObj=existingLeague)
+        logging.info(f"Saving collection={goodCollection}")
+        result = dbConn1.addRaceCollection(goodCollection)
+        logger.info(f"result is {result}")
+        self.assertEqual(result[0], 0, "Failed saving a good Race Collection")
 
 
 class TestLeagues(unittest.TestCase):
