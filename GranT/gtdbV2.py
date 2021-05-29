@@ -552,6 +552,7 @@ class GTdb:
         result = dbCursor.fetchall()
         # Disable full sql traceback to logger.debug
         self.conn.set_trace_callback(None)
+        logger.info(f"Returning {len(result)} rows")
         return result
 
     def getMfg(self, key='mfgId', value=None):
@@ -651,6 +652,35 @@ class GTdb:
             logger.critical(
                 f'Unexpected error executing sql: {sql}', exc_info=True)
             sys.exit(1)
+
+    def getRaceCollectionList(self, leagueId):
+        logger.info(
+            "Getting list of race collections for a leagueID {leagueId}")
+        selectSQL = "SELECT id, name from race_collection"
+        whereSQL = "WHERE league_id = ?"
+        orderBySQL = "Order by name"
+        sql = f"{selectSQL} {whereSQL} {orderBySQL}"
+        theVals = (leagueId,)
+        logger.debug(f"sql = {sql}")
+        logger.debug(f"theVals = {theVals}")
+
+        dbCursor = self.conn.cursor()
+        # Make sure no special row_factory. What a pure list.
+        self.conn.row_factory = None
+        # Enabling full sql traceback to logger.debug
+        self.conn.set_trace_callback(logger.debug)
+        try:
+            dbCursor.execute(sql, theVals)
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
+
+        result = dbCursor.fetchall()
+        # Disable full sql traceback to logger.debug
+        self.conn.set_trace_callback(None)
+        logger.info(f"Returning {len(result)} rows")
+        return result
 
     def getTrack(self, key='trackId', value=None):
         """
