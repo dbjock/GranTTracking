@@ -402,7 +402,7 @@ class GTdb:
         logger.debug(f"returning: {xCircuit}")
         return xCircuit
 
-    def getCircuits(self):
+    def getCircuitList(self):
         """Get a list of all the circuits
 
         Returns: list(id, name)
