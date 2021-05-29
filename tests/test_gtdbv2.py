@@ -770,3 +770,57 @@ class TestCarCat(unittest.TestCase):
                          "Failed getting car category and classes")
 
         logger.info("==== END Get Car category tests")
+
+
+class TestRaceCollection(unittest.TestCase):
+    # 5/29/2021 - DB init is WIP. Tests may need to be adjusted.
+    def test_getLayoutList(self):
+        logger.info("=== BEGIN getRaceCollectionList testing")
+        dbConn1 = gtdbV2.GTdb(name=":memory:")
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Getting list for existing League")
+        testVal = 2  # leagueId 2 should bring back at least 2 elements
+        testList = dbConn1.getRaceCollectionList(leagueId=testVal)
+        logger.info(f"testList = {testList}")
+        self.assertEqual(testList[0][0], 3, "Failed. First row incorrect")
+
+        logger.info("Getting list for non existing league")
+        testVal = 9999  # leagueId 10 does not exist
+        testList = dbConn1.getRaceCollectionList(leagueId=testVal)
+        logger.info(f"testList = {testList}")
+        self.assertEqual(len(testList), 0,
+                         "Failed. Getting list from non exist League")
+
+
+class TestLeagues(unittest.TestCase):
+    def test_getLeague(self):
+        logger.info("==== BEGIN Get/read League")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Get League by id")
+        testVal = 1
+        testObj = dbConn1.getLeague(value=testVal)
+        self.assertEqual(testObj.id, testVal, "Failed getting by league id")
+
+        logger.info("Get League by name (case insensitve")
+        testVal = 'amATeur'
+        testObj = dbConn1.getLeague(key='name', value=testVal)
+        # If not found zero is returned
+        self.assertNotEqual(
+            testObj.id, 0, "Failed getting league by existing name")
+
+        logger.info("Get non exist League by id")
+        testVal = 99999
+        testObj = dbConn1.getLeague(value=testVal)
+        self.assertEqual(
+            testObj.id, 0, "Failed getting league by non exist league id")
+
+        logger.info("Get non exist League by name")
+        testVal = 'ZZINoExist'
+        testObj = dbConn1.getLeague(key='name', value=testVal)
+        self.assertEqual(testObj.id, 0)
+
+        del dbConn1
+        logger.info(f"==== END Get/read League\n")

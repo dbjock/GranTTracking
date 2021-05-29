@@ -85,8 +85,8 @@ class League(object):
         """
         League object.
 
-        id     : type int. Unique for all circuits in db.
-        name   : type str. name of the circuit, unique in db.
+        id     : type int. Unique for all Leagues in db.
+        name   : type str. name of the League, unique in db.
         sortord: type int. Order which the object should be sorted.
         """
         self.id = id

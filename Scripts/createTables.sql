@@ -107,7 +107,8 @@ CREATE TABLE race_collection (
     id        INTEGER      PRIMARY KEY AUTOINCREMENT,
     league_id INTEGER      REFERENCES league (id) ON DELETE RESTRICT
                            NOT NULL,
-    name      VARCHAR (16)
+    name      VARCHAR (16),
+    description TEXT
 );
 
 -- Table: race_type

@@ -555,6 +555,74 @@ class GTdb:
         logger.info(f"Returning {len(result)} rows")
         return result
 
+    def getLeague(self, key='id', value=None):
+        """Get a league object from database by various fields
+
+        Args:
+            key (str, optional): The key/field to get object from db. Defaults to 'id'.
+            value (required to return something): The value the key must equal to return the object.
+
+        Returns:
+            LeagueObject. If nothing found then LeagueObj.id=0
+        """
+        logger.debug(f"Getting League:  {key}={value}")
+        selectSQL = "SELECT id, name, sortord FROM league"
+        whereSQL = f"WHERE {key} = ?"
+        theVals = (value,)
+        sql = f"{selectSQL} {whereSQL}"
+        logger.debug(f"{theVals}")
+        logger.debug(f"sql: {sql}")
+        # Disable the .keys() to get column names.
+        self.conn.row_factory = None
+        # Enabling full sql traceback to logger.debug
+        self.conn.set_trace_callback(logger.debug)
+        try:
+            c = self.conn.cursor()
+            c.execute(sql, theVals)
+            row = c.fetchone()
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
+        # Disable full sql traceback to logger.debug
+        self.conn.set_trace_callback(None)
+        if row:  # have data from db
+            league = gtClass.League(id=row[0], name=row[1], sortord=row[2])
+        else:  # No data from db. Create empty object
+            league = gtClass.League(id=0, name="", sortord=0)
+        logger.debug(f'league = {league}')
+        return league
+
+    def getLeagueList(self):
+        """Returns a list of all the leagues in the db.
+        Order will be by the sortorder in db
+
+        Returns:
+            list (leagueID, leagueName)
+        """
+        logger.info("Getting list of Leagues")
+        selectSQL = "SELECT id, name FROM league"
+        orderBySQL = "ORDER BY sortord"
+        sql = f"{selectSQL} {orderBySQL}"
+        logger.debug(f"sql = {sql}")
+        # Want to return a true list for results
+        self.conn.row_factory = None
+        # Enabling full sql traceback to logger.debug
+        self.conn.set_trace_callback(logger.debug)
+        dbCursor = self.conn.cursor()
+        try:
+            dbCursor.execute(sql)
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
+
+        result = dbCursor.fetchall()
+        # Disable full sql traceback to logger.debug
+        self.conn.set_trace_callback(None)
+        logger.debug(f"Returning {len(result)} rows")
+        return result
+
     def getMfg(self, key='mfgId', value=None):
         """
         Gets a manufacture record from the database based on the key being used.
@@ -562,7 +630,7 @@ class GTdb:
         ARGS:
         value : Is the value being search for.
         key   : the column to search on. mfgId, or Make. Default is mfgid
-        Returns : ManufactureObject. IF ManufactureObject.mfgid = 0 then nothing found
+        Returns : ManufactureObject. IF ManufactureObject.id = 0 then nothing found
         """
         logger.debug(f"Getting Manufacture: {key}={value}")
         selectSQL = """SELECT mfg.id as mfgId,

@@ -1,5 +1,5 @@
 --
--- File generated with SQLiteStudio v3.2.1 on Sat Dec 7 14:08:02 2019
+-- 5/29/2021
 --
 -- Text encoding used: System
 --
@@ -172,5 +172,10 @@ INSERT INTO track_layout (id, track_id, name, miles, circuit_id) VALUES (79, 28,
 INSERT INTO track_layout (id, track_id, name, miles, circuit_id) VALUES (80, 28, '24h', 15.77, 3);
 INSERT INTO track_layout (id, track_id, name, miles, circuit_id) VALUES (81, 28, 'GP', 3.2, 3);
 
+-- Table: race_collection
+
+INSERT INTO race_collection (id, league_id, name, description) VALUES (1, 2, 'Sunday Cup test', 'The grassroots introduction to racing. No restrictions on car models.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (2, 1, 'Clubman Cup - test', 'An event for beginners just getting the hang of racing. No restrctions on car models.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (3, 2, 'FF Challenge - test', 'Master Front wheel drive sports cars with understeer.');
 
 PRAGMA foreign_keys = on;
