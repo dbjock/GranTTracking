@@ -534,33 +534,14 @@ class TestTrackLayout(unittest.TestCase):
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
 
-        logger.info("Get Layout List by trackId")
+        logger.info("Get Track Layout List")
         testVal = 5  # Track ID 5
-        layoutList = dbConn1.getLayoutList('trackId', testVal)
+        layoutList = dbConn1.getLayoutList(testVal)
         logger.info(f"layoutList={layoutList}")
-        self.assertEqual(layoutList[0][0], testVal,
-                         "Failed getting the track id from track list")
+        self.assertEqual(layoutList[0][0], 18,
+                         "Failed getting correct trackLayoutId from list")
 
-        logger.info("Get Layout List by layoutId")
-        testVal = 10  # Layout id 10
-        layoutList = dbConn1.getLayoutList('layoutId', testVal)
-        logger.info(f"layoutList={layoutList}")
-        self.assertEqual(layoutList[0][2], testVal,
-                         "Failed getting the layoutId from track list")
-
-        logger.info("Get Layout List by circuitId")
-        testVal = 2  # Circuit id 2
-        layoutList = dbConn1.getLayoutList('circuitId', testVal)
-        logger.info(f"layoutList={layoutList}")
-        self.assertEqual(layoutList[0][5], testVal,
-                         "Failed getting the circuitId from track list")
-
-        logger.info("Get Layout List by cntryId")
-        testVal = 237  # Country id 237
-        layoutList = dbConn1.getLayoutList('cntryId', testVal)
-        logger.info(f"layoutList={layoutList}")
-        self.assertEqual(layoutList[0][7], testVal,
-                         "Failed getting the cntryId from track list")
+        del dbConn1
         logger.info("==== END get Layout List")
 
     def test_addTrackLayout(self):
@@ -581,7 +562,7 @@ class TestTrackLayout(unittest.TestCase):
         self.assertNotEqual(result[0], 0)
 
         logger.info(
-            "Add Track Layout : Layout name null/'None' for same track")
+            "Add Track Layout : Layout name 'None' for same track")
         testLayout = GT.TrackLayout(id=0, name=None, miles=None, trackObj=GT.Track(id=0, name=None, countryObj=GT.Country(
             cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)), circuitObj=GT.Circuit(id=0, name=None))
         testLayout.name = None
@@ -590,7 +571,21 @@ class TestTrackLayout(unittest.TestCase):
         testLayout.circuit.id = 3
         result = dbConn1.addLayout(testLayout)
         logger.info(f"result is {result}")
-        self.assertNotEqual(result[0], 0)
+        self.assertNotEqual(
+            result[0], 0, "Failed Layout name 'None' for same track")
+
+        logger.info(
+            "Add Track Layout : Layout name empty string for same track")
+        testLayout = GT.TrackLayout(id=0, name=None, miles=None, trackObj=GT.Track(id=0, name=None, countryObj=GT.Country(
+            cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)), circuitObj=GT.Circuit(id=0, name=None))
+        testLayout.name = ""
+        testLayout.miles = 9999
+        testLayout.track.id = 7
+        testLayout.circuit.id = 3
+        result = dbConn1.addLayout(testLayout)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Add Track Layout : Layout name empty string for same track")
 
         logger.info(
             "Add Track Layout : Layout name non existant for same track")
@@ -602,7 +597,9 @@ class TestTrackLayout(unittest.TestCase):
         testLayout.circuit.id = 3
         result = dbConn1.addLayout(testLayout)
         logger.info(f"result is {result}")
-        self.assertEqual(result[0], 0)
+        self.assertEqual(
+            result[0], 0, "Failed Add Track Layout : Layout name non existant for same track")
+
         logger.info("==== END Add Track Layout")
 
     def test_updateTrackLayout(self):

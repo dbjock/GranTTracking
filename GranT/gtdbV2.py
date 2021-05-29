@@ -267,12 +267,12 @@ class GTdb:
         # 1-Get and delete track_layout records for track id
         #   Get list of track_layouts for trackid
         logger.info(f"Getting track layouts for trackid {trackId}")
-        trackLayouts = self.getLayoutList(key='trackId', value=trackId)
+        trackLayouts = self.getLayoutList(trackId)
         logger.info(f"track layouts to delete: {len(trackLayouts)}")
         logger.info(f"trackLayouts = {trackLayouts}")
         #   Delete each track layout
         for tLayout in trackLayouts:
-            layoutId = tLayout[2]
+            layoutId = tLayout[0]
             logger.debug(f"Deleting trackLayoutID {layoutId}: {tLayout}")
             result = self.deleteTrackLayout(layoutId)
             if result[0] != 0:  # error with delete. Stop deleting
@@ -519,56 +519,35 @@ class GTdb:
         logger.debug(f"returning object xTrackLayout={xTrackLayout} ")
         return xTrackLayout
 
-    def getLayoutList(self, key, value):
-        """Get a list track layouts by key/column
+    def getLayoutList(self, trackId):
+        """Get a list of track layouts for a trackId
 
         Args:
-            key (str): The key/column to search for value. Defaults to 'trackId'.
-            value: Value to search for in key/column.
+            trackId (int): The trackId of the track the layout list is for
 
         Returns:
-            list: (trackId,track,layoutId,layout,Miles,circuitId,
-                   Circuit,cntryId,Country,alpha2,alpha3,Region)
+            list: (layoutId,layoutName)
         """
-        logger.info(f"Getting track layout list: key={key}, value={value}")
-        selectSQL = """SELECT t.id as trackId, t.name AS track, l.id AS layoutId, l.name AS layout, l.miles AS Miles, c.id as circuitId, c.name AS Circuit, cntry.ID as cntryId, cntry.name as Country, cntry.alpha2, cntry.alpha3, cntry.region as Region FROM track as t INNER JOIN track_layout as l ON t.id = l.track_id LEFT JOIN country as cntry ON t.country_id = cntry.ID INNER JOIN circuit AS c ON l.circuit_id = c.id"""
+        logger.info(f"Getting track layout list: trackId={trackId}")
+        selectSQL = """SELECT l.id AS layoutId, l.name AS layout FROM track as t INNER JOIN track_layout as l ON t.id = l.track_id"""
         orderBySQL = "ORDER BY t.name, l.name"
-        if key == 'trackId':
-            whereSQL = "WHERE trackId = ?"
-        elif key == 'layoutId':
-            whereSQL = "WHERE layoutId = ?"
-        elif key == 'circuitId':
-            whereSQL = "WHERE circuitId = ?"
-        elif key == 'cntryId':
-            whereSQL = "WHERE cntryId = ?"
+        whereSQL = "WHERE t.id = ?"
 
         dbCursor = self.conn.cursor()
         # Make sure no special row_factory. What a pure list.
         self.conn.row_factory = None
         # Enabling full sql traceback to logger.debug
         self.conn.set_trace_callback(logger.debug)
-        if key == None:
-            sql = f"{selectSQL} {orderBySQL}"
-            logger.debug(f"NO KEY PROVIDED")
-            logger.debug(f"sql = {sql}")
-            try:
-                dbCursor.execute(sql)
-            except:
-                logger.critical(
-                    f'Unexpected error executing sql: {sql}', exc_info=True)
-                sys.exit(1)
-        else:
-            logger.debug(f"KEY PROVIDED")
-            sql = f"{selectSQL} {whereSQL} {orderBySQL}"
-            theVals = (value,)
-            logger.debug(f"sql = {sql}")
-            logger.debug(f"theVals = {theVals}")
-            try:
-                dbCursor.execute(sql, theVals)
-            except:
-                logger.critical(
-                    f'Unexpected error executing sql: {sql}', exc_info=True)
-                sys.exit(1)
+        sql = f"{selectSQL} {whereSQL} {orderBySQL}"
+        theVals = (trackId,)
+        logger.debug(f"sql = {sql}")
+        logger.debug(f"theVals = {theVals}")
+        try:
+            dbCursor.execute(sql, theVals)
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
 
         result = dbCursor.fetchall()
         # Disable full sql traceback to logger.debug
@@ -865,23 +844,23 @@ class GTdb:
             False = See msg for what did not pass
         """
         logger.debug(f"trackLayout={trackLayout}")
+        # Layout name must contain at least one charcter
+        logger.info(
+            f"Checking layout name contains at lease one character")
+        if trackLayout.name == None or trackLayout.name == "":
+            msg = f"Track Layout name must contain at least one character"
+            result = (False, msg)
+            logger.info(f"returning = {result}")
+            return result
+
         # Layout name must be unique for the Track
         logger.info(
             f"Checking if layout [{trackLayout.name}] already exists for track (case insensitve)")
-        layoutList = self.getLayoutList('trackId', trackLayout.track.id)
-        if trackLayout.name:  # layout name exists go uppercase
-            xLayoutName = trackLayout.name.upper()
-        else:
-            xLayoutName = trackLayout.name
-
+        layoutList = self.getLayoutList(trackLayout.track.id)
         for row in layoutList:
-            logger.debug(f"check {row[3]}")
-            if row[3]:  # layout name exists go uppercase
-                testName = row[3].upper()
-            else:
-                testName = row[3]
-            if testName == xLayoutName:  # layout name exist for track
-                msg = f"Layout name [{trackLayout.name}] for Track [{row[1]}] already exists"
+            logger.debug(f"tlayoutId={row[0]}. checking layout name: {row[1]}")
+            if row[1].upper() == trackLayout.name.upper():  # layout name exist for track
+                msg = f"Layout name [{trackLayout.name}] for Trackid [{trackLayout.track.id}] already exists"
                 result = (False, msg)
                 logger.info(f"returning = {result}")
                 return result
