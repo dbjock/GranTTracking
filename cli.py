@@ -64,8 +64,23 @@ def _sortTuple(tup, key):
     return(sorted(tup, key=lambda x: x[key]))
 
 
-def _POCtest():
-    print("POC Test")
+def dbInit():
+    "Database initization"
+    x = f'<ansired><b>WARNING!! All Data in db will be erased</b></ansired>'
+    print_formatted_text(HTML(x))
+    usrText = prompt("  Confirm by typing YES >>>> ")
+    if usrText == None or usrText != "YES":  # Not confirmed
+        log.info("db init not confirmed")
+        print("db init not confirmed. Canceled")
+    else:
+        log.warning("db init confirmed")
+        x = f'<ansired><b>Database being initiliazed</b></ansired>'
+        print_formatted_text(HTML(x))
+
+        GTDBConn1.initDB(scriptPath=_gtScripts)
+
+        x = f'<ansired><b>Database initilization complete</b></ansired>'
+        print_formatted_text(HTML(x))
 
 
 def main():
@@ -73,8 +88,17 @@ def main():
     cls()
     print("enter Exit or Help for more info")
     completer = NestedCompleter.from_nested_dict({
-        'help': {'exit': None, 'list': None,
-                 'tracks': None},
+        'help': {
+            'exit': None,
+            'list': None,
+            'tracks': None,
+            'dbinit': None
+        },
+        'add': {
+            'collection': {
+                'leagueId=': None
+            },
+        },
         'list': {
             'circuits': None,
             'classes': None,
@@ -87,7 +111,6 @@ def main():
                 'id=': None,
                 'name=': None
             },
-
         },
         'exit': None,
     })
@@ -99,26 +122,39 @@ def main():
             userCmd = session.prompt(
                 'test-GranTT > ', completer=completer, complete_while_typing=True)
         except KeyboardInterrupt:
+            log.info("Keyboard Interrupt. Exiting Application")
             break
-        except EOFError:
+        except EOFError:  # No sure why this is here
+            log.info("EOFError. Exiting application")
             break
         else:  # Checking for valid actions
             log.info(f"Command: {userCmd}")
-            try:
+            try:  # User entered a command
                 action = userCmd.split()[0]
             except IndexError:
                 break
             log.debug(f"action={action}")
             if action == 'help':
                 pass
+            elif action == 'add':
+                if userCmd.find(' ') != -1:
+                    objCmd = userCmd[userCmd.find(' '):]
+                    addAction(objCmd)
+                else:
+                    log.info("add command not complete")
+                    print("Please provde an object for the add command.")
             elif action == 'list':
                 if userCmd.find(' ') != -1:
-                    actOn = userCmd[userCmd.find(' '):]
-                    listAction(actOn)
+                    objCmd = userCmd[userCmd.find(' '):]
+                    listAction(objCmd)
                 else:
-                    print("Must provide an object to list")
+                    log.info("list command not complete")
+                    print("Please provide an object for the list command")
             elif action == 'exit':
+                log.info("Exiting application")
                 break
+            elif action == 'dbinit':
+                dbInit()
             elif action == 'secret':
                 _POCtest()
             else:
@@ -131,6 +167,92 @@ def main():
 
 def cls():
     os.system('cls' if os.name == 'nt' else 'clear')
+
+
+def addAction(cmd):
+    """Add Action.
+    This will make sure
+    - the objected being listed is valid
+    - and have that objected listed.
+
+    Args:
+        cmd ([string]): The object and its args
+    """
+    cmd = cmd.strip()
+    obj = cmd.split()[0]
+    log.debug(f"obj={obj}")
+    if obj == "collection":
+        addCollectionCmd(cmd[len(obj):].strip())
+    else:  # Unknown object
+        print_formatted_text(
+            HTML(f'<ansired>ERROR</ansired> - Unknown <ansigreen>add</ansigreen> object <b>{obj}</b>'))
+        log.info("Unknown object for add action")
+
+
+def addCollectionCmd(args):
+    """What to do when asked to add a collection"""
+    log.debug(f"args passed: {args}")
+    log.debug(f"length of args: {len(args)}")
+    if len(args) > 0 and args.find("=") > 0:  # Have valid args
+        if args.split('=')[0].strip() == 'leagueId':
+            id = args.split('=')[1].strip()
+        else:  # Unknown args passed
+            log.info(
+                f"Unknown add collection argument {args.split('=')[0].strip()}")
+            print_formatted_text(
+                HTML(f"<ansired>ERROR</ansired> - Unknown add collection argument <b>{args.split('=')[0].strip()}</b>."))
+            return
+    else:  # No args passed
+        log.info("No args passed. Getting user to select a league")
+        id = pickLeague()
+        log.info(f"User picked league id {id}")
+        if id == None:  # No League picked
+            log.info("No league select. Cancel add collection")
+            print("Canceled add collection")
+            return
+    log.info(
+        f"Get user input for adding a race collection to league id = {id}")
+    addCollection(id)
+
+
+def addCollection(leagueId):
+    """This will add the collection to the db Hopefully"""
+    """Still work in progress"""
+    log.debug(f"getting league object for league id {leagueId}")
+    league = GTDBConn1.getLeague(value=leagueId)
+    log.info("Getting race collection name from user")
+    print_formatted_text(
+        HTML(f"Enter new race collection for the <b>{league.name}</b> league"))
+    rcName = prompt("   Collection Name: ")
+    log.debug(f"rcName={rcName}")
+    if rcName == None or rcName == "":  # User didn't provide data
+        log.info("User did not provide race collection name")
+        print_formatted_text(
+            HTML(f"<ansiyellow>No input provided. Cancelled adding race collection</ansiyellow>"))
+        return
+
+    # Validate the race collection name
+    log.info(f"Checking if '{rcName}' already exists for League")
+    rcList = GTDBConn1.getRaceCollectionList(league.id)
+    for r in rcList:
+        log.debug(
+            f"checking userEntry.upper {rcName.upper()} to list {r[1].upper()}")
+        if rcName.upper() == r[1].upper():
+            print_formatted_text(
+                HTML(f"  <ansired>Race collection name already exists for this League. Unable to save.</ansired>"))
+            return
+
+    # Get description info from user
+    log.info("Getting race collection desc from user")
+    rcDesc = prompt(
+        f"   Description: ")
+    # Now to prepare object for saving to the database
+    log.debug("creating rCollection")
+    rCollection = GT.RaceCollection(
+        id=0, name=rcName, desc=rcDesc, leagueObj=league)
+    log.debug(f"Saving {rCollection}")
+    result = GTDBConn1.addRaceCollection(rCollection)
+    log.debug(f'result from adding racecollection: {result}')
 
 
 def displayCarCats(theList):
@@ -175,7 +297,7 @@ def displayMfgs(theList):
 
 
 def displayTrack(trackObj):
-    """Print to screen the track object
+    """Display track information
 
     Args:
         trackObj
@@ -186,50 +308,36 @@ def displayTrack(trackObj):
         return
 
     tName = trackObj.name[0:50].ljust(50)
-    # rowStr = t.substitute(id=id[0:4].rjust(4),
-    #   tName = tName[0:50].ljust(50))
-    # print(rowStr)
-    print(f"Track: ({trackObj.id}) {tName}")
+    x = f"<b><u>Track:</u></b> ({trackObj.id}) {tName}"
+    print_formatted_text(HTML(x))
 
     # Displaying Country info
     if trackObj.country.id == None:  # No country info
-        cText = f"No country assigned to this track"
+        cText = f"      {str('No country assigned to this track')[0:50].ljust(50)}"
         region = "N/A"
     else:  # Country info
         cText = f"({trackObj.country.id}) {trackObj.country.cntryName[0:50].ljust(50)}"
         region = trackObj.country.region
 
-    print(f"Country: {cText}\n Region: {region}")
+    x = f"<b><u>Country:</u></b> {cText} <b>Region:</b> {region}"
+    print_formatted_text(HTML(x))
 
+    # Get track layout List
     tLayoutList = GTDBConn1.getLayoutList(trackObj.id)
     print(f"Layouts:")
-    # Layout id column (tlID): width 4, justification right
+    # Layout id column (tlID): width 2, justification right
     # Layout name column (tlName): width 30, justification left
-    # LayoutCircuitID (cID): width 4, justification right
-    # LayoutCircutName(cName): width 15, justification left
-    t = Template(' $tlID | $tlName | $cID | $cName')
     tlID = "ID"
-    tlName = "Name"
-    cID = "cID"
-    cName = "Circuit Name"
-    hdrStr = t.substitute(tlID=tlID[0:4].rjust(4),
-                          tlName=tlName[0:30].ljust(30),
-                          cID=cID[0:4].rjust(4),
-                          cName=cName[0:30].ljust(30))
-    print(hdrStr)
+    tlName = "Name".ljust(30)
+    rowStr = f" {tlID} | {tlName}"
+    print(rowStr)
     print("-" * 78)  # header seperator
+    # display track layouts
     for r in tLayoutList:
-        tlID = str(r[2])
-        if r[3] == None:
-            tlName = "None"
-        else:
-            tlName = r[3]
-        cID = str(r[5])
-        cName = r[6]
-        rowStr = t.substitute(tlID=tlID[0:4].rjust(4),
-                              tlName=tlName[0:30].ljust(30),
-                              cID=cID[0:4].rjust(4),
-                              cName=cName[0:30].ljust(30))
+        # print(r)
+        tlID = str(r[0])[0:2].rjust(2)
+        tlName = r[1][0:30].ljust(30)
+        rowStr = f" {tlID} | {tlName} |"
         print(rowStr)
 
     print("=" * 78)
@@ -239,16 +347,16 @@ def help(arg):
     """Display help information
 
     Args:
-        arg (string): command looking to get help on
+        arg(string): command looking to get help on
     """
     if arg == 'general':
         print("Required to provide one of the following")
         print(" LIST\n CREATE\n EDIT\n DELETE")
     elif arg == 'list':
         print(""" Addtional LIST requirements
-          - Tracks : list all tracks
-          - Track [name of track] - list details of track
-          - TrackLayout [name of TrackLayout] - list details of tracklayout""")
+          - Tracks: list all tracks
+          - Track[name of track] - list details of track
+          - TrackLayout[name of TrackLayout] - list details of tracklayout""")
     else:
         pass
     sys.exit()
@@ -261,9 +369,10 @@ def listAction(cmd):
     - and have that objected listed.
 
     Args:
-        cmd ([string]): The object and its args to list
+        cmd([string]): The object and its args to list
     """
     cmd = cmd.strip()
+    # TODO: rename listObj -> obj (like what was done in addAction)
     listObj = cmd.split()[0]
     log.debug(f"listObj={listObj}")
     if listObj == 'track':
@@ -278,7 +387,6 @@ def listAction(cmd):
         displayDriveTrains(GTDBConn1.getDriveTrains())
     elif listObj == 'leagues':
         displayLeagues(GTDBConn1.getLeagueList())
-
     elif listObj == 'manufactures':
         if cmd.find(' ') != -1:  # Args provided
             objArgs = cmd[cmd.find(' '):].lstrip()
@@ -332,7 +440,7 @@ def listRaceCollections(args):
     """Get a list, and display, race collections for a League
 
     Args:
-        args ([str]): The args from the list collection command.
+        args([str]): The args from the list collection command.
         These are parsed to provide complete the request
     """
     log.debug(f"args passed: {args}")
@@ -340,15 +448,15 @@ def listRaceCollections(args):
     if len(args) > 0 and args.find("=") > 0:  # Have valid Args
         if args.split('=')[0].strip() == 'leagueId':
             id = args.split('=')[1].strip()
-            log.info(f"Getting collection info for league id {id}")
         else:  # unknown Args passed
             log.info(
                 f"Unknown list collection argument {args.split('=')[0].strip()}")
             print_formatted_text(
                 HTML(f"<ansired>ERROR</ansired> - Unknown list collection argument <b>{args.split('=')[0].strip()}</b>."))
+            return
     else:  # No args passed. Need to ask user some info
         log.info(
-            "No args passed. Have user select which League to get the collection for")
+            "No args passed. Getting user to select a league")
         id = pickLeague()
         log.info(f"User picked league id {id}")
         if id == None:  # No League picked
@@ -356,6 +464,7 @@ def listRaceCollections(args):
             print("Cancel listing of collection")
             return
 
+    log.info(f"Getting collection info for league id {id}")
     league = GTDBConn1.getLeague(value=id)
     theList = GTDBConn1.getRaceCollectionList(id)
     displayCollections(theList, league)
@@ -399,12 +508,12 @@ def pickTrackLayout(trackID, trackName):
     """Dialog box for user to select a track layout from a track
 
     Args:
-        trackID (int): trackID to get layouts for
-        trackName (str): This is included in the text of the dialog.
+        trackID(int): trackID to get layouts for
+        trackName(str): This is included in the text of the dialog.
               UX friendly letting them know which track its for.
 
     Returns:
-        layoutID (int)
+        layoutID(int)
     """
     log.info("getting track layouts for trackID:{trackID}")
     pickList = GTDBConn1.getLayoutList(trackID)
