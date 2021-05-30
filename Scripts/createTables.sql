@@ -5,6 +5,7 @@
 --
 PRAGMA foreign_keys = off;
 -- Table: car
+DROP TABLE IF EXISTS car;
 CREATE TABLE car (
     id            INTEGER      PRIMARY KEY,
     model         VARCHAR (16) NOT NULL
@@ -27,6 +28,7 @@ CREATE TABLE car (
 );
 
 -- Table: category
+DROP TABLE IF EXISTS category;
 CREATE TABLE category (
     id          INTEGER      PRIMARY KEY,
     name        VARCHAR (16) UNIQUE
@@ -37,6 +39,7 @@ CREATE TABLE category (
 );
 
 -- Table: circuit
+DROP TABLE IF EXISTS circuit;
 CREATE TABLE circuit (
     id   INTEGER      PRIMARY KEY AUTOINCREMENT,
     name VARCHAR (16) UNIQUE
@@ -44,6 +47,7 @@ CREATE TABLE circuit (
 );
 
 -- Table: country
+DROP TABLE IF EXISTS country;
 CREATE TABLE country (
     ID     INTEGER      PRIMARY KEY AUTOINCREMENT,
     name   VARCHAR (64) COLLATE NOCASE,
@@ -55,6 +59,7 @@ CREATE TABLE country (
 );
 
 -- Table: drivetrain
+DROP TABLE IF EXISTS drivetrain;
 CREATE TABLE drivetrain (
     id          INTEGER PRIMARY KEY,
     code        TEXT    UNIQUE
@@ -64,6 +69,7 @@ CREATE TABLE drivetrain (
 );
 
 -- Table: league
+DROP TABLE IF EXISTS league;
 CREATE TABLE league (
     id      INTEGER      PRIMARY KEY AUTOINCREMENT,
     name    VARCHAR (16) UNIQUE
@@ -73,6 +79,7 @@ CREATE TABLE league (
 );
 
 -- Table: manufacture
+DROP TABLE IF EXISTS manufacture;
 CREATE TABLE manufacture (
     id         INTEGER      PRIMARY KEY,
     name       VARCHAR (32) UNIQUE
@@ -82,6 +89,7 @@ CREATE TABLE manufacture (
                             NOT NULL
 );
 -- Table: race
+DROP TABLE IF EXISTS race;
 CREATE TABLE race (
     ID         INTEGER      PRIMARY KEY AUTOINCREMENT,
     name       VARCHAR (18) COLLATE NOCASE,
@@ -103,6 +111,7 @@ CREATE TABLE race (
 );
 
 -- Table: race_collection
+DROP TABLE IF EXISTS race_collection;
 CREATE TABLE race_collection (
     id        INTEGER      PRIMARY KEY AUTOINCREMENT,
     league_id INTEGER      REFERENCES league (id) ON DELETE RESTRICT
@@ -112,6 +121,7 @@ CREATE TABLE race_collection (
 );
 
 -- Table: race_type
+DROP TABLE IF EXISTS race_type;
 CREATE TABLE race_type (
     ID   INTEGER      PRIMARY KEY AUTOINCREMENT,
     name VARCHAR (16) UNIQUE
@@ -120,6 +130,7 @@ CREATE TABLE race_type (
 );
 
 -- Table: track
+DROP TABLE IF EXISTS track;
 CREATE TABLE track (
     id         INTEGER      PRIMARY KEY AUTOINCREMENT,
     name       VARCHAR (40) UNIQUE
@@ -129,6 +140,7 @@ CREATE TABLE track (
 );
 
 -- Table: track_layout
+DROP TABLE IF EXISTS track_layout;
 CREATE TABLE track_layout (
     id         INTEGER      PRIMARY KEY AUTOINCREMENT,
     track_id   INTEGER      REFERENCES track (id) ON DELETE RESTRICT
@@ -141,9 +153,11 @@ CREATE TABLE track_layout (
 );
 
 -- Table: weather
+DROP TABLE IF EXISTS weather;
 CREATE TABLE weather (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR (16) UNIQUE NOT NULL);
 
 -- Index: sortord
+DROP INDEX IF EXISTS sortord;
 CREATE INDEX sortord ON league (sortord COLLATE RTRIM ASC);
 
 PRAGMA foreign_keys = on;
