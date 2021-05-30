@@ -9,11 +9,6 @@ from datetime import datetime
 from GranT import gtdbV2 as gtdb
 from GranT import gtcfg
 
-# Just for this module
-# import string
-# import random
-
-
 gtPath = Path.cwd()
 gtScripts = gtPath / 'Scripts'
 
@@ -40,19 +35,13 @@ fileHandler.setLevel(logging.DEBUG)
 logger.addHandler(fileHandler)
 # ----------------------------
 dbFile = Path(gtcfg.dbcfg['dbFile'])
-print(f"This will create a new clean {dbFile}")
 print(f"Logging to {logfile}")
-if dbFile.is_file():
-    dbFile.unlink(missing_ok=True)
-    msg = f"Existing Database file: {dbFile} deleted"
-    print(msg)
-    logging.info(msg)
-
-msg = f"Creating {dbFile}"
+print(f"This will drop and create tables in {dbFile}")
+msg = f"Database init (Drop, create, populate database) {dbFile}"
 print(msg)
 logger.info(msg)
 dbConn1 = gtdb.GTdb(name=dbFile)
 dbConn1.initDB(scriptPath=f'{gtScripts}')
-msg = f"Created {dbFile}"
+msg = f"Work completed on {dbFile}"
 print(msg)
 logger.info(msg)
