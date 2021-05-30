@@ -26,6 +26,7 @@ class GTdb:
                 sys.exit(1)
             c = self.conn.cursor()
             logger.debug(f"Connected {name}")
+            c.execute("PRAGMA foreign_keys = on;")
             c.execute("PRAGMA database_list;")
             xtmp = c.fetchall()
             logger.debug(f"database_list={xtmp}")
@@ -150,7 +151,14 @@ class GTdb:
         return r
 
     def addRaceCollection(self, raceCollection):
-        "This is being worked on"
+        """Adding a Race Collection
+
+        Args:
+        raceCollection Object
+        Returns - list (ResultCode, ResultText)
+            ResultCode 0 = Success Add
+            Resultcode <> 0 - See ResultText for details
+        """
         logger.debug(f"raceCollection={raceCollection}")
         # Collection name must have a value
         if raceCollection.name == None or raceCollection.name == "":
@@ -168,7 +176,7 @@ class GTdb:
                 logger.debug(f"Return {rtrnMsg}")
                 return rtrnMsg
 
-        # Programable tests passed, so lets try and save
+        # Programable tests passed, so try and save
         logger.info("Attempting to safe the race collection")
         theVals = {'colName': raceCollection.name, 'colDesc': raceCollection.desc,
                    'leagueId': raceCollection.league.id}
@@ -752,6 +760,14 @@ class GTdb:
             sys.exit(1)
 
     def getRaceCollectionList(self, leagueId):
+        """Returns Race Collection list for the leagueID.
+
+        Args:
+            leagueId (int): leagueId to get race collections for
+
+        Returns:
+            list: (id,name)
+        """
         logger.info(
             f"Getting list of race collections for a leagueID {leagueId}")
         selectSQL = "SELECT id, name from race_collection"
