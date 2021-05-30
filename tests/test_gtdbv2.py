@@ -836,9 +836,9 @@ class TestRaceCollection(unittest.TestCase):
         # object is ignored/not used. The SQL to add/insert the collection
         # object does not provide the id so db will auto generate
 
-        # Add with with non existing league id
+        # Add with with non existing league id >0
         logger.info(
-            "Add Race Collection : Non existing League")
+            "Add Race Collection : Non existing League using 9999")
         xLeague = GT.League(id=99999, name='NA', sortord=0)
         testCollection = GT.RaceCollection(
             id=0, name="I am brand new", desc="", leagueObj=xLeague)
@@ -846,7 +846,19 @@ class TestRaceCollection(unittest.TestCase):
         result = dbConn1.addRaceCollection(testCollection)
         logger.info(f"result is {result}")
         self.assertNotEqual(
-            result[0], 0, "Failed. Test with non existing League")
+            result[0], 0, "Failed. Test with League 9999")
+
+        # Add with with league id 0
+        logger.info(
+            "Add Race Collection : League ID 0")
+        xLeague = GT.League(id=0, name='NA', sortord=0)
+        testCollection = GT.RaceCollection(
+            id=0, name="I am brand new", desc="", leagueObj=xLeague)
+        logging.info(f"Saving collection={testCollection}")
+        result = dbConn1.addRaceCollection(testCollection)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed. Test with League 0")
 
         logger.info(
             "Add Race Collection : non existant name, existing League")
