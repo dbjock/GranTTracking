@@ -766,11 +766,11 @@ class GTdb:
             leagueId (int): leagueId to get race collections for
 
         Returns:
-            list: (id,name)
+            list: (id,name,desc)
         """
         logger.info(
             f"Getting list of race collections for a leagueID {leagueId}")
-        selectSQL = "SELECT id, name from race_collection"
+        selectSQL = "SELECT id, name, description from race_collection"
         whereSQL = "WHERE league_id = ?"
         orderBySQL = "Order by name"
         sql = f"{selectSQL} {whereSQL} {orderBySQL}"
