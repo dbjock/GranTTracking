@@ -96,7 +96,7 @@ class RaceCollection(object):
         self.league = leagueObj
 
     def __repr__(self):
-        return f"RaceCollection(id={self.id}, name='{self.name}', desc={self.desc},league={self.league}"
+        return f"RaceCollection(id={self.id}, name='{self.name}', desc='{self.desc}',league={self.league}"
 
 
 class League(object):
