@@ -173,9 +173,52 @@ INSERT INTO track_layout (id, track_id, name, miles, circuit_id) VALUES (80, 28,
 INSERT INTO track_layout (id, track_id, name, miles, circuit_id) VALUES (81, 28, 'GP', 3.2, 3);
 
 -- Table: race_collection
-
 INSERT INTO race_collection (id, league_id, name, description) VALUES (1, 2, 'Sunday Cup', 'The grassroots introduction to racing. No restrictions on car models.');
 INSERT INTO race_collection (id, league_id, name, description) VALUES (2, 1, 'Clubman Cup', 'An event for beginners just getting the hang of racing. No restrctions on car models.');
 INSERT INTO race_collection (id, league_id, name, description) VALUES (3, 2, 'FF Challenge', 'Master Front wheel drive sports cars with understeer.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (4, 2, 'Clio cup', 'A one-make race in the Renault Clio for beginner racers.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (5, 2, 'Mazda Roadsters Cup', 'A one-make series for Mazda Roadsters, providing an entry level race category.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (6, 2, 'F-150 Raptor Survial', 'the final word in American pickup trucks. A Ford F-150 one-make event.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (7, 2, 'Stars & Stripes', 'The race to find the fastest most menacing American sports carl Cany you handle the power?');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (8, 2, 'Nissan GT-R Cup', 'A one-make race for the GT-R, featuring Nissan''s iconic sparts car.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (9, 2, 'Competition de France', 'Cute, sporty, a clash of the unique. An event for French Cars.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (10, 2, 'Group 4 Cup', 'You''ll find plenty of power and excellent handling in these Group 4 races.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (11, 2, 'Lightweight K Cup', 'This race consists of compact cars available only in Japan, powered by 660-cc engines.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (12, 2, 'Beetle & Samba Bus Fest', 'Two uniquely-shaped vehicles with air-cooled flat-4 engines from the good ol''days, the Volkswagen "Beetle" and the Samba Bus, are featured in this event.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (13, 2, 'The Passion of Dr. Wankel', 'A special event for cars powered by the rotary engine, which was invented by Felix Wankel of Germany.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (14, 2, 'Mini Challenge', 'MINI fans unite! An event for the cute but quick MINI Cooper.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (15, 2, 'Z Heritage', 'The "Z" only event for Nissan''s iconic front-engine rear-wheel-drive sports car, with its flowing body and high-powered engine.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (16, 2, 'FR Challenge', 'A race series limited to front-engine/rear-wheel drive cars. Hone your countersteering technique.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (17, 1, 'Tourist Trophy', 'A one-make race series for the Audi TT, crowned with its own name.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (18, 1, '4WD Challenge', 'Races for four-wheel drives, with everything from 4-door sedans to supercars.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (19, 1, 'FR Challenge +', 'The intermediate level series of the FR Challenge, limited to front-engine rear-wheel drives.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (20, 1, 'Boxer Spirit', 'A race series for cars with horizontally-ooposed engines. Enjoy their low center of gravity and bask in their unique sounds.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (21, 1, 'Mazda Roadsters Cup +', 'An intermediate level category for the one-make series with the Mazda Roadster.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (22, 1, 'J-Sports Meeting', 'A diverse assortment of unique and high performance Japanese sports cars.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (23, 1, 'Vision Gran Turismo Trophy', 'A competition of Vision Gran Turismo vehicles, which represent the pinnacle of technology and design.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (24, 1, 'Red Bull X-Junior Series', 'Entry Level Red Bull X Series, X2014 Jr. One-Make Race.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (25, 1, 'Gr. B Rallycross', 'By grip or drift'' your fate lies in total control of your machine. this race is for Group B rally cars.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (26, 1, 'World Hatchback Championship', 'This race features hatchbacks, which are cars with rear doors that open upward.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (27, 1, 'Nostalgic Car Festival', 'With beautiful designs and sensuous sounds, these classics represent cars from a bygone era.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (28, 1, 'Group 3 Cup', 'Stay focused and take the checkered flag in this Grp 3 battle of the bravest pilots.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (29, 1, 'Real Circuit Tours', 'A race series on real-world tracks, involving non-racecars with 394 HP or less.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (30, 1, 'Supra Legend', 'This special race event for the Toyota Supra features a group of the company''s high-powered front-engine/rear-wheel sports car developed for racing.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (31, 1, 'Super Formula Championships', 'This one-make race features the Dallara SF19 from the Supoer Formula series, among the most preeminent motorsports categories in Japan.');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (32, 4, 'Midship Challenge', '');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (33, 4, 'Premium Sports Lounge', '');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (34, 4, 'La Festa Cavallino', '');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (35, 4, 'F1500 Championship', '');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (36, 4, 'All Japan GT Car Championships', '');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (37, 4, 'Vision Gran Turismo Trohpy +', '');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (38, 4, 'Lamborghini Cup', '');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (39, 4, 'Mercedes AMG Grand Prix', '');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (40, 4, 'Nostalgic 1979', '');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (41, 4, 'Group 1 Cup', '');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (42, 4, 'X2014 Nations Cup', '');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (43, 3, 'Gr.1 Prototype endurance Series', '');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (44, 3, 'Porsche Cup', '');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (45, 3, 'Gr.3 Endurance Series', '');
+INSERT INTO race_collection (id, league_id, name, description) VALUES (46, 3, 'Compentition Endurance Series', '');
+
 
 PRAGMA foreign_keys = on;
