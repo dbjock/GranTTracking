@@ -8,7 +8,7 @@ PRAGMA foreign_keys = off;
 DROP TABLE IF EXISTS car;
 CREATE TABLE car (
     id            INTEGER      PRIMARY KEY,
-    model         VARCHAR (16) NOT NULL
+    model         TEXT NOT NULL
 							   COLLATE NOCASE,
     mfg_id        INTEGER      REFERENCES manufacture (id) ON DELETE RESTRICT
                                NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE car (
 DROP TABLE IF EXISTS category;
 CREATE TABLE category (
     id          INTEGER      PRIMARY KEY,
-    name        VARCHAR (16) UNIQUE
+    name        TEXT UNIQUE
                              NOT NULL
                              COLLATE NOCASE,
     description TEXT,
@@ -42,7 +42,7 @@ CREATE TABLE category (
 DROP TABLE IF EXISTS circuit;
 CREATE TABLE circuit (
     id   INTEGER      PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR (16) UNIQUE
+    name TEXT UNIQUE
 	                  COLLATE NOCASE
 );
 
@@ -50,12 +50,12 @@ CREATE TABLE circuit (
 DROP TABLE IF EXISTS country;
 CREATE TABLE country (
     ID     INTEGER      PRIMARY KEY AUTOINCREMENT,
-    name   VARCHAR (64) COLLATE NOCASE,
+    name   TEXT COLLATE NOCASE,
     alpha2 CHAR (2)     UNIQUE
                         NOT NULL,
     alpha3 CHAR (3)     NOT NULL
                         UNIQUE,
-    region VARCHAR (32)
+    region TEXT
 );
 
 -- Table: drivetrain
@@ -72,7 +72,7 @@ CREATE TABLE drivetrain (
 DROP TABLE IF EXISTS league;
 CREATE TABLE league (
     id      INTEGER      PRIMARY KEY AUTOINCREMENT,
-    name    VARCHAR (16) UNIQUE
+    name    TEXT UNIQUE
                          NOT NULL
                          COLLATE NOCASE,
     sortord INTEGER      UNIQUE
@@ -82,7 +82,7 @@ CREATE TABLE league (
 DROP TABLE IF EXISTS manufacture;
 CREATE TABLE manufacture (
     id         INTEGER      PRIMARY KEY,
-    name       VARCHAR (32) UNIQUE
+    name       TEXT UNIQUE
                             NOT NULL
                             COLLATE NOCASE,
     country_id INTEGER      REFERENCES country (ID) ON DELETE RESTRICT
@@ -92,7 +92,7 @@ CREATE TABLE manufacture (
 DROP TABLE IF EXISTS race;
 CREATE TABLE race (
     ID         INTEGER      PRIMARY KEY AUTOINCREMENT,
-    name       VARCHAR (18) COLLATE NOCASE,
+    name       TEXT COLLATE NOCASE,
     tl_id      INTEGER      REFERENCES track_layout (id) ON DELETE RESTRICT
                             NOT NULL,
     time       TIME,
@@ -116,7 +116,7 @@ CREATE TABLE race_collection (
     id        INTEGER      PRIMARY KEY AUTOINCREMENT,
     league_id INTEGER      REFERENCES league (id) ON DELETE RESTRICT
                            NOT NULL,
-    name      VARCHAR (16),
+    name      TEXT,
     description TEXT
 );
 
@@ -124,7 +124,7 @@ CREATE TABLE race_collection (
 DROP TABLE IF EXISTS race_type;
 CREATE TABLE race_type (
     ID   INTEGER      PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR (16) UNIQUE
+    name TEXT UNIQUE
                       NOT NULL
                       COLLATE NOCASE
 );
@@ -133,7 +133,7 @@ CREATE TABLE race_type (
 DROP TABLE IF EXISTS track;
 CREATE TABLE track (
     id         INTEGER      PRIMARY KEY AUTOINCREMENT,
-    name       VARCHAR (40) UNIQUE
+    name       TEXT UNIQUE
                             NOT NULL
 							COLLATE NOCASE,
     country_id INTEGER      REFERENCES country (ID) ON DELETE RESTRICT
@@ -145,7 +145,7 @@ CREATE TABLE track_layout (
     id         INTEGER      PRIMARY KEY AUTOINCREMENT,
     track_id   INTEGER      REFERENCES track (id) ON DELETE RESTRICT
                             NOT NULL,
-    name       VARCHAR (16) COLLATE NOCASE
+    name       TEXT COLLATE NOCASE
                             NOT NULL,
     miles      DECIMAL      NOT NULL,
     circuit_id INTEGER      REFERENCES circuit (id) ON DELETE RESTRICT
@@ -154,7 +154,7 @@ CREATE TABLE track_layout (
 
 -- Table: weather
 DROP TABLE IF EXISTS weather;
-CREATE TABLE weather (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR (16) UNIQUE NOT NULL);
+CREATE TABLE weather (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL);
 
 -- Index: sortord
 DROP INDEX IF EXISTS sortord;
