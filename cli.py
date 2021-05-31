@@ -210,37 +210,57 @@ def addCollectionCmd(args):
             log.info("No league select. Cancel add collection")
             print("Canceled add collection")
             return
-    log.info(
-        f"Get user input for adding a race collection to league id = {id}")
-    addCollection(id)
+        log.info(
+            f"Get user input for adding a race collection to league id = {id}")
+
+    r = addCollection(id)
+    if r[0] != 0:  # Save was not successful
+        x = f'  <ansiyellow>Unable to add Race Collection. Return Code: {r[0]} Desc: {r[1]}</ansiyellow>'
+        print_formatted_text(HTML(x))
+        log.info(
+            f"Unable to add Race Collection. Return Code: {r[0]} Desc: {r[1]}")
+        return
+    else:  # Race collection added
+        x = f'  <ansigreen>Race Collection Added</ansigreen>'
+        print_formatted_text(HTML(x))
+        log.info(f"Race Collection Added")
 
 
 def addCollection(leagueId):
-    """This will add the collection to the db Hopefully"""
-    """Still work in progress"""
-    log.debug(f"getting league object for league id {leagueId}")
+    """Add a race collection
+
+    Args:
+        leagueId (int): The league ID to add the race collection to
+
+    Returns:
+        list: (ResultCode,ResultDesc)
+        if ResultCode !=0 then not successfull. See ResultDesc
+    """
+
+    log.info(f"getting league object for league id {leagueId}")
     league = GTDBConn1.getLeague(value=leagueId)
+    if league.id == 0:  # League was not found
+        log.warning("League not found in database")
+        return [1, "League not found"]
+
     log.info("Getting race collection name from user")
     print_formatted_text(
-        HTML(f"Enter new race collection for the <b>{league.name}</b> league"))
+        HTML(f"Enter new race collection for the <u><b>{league.name}</b></u> league"))
     rcName = prompt("   Collection Name: ")
     log.debug(f"rcName={rcName}")
     if rcName == None or rcName == "":  # User didn't provide data
         log.info("User did not provide race collection name")
-        print_formatted_text(
-            HTML(f"<ansiyellow>No input provided. Cancelled adding race collection</ansiyellow>"))
-        return
+        return [1, "Race collection name not provided."]
 
     # Validate the race collection name
-    log.info(f"Checking if '{rcName}' already exists for League")
+    log.info(f"Checking if League already has race name: '{rcName}'")
     rcList = GTDBConn1.getRaceCollectionList(league.id)
     for r in rcList:
         log.debug(
             f"checking userEntry.upper {rcName.upper()} to list {r[1].upper()}")
         if rcName.upper() == r[1].upper():
-            print_formatted_text(
-                HTML(f"  <ansired>Race collection name already exists for this League. Unable to save.</ansired>"))
-            return
+            log.warning(f"Race collection name already exists for league.")
+            return [1, "Race collection name already exists for this League."]
 
     # Get description info from user
     log.info("Getting race collection desc from user")
@@ -251,8 +271,9 @@ def addCollection(leagueId):
     rCollection = GT.RaceCollection(
         id=0, name=rcName, desc=rcDesc, leagueObj=league)
     log.debug(f"Saving {rCollection}")
-    result = GTDBConn1.addRaceCollection(rCollection)
-    log.debug(f'result from adding racecollection: {result}')
+    r = GTDBConn1.addRaceCollection(rCollection)
+    log.debug(f'result from adding racecollection: {r}')
+    return r
 
 
 def displayCarCats(theList):
