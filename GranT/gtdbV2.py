@@ -759,6 +759,50 @@ class GTdb:
                 f'Unexpected error executing sql: {sql}', exc_info=True)
             sys.exit(1)
 
+    def getRaceCollection(self, rcId):
+        """Get a race collection object from database
+
+        Args:
+            rcId (int): Race collection id
+
+        Returns:
+            [obj]: Race Collection objection
+            IF raceCollection.id == 0 then raceColltion not found
+        """
+        selectSQL = "SELECT rc.id, rc.name, rc.description, l.id as leagueId, l.name as leagueName, l.sortord as leagueSortord FROM race_collection as rc LEFT JOIN league as l ON rc.league_id = l.id"
+        whereSQL = "WHERE rc.id = ?"
+        value = rcId
+        sql = f"{selectSQL} {whereSQL}"
+        theVals = (value,)
+        logger.debug(f"sql = {sql}")
+        logger.debug(f"theVals = {theVals}")
+        try:
+            # Enabling full sql traceback to logger.debug
+            self.conn.set_trace_callback(logger.debug)
+            c = self.conn.cursor()
+            c.execute(sql, theVals)
+            row = c.fetchone()
+            # Disable full sql traceback to logger.debug
+            self.conn.set_trace_callback(None)
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
+        if row:  # populate the raceCollection object
+            logger.debug("Found race collection")
+            logger.debug(f"row={row}")
+            league = gtClass.League(id=row[3], name=row[4], sortord=row[5])
+            logger.debug(f"league={league}")
+            raceCollection = gtClass.RaceCollection(
+                id=row[0], name=row[1], desc=row[2], leagueObj=league)
+
+        else:  # create a blank raceCollection object
+            raceCollection = gtClass.RaceCollection(
+                id=0, name="", desc="", leagueObj="")
+
+        logger.debug(f"raceCollection={raceCollection}")
+        return raceCollection
+
     def getRaceCollectionList(self, leagueId):
         """Returns Race Collection list for the leagueID.
 

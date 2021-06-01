@@ -782,7 +782,7 @@ class TestRaceCollection(unittest.TestCase):
         testVal = 2  # leagueId 2 should bring back at least 2 elements
         testList = dbConn1.getRaceCollectionList(leagueId=testVal)
         logger.info(f"testList = {testList}")
-        self.assertEqual(testList[0][0], 3, "Failed. First row incorrect")
+        self.assertEqual(testList[0][0], 12, "Failed. First row incorrect")
 
         logger.info("Getting list for non existing league")
         testVal = 9999  # leagueId 10 does not exist
@@ -790,6 +790,22 @@ class TestRaceCollection(unittest.TestCase):
         logger.info(f"testList = {testList}")
         self.assertEqual(len(testList), 0,
                          "Failed. Getting list from non exist League")
+
+    def test_getRaceCollection(self):
+        logger.info("==== BEGIN Get Race Collection")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Getting an existing Race Collection")
+        testVal = 1
+        r = dbConn1.getRaceCollection(rcId=testVal)
+        self.assertEqual(r.id, 1, "Failed to get existing race collection")
+
+        logger.info("Getting non existing Race Collection")
+        testVal = 9999
+        r = dbConn1.getRaceCollection(rcId=testVal)
+        self.assertEqual(
+            r.id, 0, "Failed getting non existing race collection")
 
     def test_addRaceCollection(self):
         logger.info("=== BEGIN Add RaceCollection testing")
