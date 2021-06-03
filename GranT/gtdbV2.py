@@ -567,7 +567,7 @@ class GTdb:
             list: (layoutId,layoutName)
         """
         logger.info(f"Getting track layout list: trackId={trackId}")
-        selectSQL = """SELECT l.id AS layoutId, l.name AS layout FROM track as t INNER JOIN track_layout as l ON t.id = l.track_id"""
+        selectSQL = """SELECT l.id AS layoutId, l.name AS layout, l.miles FROM track as t INNER JOIN track_layout as l ON t.id = l.track_id"""
         orderBySQL = "ORDER BY t.name, l.name"
         whereSQL = "WHERE t.id = ?"
 
