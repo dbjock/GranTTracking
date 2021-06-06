@@ -917,3 +917,37 @@ class TestLeagues(unittest.TestCase):
 
         del dbConn1
         logger.info(f"==== END Get/read League\n")
+
+
+class TestWeather(unittest.TestCase):
+    def test_getWeather(self):
+        logger.info("==== BEGIN Get/read Weather")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Getting a list of weathers")
+        testList = dbConn1.getWeatherList()
+        logger.info(f"testList={testList}")
+        self.assertGreater(
+            len(testList), 1, "More than one weather should be returned")
+        self.assertEqual(
+            len(testList[0]), 2, "There should be 2 fields for each weather row")
+
+        logger.info("=== END Get/read Weather")
+
+
+class TestRacetype(unittest.TestCase):
+    def test_getRaceType(self):
+        logger.info("==== BEGIN Get/read Race Type")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Getting a list of race types")
+        testList = dbConn1.getRaceTypeList()
+        logger.info(f"testList={testList}")
+        self.assertGreater(
+            len(testList), 1, "More than one race type should be returned")
+        self.assertEqual(
+            len(testList[0]), 2, "There should be 2 fields for each race type row")
+
+        logger.info("=== END Get/read Race Type")

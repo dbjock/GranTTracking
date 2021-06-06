@@ -840,6 +840,34 @@ class GTdb:
         logger.info(f"Returning {len(result)} rows")
         return result
 
+    def getRaceTypeList(self):
+        """Return a list of all the race types in db
+
+        Returns:
+            list: (raceTypeid, raceTypeName)
+        """
+        logger.info("Getting list of race types from db")
+        selectSQL = "SELECT id, name FROM race_type ORDER by name"
+        sql = selectSQL
+        logger.debug(f"sql = {sql}")
+        dbCursor = self.conn.cursor()
+        # Want to return a true list for results
+        self.conn.row_factory = None
+        # Enabling full sql traceback to logger.debug
+        self.conn.set_trace_callback(logger.debug)
+        try:
+            dbCursor.execute(sql)
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
+
+        result = dbCursor.fetchall()
+        # Disable full sql traceback to logger.debug
+        self.conn.set_trace_callback(None)
+        logger.info(f"Rows being returned: {len(result)}")
+        return result
+
     def getTrack(self, key='trackId', value=None):
         """
         Gets a single Track record from database based on key and value passed.
@@ -915,6 +943,35 @@ class GTdb:
         result = dbCursor.fetchall()
         # Disable full sql traceback to logger.debug
         self.conn.set_trace_callback(None)
+        logger.info(f"Rows being returned: {len(result)}")
+        return result
+
+    def getWeatherList(self):
+        """Returns a list of all the the Weather rows
+
+        Returns:
+            list (weatherID, weatherName)
+        """
+        logger.info("Getting list of weather objects")
+        selectSQL = "SELECT id, name FROM weather ORDER by name"
+        sql = selectSQL
+        logger.debug(f"sql = {sql}")
+        dbCursor = self.conn.cursor()
+        # Want to return a true list for results
+        self.conn.row_factory = None
+        # Enabling full sql traceback to logger.debug
+        self.conn.set_trace_callback(logger.debug)
+        try:
+            dbCursor.execute(sql)
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
+
+        result = dbCursor.fetchall()
+        # Disable full sql traceback to logger.debug
+        self.conn.set_trace_callback(None)
+        logger.info(f"Rows being returned: {len(result)}")
         return result
 
     def initDB(self, scriptPath=None):
