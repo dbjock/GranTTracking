@@ -303,6 +303,7 @@ def addRaceCmd(args):
         return
     tLayout = GTDBConn1.getLayout(x)
 
+    # Prompt user for League
     x = pickLeague(text="Which League for the new race?")
     if x == None:  # no league picked
         log.info("No league selected.")
@@ -321,9 +322,19 @@ def addRaceCmd(args):
         return
     rcCollection = GTDBConn1.getRaceCollection(x)
 
+    # Prompt user for weather type
+    x = pickWeather()
+    if x == None:  # User did not choose a weather type
+        log.info(f"No weather type choosen")
+        print("No weather type choosen")
+        return
+    weather = GTDBConn1.getWeather(value=x)
+    # Prompt user for Race Type
     x = f"Track Layout   : {tLayout.track.name} - {tLayout.name} -- layout Id: {tLayout.id}"
     print(x)
     x = f"Race Collection: {rcCollection.league.name} - {rcCollection.name} -- collection Id: {rcCollection.id}"
+    print(x)
+    x = f"Weather: {weather.name}"
     print(x)
 
 
@@ -572,7 +583,7 @@ def pickRaceCollection(leagueId, lName, text='Select one'):
 
 
 def pickTrack(text="Select a Track"):
-    """Dialog box for user to select a a track
+    """Dialog box for user to select a track
     Returns: the trackID user picked
     """
     log.info("Getting tracks for picklist")
@@ -604,6 +615,27 @@ def pickTrackLayout(trackID, trackName, text='Select one'):
     result = radiolist_dialog(title=f"Track Layouts for track {trackName}",
                               text=text,
                               values=pickList).run()
+    log.info(f"User choose: {result}")
+    return result
+
+
+def pickWeather(text='Select type of Weather'):
+    """Dialog box for user to select weather type.
+
+    Args:
+        text (str, optional): Text to appear on dialog box. Defaults to 'Select type of Weather'.
+
+    Returns:
+        int: The unique id of the Weather
+    """
+    log.info("Getting list of weather choices")
+    pickList = GTDBConn1.getWeatherList()
+    log.info('Displaying weather types for user to choose')
+    result = radiolist_dialog(
+        title="Weather Types",
+        text=text,
+        values=pickList
+    ).run()
     log.info(f"User choose: {result}")
     return result
 
