@@ -925,13 +925,25 @@ class TestWeather(unittest.TestCase):
         dbConn1 = gtdbV2.GTdb(name=':memory:')
         dbConn1.initDB(scriptPath=f'{_gtScripts}')
 
-        logger.info("Getting a list of weathers")
+        logger.info("Getting a list of all weather types")
         testList = dbConn1.getWeatherList()
         logger.info(f"testList={testList}")
         self.assertGreater(
             len(testList), 1, "More than one weather should be returned")
         self.assertEqual(
             len(testList[0]), 2, "There should be 2 fields for each weather row")
+
+        logger.info("Get a weather object by id")
+        testVal = 1
+        testObj = dbConn1.getWeather(value=testVal)
+        self.assertEqual(testObj.id, testVal,
+                         "Failed getting by Weather object by id")
+
+        logger.info("Get non exist weather by id")
+        testVal = 99999
+        testObj = dbConn1.getWeather(value=testVal)
+        self.assertEqual(
+            testObj.id, 0, "Failed getting weather by non exist id")
 
         logger.info("=== END Get/read Weather")
 

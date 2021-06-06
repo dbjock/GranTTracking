@@ -887,11 +887,11 @@ class GTdb:
         theVals = (value,)
         logger.debug(f"sql = {sql}")
         logger.debug(f"theVals = {theVals}")
+        # Enable the .keys() to get column names
+        self.conn.row_factory = sqlite3.Row
+        # Enabling full sql traceback to logger.debug
+        self.conn.set_trace_callback(logger.debug)
         try:
-            # Enable the .keys() to get column names
-            self.conn.row_factory = sqlite3.Row
-            # Enabling full sql traceback to logger.debug
-            self.conn.set_trace_callback(logger.debug)
             c = self.conn.cursor()
             c.execute(sql, theVals)
             row = c.fetchone()
@@ -903,6 +903,8 @@ class GTdb:
             logger.critical(
                 f'Unexpected error executing sql: {sql}', exc_info=True)
             sys.exit(1)
+
+        logger.debug(f"row={row}")
         if row:  # Populate the track object
             logger.debug("track found")
             xCountry = gtClass.Country(
@@ -945,6 +947,36 @@ class GTdb:
         self.conn.set_trace_callback(None)
         logger.info(f"Rows being returned: {len(result)}")
         return result
+
+    def getWeather(self, key='id', value=None):
+        logger.info(f"Getting weather object: {key}={value}")
+        selectSQL = "SELECT id, name FROM weather"
+        whereSQL = f"WHERE {key} = ?"
+        theVals = (value,)
+        sql = f"{selectSQL} {whereSQL}"
+        logger.debug(f"{theVals}")
+        logger.debug(f"sql: {sql}")
+        # Disable the .keys() to get column names.
+        self.conn.row_factory = None
+        # Enabling full sql traceback to logger.debug
+        self.conn.set_trace_callback(logger.debug)
+        try:
+            c = self.conn.cursor()
+            c.execute(sql, theVals)
+            row = c.fetchone()
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
+        # Disable full sql traceback to logger.debug
+        self.conn.set_trace_callback(None)
+        logger.debug(f"row={row}")
+        if row:  # have data from db
+            weather = gtClass.Weather(id=row[0], name=row[1])
+        else:  # No data from db. Create empty object
+            weather = gtClass.Weather(id=0, name="")
+        logger.debug(f'weather = {weather}')
+        return weather
 
     def getWeatherList(self):
         """Returns a list of all the the Weather rows
