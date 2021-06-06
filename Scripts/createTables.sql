@@ -88,22 +88,21 @@ CREATE TABLE manufacture (
     country_id INTEGER      REFERENCES country (ID) ON DELETE RESTRICT
                             NOT NULL
 );
+
 -- Table: race
 DROP TABLE IF EXISTS race;
 CREATE TABLE race (
-    ID         INTEGER      PRIMARY KEY AUTOINCREMENT,
-    name       TEXT COLLATE NOCASE,
-    tl_id      INTEGER      REFERENCES track_layout (id) ON DELETE RESTRICT
-                            NOT NULL,
-    time       TIME,
-    weather_id INTEGER      REFERENCES weather (id) ON DELETE RESTRICT,
-    laps       INTEGER,
-    type_id    INTEGER      REFERENCES race_type (ID) ON DELETE RESTRICT
-                            NOT NULL,
-    time_limit TIME,
-    cat_id     INTEGER      REFERENCES category (id) ON DELETE RESTRICT,
-    cars       INTEGER,
-    start_grid INTEGER,
+    ID         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT    COLLATE NOCASE,
+    tl_id      INTEGER REFERENCES track_layout (id) ON DELETE RESTRICT
+                       NOT NULL,
+    rc_id      INTEGER NOT NULL
+                       REFERENCES race_collection (id) ON DELETE RESTRICT,
+    racetime  TIME,
+    weather_id INTEGER REFERENCES weather (id) ON DELETE RESTRICT,
+    limits     TEXT,
+    type_id    INTEGER REFERENCES race_type (ID) ON DELETE RESTRICT
+                       NOT NULL,
     prize1     INTEGER,
     prize2     INTEGER,
     prize3     INTEGER,
