@@ -138,7 +138,7 @@ class RaceType(object):
         self.name = name
 
     def __repr__(self):
-        return f"id={self.id}, name={self.name}"
+        return f"Racetype(id={self.id}, name={self.name})"
 
 
 class Weather(object):
@@ -153,7 +153,7 @@ class Weather(object):
         self.name = name
 
     def __repr__(self):
-        return f"id={self.id}, name={self.name}"
+        return f"Weather(id={self.id}, name={self.name})"
 
 
 class League(object):
