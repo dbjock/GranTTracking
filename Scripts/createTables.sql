@@ -93,12 +93,13 @@ CREATE TABLE manufacture (
 DROP TABLE IF EXISTS race;
 CREATE TABLE race (
     ID         INTEGER PRIMARY KEY AUTOINCREMENT,
-    name       TEXT    COLLATE NOCASE,
+    name       TEXT    COLLATE NOCASE
+                       NOT NULL,
     tl_id      INTEGER REFERENCES track_layout (id) ON DELETE RESTRICT
                        NOT NULL,
     rc_id      INTEGER NOT NULL
                        REFERENCES race_collection (id) ON DELETE RESTRICT,
-    racetime  TIME,
+    racetime   TIME,
     weather_id INTEGER REFERENCES weather (id) ON DELETE RESTRICT,
     limits     TEXT,
     type_id    INTEGER REFERENCES race_type (ID) ON DELETE RESTRICT

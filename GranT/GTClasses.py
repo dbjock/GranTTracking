@@ -100,30 +100,30 @@ class RaceCollection(object):
 
 
 class Race(object):
-    def __init__(self, id, name,  racetime, limits, tlObj, rcObj, rcTypeObj, weatherObj):
+    def __init__(self, id, name,  racetime, limits, trackLayout, raceCollection, raceType, weather):
         """[summary]
 
         Args:
-            id ([type]): Unique ID of race
-            name ([type]): Name of race
-            racetime ([type]): Time race is taking place in the day
-            limits ([type]): Limits in the race. (15 laps or 15 minutes)
-            tlObj ([type]): Track Layout Object
-            rcObj ([type]): Race Collection Object
-            rTypeObj ([type]): Race Type Object
-            weatherObj ([type]): Weather Object
+            id (int): Unique ID of race
+            name (str): Name of race
+            racetime (HH:MM): Time race is taking place in the day
+            limits (str): Limits in the race. (15 laps or 15 minutes)
+            trackLaout (object): Track Layout Object
+            raceCollection (object): Race Collection Object
+            raceType (object): Race Type Object
+            weather (object): Weather Object
         """
         self.id = 0
         self.name = name
         self.racetime = racetime
         self.limits = limits
-        self.tlObj = tlObj
-        self.rcObj = rcObj
-        self.rcTypeObj = rcTypeObj
-        self.weatherObj = weatherObj
+        self.trackLayout = trackLayout
+        self.raceCollection = raceCollection
+        self.raceType = raceType
+        self.weather = weather
 
     def __repr__(self):
-        return f"Race(id={self.id}, name='{self.name}',racetime={self.racetime}, limits={self.limits}, {self.tlObj}, {self.rcObj}, {self.rTypeObj}, {self.weatherObj}"
+        return f"Race(id={self.id}, name='{self.name}',racetime={self.racetime}, limits={self.limits}, {self.trackLayout}, {self.raceCollection}, {self.raceType}, {self.weather}"
 
 
 class RaceType(object):
