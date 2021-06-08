@@ -38,6 +38,92 @@ logger.addHandler(fileHandler)
 print(f"Logging to {_logfile}")
 
 
+class TestCarCat(unittest.TestCase):
+    def test_getCarCats(self):
+        logger.info("==== BEGIN Get Car category tests")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Getting all car category/classes")
+        testVal = 1  # First row, first element should be this
+        testList = dbConn1.getCarCats()
+        logger.info(f"testList = {testList}")
+        self.assertEqual(testList[0][0], testVal,
+                         "Failed getting car category and classes")
+
+        logger.info("==== END Get Car category tests")
+
+
+class TestCircuit(unittest.TestCase):
+    def test_getCircuit(self):
+        logger.info("==== BEGIN Get Circuit")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Get Circuit by ID - Exist")
+        testVal = 1
+        logger.info(f"Circuit ID = {testVal}")
+        xCircuit = dbConn1.getCircuit(key='id', value=testVal)
+        logger.info(f"result is {xCircuit}")
+        self.assertNotEqual(xCircuit.id, 0)
+
+        logger.info("Get Circuit by ID - Non Exist")
+        testVal = 999
+        logger.info(f"Circuit ID = {testVal}")
+        xCircuit = dbConn1.getCircuit(key='id', value=testVal)
+        logger.info(f"result is {xCircuit}")
+        self.assertEqual(xCircuit.id, 0)
+
+        logger.info("Get Circuit by name - Exist")
+        testVal = "Dirt / Snow"
+        logger.info(f"Circuit name = {testVal}")
+        xCircuit = dbConn1.getCircuit(key='name', value=testVal)
+        logger.info(f"result is {xCircuit}")
+        self.assertNotEqual(xCircuit.id, 0)
+
+        logger.info("Get Circuit by name - Non Exist")
+        testVal = "I donot exist"
+        logger.info(f"Circuit name = {testVal}")
+        xCircuit = dbConn1.getCircuit(key='id', value=testVal)
+        logger.info(f"result is {xCircuit}")
+        self.assertEqual(xCircuit.id, 0)
+
+        logger.info("==== END Get Circuit")
+
+
+class TestLeagues(unittest.TestCase):
+    def test_getLeague(self):
+        logger.info("==== BEGIN Get/read League")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Get League by id")
+        testVal = 1
+        testObj = dbConn1.getLeague(value=testVal)
+        self.assertEqual(testObj.id, testVal, "Failed getting by league id")
+
+        logger.info("Get League by name (case insensitve")
+        testVal = 'amATeur'
+        testObj = dbConn1.getLeague(key='name', value=testVal)
+        # If not found zero is returned
+        self.assertNotEqual(
+            testObj.id, 0, "Failed getting league by existing name")
+
+        logger.info("Get non exist League by id")
+        testVal = 99999
+        testObj = dbConn1.getLeague(value=testVal)
+        self.assertEqual(
+            testObj.id, 0, "Failed getting league by non exist league id")
+
+        logger.info("Get non exist League by name")
+        testVal = 'ZZINoExist'
+        testObj = dbConn1.getLeague(key='name', value=testVal)
+        self.assertEqual(testObj.id, 0)
+
+        del dbConn1
+        logger.info(f"==== END Get/read League\n")
+
+
 class TestMfg(unittest.TestCase):
 
     def test_addMfg(self):
@@ -249,6 +335,138 @@ class TestMfg(unittest.TestCase):
         logger.info(f"layoutList={testList}")
         self.assertEqual(testList[0][0], testVal,
                          "Failed mfg sorting by id")
+
+
+class TestRaceCollection(unittest.TestCase):
+    # 5/29/2021 - DB init is WIP. Tests may need to be adjusted.
+    def test_getRaceCollectionList(self):
+        logger.info("=== BEGIN getRaceCollectionList testing")
+        dbConn1 = gtdbV2.GTdb(name=":memory:")
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Getting list for existing League")
+        testVal = 2  # leagueId 2 should bring back at least 2 elements
+        testList = dbConn1.getRaceCollectionList(leagueId=testVal)
+        logger.info(f"testList = {testList}")
+        self.assertEqual(testList[0][0], 12, "Failed. First row incorrect")
+
+        logger.info("Getting list for non existing league")
+        testVal = 9999  # leagueId 10 does not exist
+        testList = dbConn1.getRaceCollectionList(leagueId=testVal)
+        logger.info(f"testList = {testList}")
+        self.assertEqual(len(testList), 0,
+                         "Failed. Getting list from non exist League")
+
+    def test_getRaceCollection(self):
+        logger.info("==== BEGIN Get Race Collection")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Getting an existing Race Collection")
+        testVal = 1
+        r = dbConn1.getRaceCollection(rcId=testVal)
+        self.assertEqual(r.id, 1, "Failed to get existing race collection")
+
+        logger.info("Getting non existing Race Collection")
+        testVal = 9999
+        r = dbConn1.getRaceCollection(rcId=testVal)
+        self.assertEqual(
+            r.id, 0, "Failed getting non existing race collection")
+
+    def test_addRaceCollection(self):
+        logger.info("=== BEGIN Add RaceCollection testing")
+        existingLeague = GT.League(id=1, name='NA', sortord=0)
+        dbConn1 = gtdbV2.GTdb(name=":memory:")
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        # Add with existing name for league
+        # Note- League 1 should have race collection = "Clubman Cup"
+        logger.info(
+            "Add Race Collection : name existing for League")
+        testCollection = GT.RaceCollection(
+            id=0, name="Clubman Cup", desc="", leagueObj=existingLeague)
+        logging.info(f"Saving collection={testCollection}")
+        result = dbConn1.addRaceCollection(testCollection)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed. Test with name=none")
+
+        # Add Collection name is null
+        logger.info(
+            "Add Race Collection : name=None, League=existing")
+        testCollection = GT.RaceCollection(
+            id=0, name=None, desc="", leagueObj=existingLeague)
+        logging.info(f"Saving collection={testCollection}")
+        result = dbConn1.addRaceCollection(testCollection)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed. Test with name=none")
+
+        # Add collection with name=""
+        logger.info(
+            "Add Race Collection : name='', League=existing")
+        testCollection = GT.RaceCollection(
+            id=0, name="", desc="", leagueObj=existingLeague)
+        logging.info(f"Saving collection={testCollection}")
+        result = dbConn1.addRaceCollection(testCollection)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed. Test with name=''")
+
+        # Add with existing collection ID
+        # Not tested as the collection id provided in the collection
+        # object is ignored/not used. The SQL to add/insert the collection
+        # object does not provide the id so db will auto generate
+
+        # Add with with non existing league id >0
+        logger.info(
+            "Add Race Collection : Non existing League using 9999")
+        xLeague = GT.League(id=99999, name='NA', sortord=0)
+        testCollection = GT.RaceCollection(
+            id=0, name="I am brand new", desc="", leagueObj=xLeague)
+        logging.info(f"Saving collection={testCollection}")
+        result = dbConn1.addRaceCollection(testCollection)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed. Test with League 9999")
+
+        # Add with with league id 0
+        logger.info(
+            "Add Race Collection : League ID 0")
+        xLeague = GT.League(id=0, name='NA', sortord=0)
+        testCollection = GT.RaceCollection(
+            id=0, name="I am brand new", desc="", leagueObj=xLeague)
+        logging.info(f"Saving collection={testCollection}")
+        result = dbConn1.addRaceCollection(testCollection)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed. Test with League 0")
+
+        logger.info(
+            "Add Race Collection : non existant name, existing League")
+        goodCollection = GT.RaceCollection(
+            id=0, name="I am brand new", desc="", leagueObj=existingLeague)
+        logging.info(f"Saving collection={goodCollection}")
+        result = dbConn1.addRaceCollection(goodCollection)
+        logger.info(f"result is {result}")
+        self.assertEqual(result[0], 0, "Failed saving a good Race Collection")
+
+
+class TestRacetype(unittest.TestCase):
+    def test_getRaceType(self):
+        logger.info("==== BEGIN Get/read Race Type")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Getting a list of race types")
+        testList = dbConn1.getRaceTypeList()
+        logger.info(f"testList={testList}")
+        self.assertGreater(
+            len(testList), 1, "More than one race type should be returned")
+        self.assertEqual(
+            len(testList[0]), 2, "There should be 2 fields for each race type row")
+
+        logger.info("=== END Get/read Race Type")
 
 
 class TestTrack(unittest.TestCase):
@@ -718,207 +936,6 @@ class TestTrackLayout(unittest.TestCase):
         logger.info("==== END Deleting Track Layout")
 
 
-class TestCircuit(unittest.TestCase):
-    def test_getCircuit(self):
-        logger.info("==== BEGIN Get Circuit")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-
-        logger.info("Get Circuit by ID - Exist")
-        testVal = 1
-        logger.info(f"Circuit ID = {testVal}")
-        xCircuit = dbConn1.getCircuit(key='id', value=testVal)
-        logger.info(f"result is {xCircuit}")
-        self.assertNotEqual(xCircuit.id, 0)
-
-        logger.info("Get Circuit by ID - Non Exist")
-        testVal = 999
-        logger.info(f"Circuit ID = {testVal}")
-        xCircuit = dbConn1.getCircuit(key='id', value=testVal)
-        logger.info(f"result is {xCircuit}")
-        self.assertEqual(xCircuit.id, 0)
-
-        logger.info("Get Circuit by name - Exist")
-        testVal = "Dirt / Snow"
-        logger.info(f"Circuit name = {testVal}")
-        xCircuit = dbConn1.getCircuit(key='name', value=testVal)
-        logger.info(f"result is {xCircuit}")
-        self.assertNotEqual(xCircuit.id, 0)
-
-        logger.info("Get Circuit by name - Non Exist")
-        testVal = "I donot exist"
-        logger.info(f"Circuit name = {testVal}")
-        xCircuit = dbConn1.getCircuit(key='id', value=testVal)
-        logger.info(f"result is {xCircuit}")
-        self.assertEqual(xCircuit.id, 0)
-
-        logger.info("==== END Get Circuit")
-
-
-class TestCarCat(unittest.TestCase):
-    def test_getCarCats(self):
-        logger.info("==== BEGIN Get Car category tests")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-
-        logger.info("Getting all car category/classes")
-        testVal = 1  # First row, first element should be this
-        testList = dbConn1.getCarCats()
-        logger.info(f"testList = {testList}")
-        self.assertEqual(testList[0][0], testVal,
-                         "Failed getting car category and classes")
-
-        logger.info("==== END Get Car category tests")
-
-
-class TestRaceCollection(unittest.TestCase):
-    # 5/29/2021 - DB init is WIP. Tests may need to be adjusted.
-    def test_getRaceCollectionList(self):
-        logger.info("=== BEGIN getRaceCollectionList testing")
-        dbConn1 = gtdbV2.GTdb(name=":memory:")
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-
-        logger.info("Getting list for existing League")
-        testVal = 2  # leagueId 2 should bring back at least 2 elements
-        testList = dbConn1.getRaceCollectionList(leagueId=testVal)
-        logger.info(f"testList = {testList}")
-        self.assertEqual(testList[0][0], 12, "Failed. First row incorrect")
-
-        logger.info("Getting list for non existing league")
-        testVal = 9999  # leagueId 10 does not exist
-        testList = dbConn1.getRaceCollectionList(leagueId=testVal)
-        logger.info(f"testList = {testList}")
-        self.assertEqual(len(testList), 0,
-                         "Failed. Getting list from non exist League")
-
-    def test_getRaceCollection(self):
-        logger.info("==== BEGIN Get Race Collection")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-
-        logger.info("Getting an existing Race Collection")
-        testVal = 1
-        r = dbConn1.getRaceCollection(rcId=testVal)
-        self.assertEqual(r.id, 1, "Failed to get existing race collection")
-
-        logger.info("Getting non existing Race Collection")
-        testVal = 9999
-        r = dbConn1.getRaceCollection(rcId=testVal)
-        self.assertEqual(
-            r.id, 0, "Failed getting non existing race collection")
-
-    def test_addRaceCollection(self):
-        logger.info("=== BEGIN Add RaceCollection testing")
-        existingLeague = GT.League(id=1, name='NA', sortord=0)
-        dbConn1 = gtdbV2.GTdb(name=":memory:")
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-
-        # Add with existing name for league
-        # Note- League 1 should have race collection = "Clubman Cup"
-        logger.info(
-            "Add Race Collection : name existing for League")
-        testCollection = GT.RaceCollection(
-            id=0, name="Clubman Cup", desc="", leagueObj=existingLeague)
-        logging.info(f"Saving collection={testCollection}")
-        result = dbConn1.addRaceCollection(testCollection)
-        logger.info(f"result is {result}")
-        self.assertNotEqual(
-            result[0], 0, "Failed. Test with name=none")
-
-        # Add Collection name is null
-        logger.info(
-            "Add Race Collection : name=None, League=existing")
-        testCollection = GT.RaceCollection(
-            id=0, name=None, desc="", leagueObj=existingLeague)
-        logging.info(f"Saving collection={testCollection}")
-        result = dbConn1.addRaceCollection(testCollection)
-        logger.info(f"result is {result}")
-        self.assertNotEqual(
-            result[0], 0, "Failed. Test with name=none")
-
-        # Add collection with name=""
-        logger.info(
-            "Add Race Collection : name='', League=existing")
-        testCollection = GT.RaceCollection(
-            id=0, name="", desc="", leagueObj=existingLeague)
-        logging.info(f"Saving collection={testCollection}")
-        result = dbConn1.addRaceCollection(testCollection)
-        logger.info(f"result is {result}")
-        self.assertNotEqual(
-            result[0], 0, "Failed. Test with name=''")
-
-        # Add with existing collection ID
-        # Not tested as the collection id provided in the collection
-        # object is ignored/not used. The SQL to add/insert the collection
-        # object does not provide the id so db will auto generate
-
-        # Add with with non existing league id >0
-        logger.info(
-            "Add Race Collection : Non existing League using 9999")
-        xLeague = GT.League(id=99999, name='NA', sortord=0)
-        testCollection = GT.RaceCollection(
-            id=0, name="I am brand new", desc="", leagueObj=xLeague)
-        logging.info(f"Saving collection={testCollection}")
-        result = dbConn1.addRaceCollection(testCollection)
-        logger.info(f"result is {result}")
-        self.assertNotEqual(
-            result[0], 0, "Failed. Test with League 9999")
-
-        # Add with with league id 0
-        logger.info(
-            "Add Race Collection : League ID 0")
-        xLeague = GT.League(id=0, name='NA', sortord=0)
-        testCollection = GT.RaceCollection(
-            id=0, name="I am brand new", desc="", leagueObj=xLeague)
-        logging.info(f"Saving collection={testCollection}")
-        result = dbConn1.addRaceCollection(testCollection)
-        logger.info(f"result is {result}")
-        self.assertNotEqual(
-            result[0], 0, "Failed. Test with League 0")
-
-        logger.info(
-            "Add Race Collection : non existant name, existing League")
-        goodCollection = GT.RaceCollection(
-            id=0, name="I am brand new", desc="", leagueObj=existingLeague)
-        logging.info(f"Saving collection={goodCollection}")
-        result = dbConn1.addRaceCollection(goodCollection)
-        logger.info(f"result is {result}")
-        self.assertEqual(result[0], 0, "Failed saving a good Race Collection")
-
-
-class TestLeagues(unittest.TestCase):
-    def test_getLeague(self):
-        logger.info("==== BEGIN Get/read League")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-
-        logger.info("Get League by id")
-        testVal = 1
-        testObj = dbConn1.getLeague(value=testVal)
-        self.assertEqual(testObj.id, testVal, "Failed getting by league id")
-
-        logger.info("Get League by name (case insensitve")
-        testVal = 'amATeur'
-        testObj = dbConn1.getLeague(key='name', value=testVal)
-        # If not found zero is returned
-        self.assertNotEqual(
-            testObj.id, 0, "Failed getting league by existing name")
-
-        logger.info("Get non exist League by id")
-        testVal = 99999
-        testObj = dbConn1.getLeague(value=testVal)
-        self.assertEqual(
-            testObj.id, 0, "Failed getting league by non exist league id")
-
-        logger.info("Get non exist League by name")
-        testVal = 'ZZINoExist'
-        testObj = dbConn1.getLeague(key='name', value=testVal)
-        self.assertEqual(testObj.id, 0)
-
-        del dbConn1
-        logger.info(f"==== END Get/read League\n")
-
-
 class TestWeather(unittest.TestCase):
     def test_getWeather(self):
         logger.info("==== BEGIN Get/read Weather")
@@ -946,20 +963,3 @@ class TestWeather(unittest.TestCase):
             testObj.id, 0, "Failed getting weather by non exist id")
 
         logger.info("=== END Get/read Weather")
-
-
-class TestRacetype(unittest.TestCase):
-    def test_getRaceType(self):
-        logger.info("==== BEGIN Get/read Race Type")
-        dbConn1 = gtdbV2.GTdb(name=':memory:')
-        dbConn1.initDB(scriptPath=f'{_gtScripts}')
-
-        logger.info("Getting a list of race types")
-        testList = dbConn1.getRaceTypeList()
-        logger.info(f"testList={testList}")
-        self.assertGreater(
-            len(testList), 1, "More than one race type should be returned")
-        self.assertEqual(
-            len(testList[0]), 2, "There should be 2 fields for each race type row")
-
-        logger.info("=== END Get/read Race Type")
