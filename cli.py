@@ -135,7 +135,12 @@ def main():
                 break
             log.debug(f"action={action}")
             if action == 'help':
-                pass
+                if userCmd.find(' ') != -1:
+                    objCmd = userCmd[userCmd.find(' '):]
+                    helpAction(objCmd.strip())
+                else:
+                    log.info("help command not complete")
+                    print(" Please provde which command you want help for.")
             elif action == 'add':
                 if userCmd.find(' ') != -1:
                     objCmd = userCmd[userCmd.find(' '):]
@@ -442,6 +447,34 @@ def help(arg):
     else:
         pass
     sys.exit()
+
+
+def helpAction(cmd=None):
+    """Display the help for a cmd
+    """
+    log.info(f"Providing help for the command {cmd}")
+    if cmd.lower() == "list":
+        print_formatted_text(HTML('<b>list</b>'))
+        print_formatted_text(HTML(' <b><u>Car things</u></b>'))
+        print_formatted_text(
+            HTML(' classes - Lists all the car classes a car can be.'))
+        print_formatted_text(
+            HTML(' drivetrains - List all the drive trains a car can have.'))
+        print_formatted_text(
+            HTML(' manufactures - List all the manufactures for the cars.'))
+        print_formatted_text(HTML('<b><u>Track things</u></b>'))
+        print_formatted_text(
+            HTML(' circuits - Lists all circuits tracks can use.'))
+        print_formatted_text(HTML(
+            ' collection - Lists all the race collections for a league. Select a league, or enter a leagueId'))
+        print_formatted_text(HTML(' leagues - Lists all the Leagues'))
+        print_formatted_text(HTML(
+            ' track - List all the information about a single track. You can list by TrackID or name, or just select a track.'))
+
+    elif cmd.lower() == "dbinit":
+        pass
+    else:
+        pass
 
 
 def listAction(cmd):
