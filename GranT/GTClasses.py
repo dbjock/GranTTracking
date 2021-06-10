@@ -100,7 +100,7 @@ class RaceCollection(object):
 
 
 class Race(object):
-    def __init__(self, id, name,  racetime, limits, trackLayout, raceCollection, raceType, weather):
+    def __init__(self, id, name, trackLayout, raceCollection, raceType, weather):
         """[summary]
 
         Args:
@@ -115,15 +115,19 @@ class Race(object):
         """
         self.id = 0
         self.name = name
-        self.racetime = racetime
-        self.limits = limits
+        self.racetime = None
+        self.limits = None
         self.trackLayout = trackLayout
         self.raceCollection = raceCollection
         self.raceType = raceType
         self.weather = weather
+        self.prize1 = 0
+        self.prize2 = 0
+        self.prize3 = 0
+        self.notes = None
 
     def __repr__(self):
-        return f"Race(id={self.id}, name='{self.name}',racetime={self.racetime}, limits={self.limits}, {self.trackLayout}, {self.raceCollection}, {self.raceType}, {self.weather}"
+        return f"Race(id={self.id}, name='{self.name}',racetime={self.racetime}, limits={self.limits}, prize1={self.prize1},prize2={self.prize2}, prize3={self.prize3}, notes={self.notes}, {self.trackLayout}, {self.raceCollection}, {self.raceType}, {self.weather}"
 
 
 class RaceType(object):
