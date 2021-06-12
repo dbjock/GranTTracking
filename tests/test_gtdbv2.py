@@ -337,6 +337,230 @@ class TestMfg(unittest.TestCase):
                          "Failed mfg sorting by id")
 
 
+class TestRace(unittest.TestCase):
+    def test_addRace(self):
+        logger.info("==== BEGIN Add Race")
+        country = GT.Country(cntryID=1, cntryName="Testing",
+                             alpha2=None, alpha3=None, region=None)
+        circuit = GT.Circuit(id=1, name="Testing")
+        weather = GT.Weather(id=1, name="Testing")
+        league = GT.League(id=1, name="Testing", sortord=1)
+        raceType = GT.RaceType(id=1, name="Test")
+        track = GT.Track(id=1, name="Testing", countryObj=country)
+        raceCollection = GT.RaceCollection(
+            id=1, name="Testing", desc=None, leagueObj=league)
+        tLayout = GT.TrackLayout(
+            id=1, name="TestTrace", miles=1, trackObj=track, circuitObj=circuit)
+
+        logger.info("Add Race : Race name must be unique for Race Collection")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        # Have to successfully save a test Race for this dupe testing
+        setupRace = GT.Race(id=900,
+                            name="Testing Race",
+                            trackLayout=tLayout,
+                            raceCollection=raceCollection,
+                            raceType=raceType,
+                            weather=weather)
+        xRace = GT.Race(id=999,
+                        name="Testing Race",
+                        trackLayout=tLayout,
+                        raceCollection=raceCollection,
+                        raceType=raceType,
+                        weather=weather)
+        logger.info(f"Setup existing race setupRace={setupRace}")
+        result = dbConn1.addRace(setupRace)
+        logger.info(f"result={result}")
+        if result[0] != 0:
+            logger.info(
+                f"Can not test for unique race name. Unable to save a unique test race")
+            self.assertEqual(
+                result[0], 0, "Unable to test Add Race : Race name must be unique for Race Collection, because test case could not be setup")
+        else:
+            logger.info(f"Saving race with dupe name xRace={xRace}")
+            result = dbConn1.addRace(xRace)
+            logger.info(f"result={result}")
+            # Error Code 100 should be returned for dupe race name
+            self.assertEqual(
+                result[0], 0, "Failed Add Race : Race name must be unique for Race Collection")
+        del dbConn1
+
+        # Test Add Race with None/null race name
+        logger.info("Add Race : Race name None/Null")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        xRace = GT.Race(id=999,
+                        name=None,
+                        trackLayout=tLayout,
+                        raceCollection=raceCollection,
+                        raceType=raceType,
+                        weather=weather)
+        logger.info(f"xRace={xRace}")
+        result = dbConn1.addRace(xRace)
+        logger.info(f"result={result}")
+        self.assertNotEqual(
+            result[0], 0, f"Failed Add Race : Race name None/Null test")
+        del dbConn1
+
+        logger.info("Add Race : Race name blank")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        xRace = GT.Race(id=999,
+                        name="",
+                        trackLayout=tLayout,
+                        raceCollection=raceCollection,
+                        raceType=raceType,
+                        weather=weather)
+        logger.info(f"xRace={xRace}")
+        result = dbConn1.addRace(xRace)
+        logger.info(f"result={result}")
+        self.assertNotEqual(
+            result[0], 0, f"Failed Add Race : Race name blank test")
+        del dbConn1
+
+        logger.info("Add Race : weather.id=0")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        badweather = GT.Weather(id=0, name="Testing")
+        xRace = GT.Race(id=999,
+                        name="Test Race",
+                        trackLayout=tLayout,
+                        raceCollection=raceCollection,
+                        raceType=raceType,
+                        weather=badweather)
+        logger.info(f"xRace={xRace}")
+        result = dbConn1.addRace(xRace)
+        logger.info(f"result={result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed Add Race with weather.id = 0")
+        del dbConn1
+
+        # Test Add Race with non exisitng weather.id (Not Allowed)
+        logger.info("Add Race : non existing weather.id")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        badweather = GT.Weather(id=999, name="Testing")
+        xRace = GT.Race(id=999,
+                        name="Test Race",
+                        trackLayout=tLayout,
+                        raceCollection=raceCollection,
+                        raceType=raceType,
+                        weather=badweather)
+        logger.info(f"xRace={xRace}")
+        result = dbConn1.addRace(xRace)
+        logger.info(f"result={result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed Add Race with non existing weather.id.")
+        del dbConn1
+
+        logger.info("Add Race : non trackLayout.id=0")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        badtLayout = GT.TrackLayout(
+            id=0, name="TestTrace", miles=1, trackObj=track, circuitObj=circuit)
+        xRace = GT.Race(id=999,
+                        name="Test Race",
+                        trackLayout=badtLayout,
+                        raceCollection=raceCollection,
+                        raceType=raceType,
+                        weather=weather)
+        logger.info(f"xRace={xRace}")
+        result = dbConn1.addRace(xRace)
+        logger.info(f"result={result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed Add Race : non trackLayout.id=0")
+        del dbConn1
+
+        logger.info("Add Race : non existing trackLayout.id")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        badtLayout = GT.TrackLayout(
+            id=9999, name="TestTrace", miles=1, trackObj=track, circuitObj=circuit)
+        xRace = GT.Race(id=999,
+                        name="Test Race",
+                        trackLayout=badtLayout,
+                        raceCollection=raceCollection,
+                        raceType=raceType,
+                        weather=weather)
+        logger.info(f"xRace={xRace}")
+        result = dbConn1.addRace(xRace)
+        logger.info(f"result={result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed Add Race : non existing trackLayout.id")
+        del dbConn1
+
+        logger.info("Add Race : raceType.id=0")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        badraceType = GT.RaceType(id=0, name="Test")
+        xRace = GT.Race(id=999,
+                        name="Test Race",
+                        trackLayout=tLayout,
+                        raceCollection=raceCollection,
+                        raceType=badraceType,
+                        weather=weather)
+        logger.info(f"xRace={xRace}")
+        result = dbConn1.addRace(xRace)
+        logger.info(f"result={result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed Add Race : raceType.id=0")
+        del dbConn1
+
+        logger.info("Add Race : raceType.id=999")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        badraceType = GT.RaceType(id=999, name="Test")
+        xRace = GT.Race(id=999,
+                        name="Test Race",
+                        trackLayout=tLayout,
+                        raceCollection=raceCollection,
+                        raceType=badraceType,
+                        weather=weather)
+        logger.info(f"xRace={xRace}")
+        result = dbConn1.addRace(xRace)
+        logger.info(f"result={result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed Add Race : raceType.id=999")
+        del dbConn1
+
+        logger.info("Add Race : race_collection.id=0")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        badraceCollection = GT.RaceCollection(
+            id=0, name="Testing", desc=None, leagueObj=league)
+        xRace = GT.Race(id=999,
+                        name="Test Race",
+                        trackLayout=tLayout,
+                        raceCollection=badraceCollection,
+                        raceType=raceType,
+                        weather=weather)
+        logger.info(f"xRace={xRace}")
+        result = dbConn1.addRace(xRace)
+        logger.info(f"result={result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed Add Race : race_collection.id=0")
+        del dbConn1
+
+        # Test Add Race with non existing race_collection.id (Not Allowed)
+        logger.info("Add Race : race_collection.id=999")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        badraceCollection = GT.RaceCollection(
+            id=999, name="Testing", desc=None, leagueObj=league)
+        xRace = GT.Race(id=999,
+                        name="Test Race",
+                        trackLayout=tLayout,
+                        raceCollection=badraceCollection,
+                        raceType=raceType,
+                        weather=weather)
+        logger.info(f"xRace={xRace}")
+        result = dbConn1.addRace(xRace)
+        logger.info(f"result={result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed Add Race : race_collection.id=999")
+        del dbConn1
+
+
 class TestRaceCollection(unittest.TestCase):
     # 5/29/2021 - DB init is WIP. Tests may need to be adjusted.
     def test_getRaceCollectionList(self):
