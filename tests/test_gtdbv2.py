@@ -686,9 +686,15 @@ class TestRacetype(unittest.TestCase):
         testList = dbConn1.getRaceTypeList()
         logger.info(f"testList={testList}")
         self.assertGreater(
-            len(testList), 1, "More than one race type should be returned")
+            len(testList), 1, "FAILED: Getting race type list. More than one race type should be returned")
+        self.assertGreater(
+            len(testList[0]), 1, "FAILED: Getting race type list. There should be at least 2 fields for each row")
+
+        logger.info("Getting a race type")
+        testRt = dbConn1.getRaceType(id=1)
+        logger.info(f"testRt={testRt}")
         self.assertEqual(
-            len(testList[0]), 2, "There should be 2 fields for each race type row")
+            testRt.id, 1, "Failed: Getting a race type. Race type id = 1")
 
         logger.info("=== END Get/read Race Type")
 
