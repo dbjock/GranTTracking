@@ -150,6 +150,30 @@ class GTdb:
         logger.debug(f"returning {r}")
         return r
 
+    def addRace(self, race):
+        """Adding a Race to database
+
+        Args:
+            race ([Object]): The race object to add
+
+        Returns:
+            list: ResultCode, ResultText
+               ResultCode == 0 Successful
+               ResultCode !=0 Unsuccessful, see ResultText
+        """
+        logger.debug(f"addRace: race={race}")
+        logger.info(
+            f"Adding race {race.name} for Race Collection {race.raceCollection.name}")
+        tResult = self.validateRace(race)
+        if tResult[0]:  # Tests passed - Save the Race
+            result = (0, "I would have saved")
+        else:
+            logger.warning(tResult[1])
+            result = (1, tResult[1])
+
+        logger.debug(f"returning: {result}")
+        return result
+
     def addRaceCollection(self, raceCollection):
         """Adding a Race Collection
 
@@ -759,6 +783,47 @@ class GTdb:
                 f'Unexpected error executing sql: {sql}', exc_info=True)
             sys.exit(1)
 
+    def getRaces(self, raceCollectionID):
+        """Get a list of races for a Race Collection
+
+        Args:
+            raceCollectionID (int): Race Collection ID
+
+        Returns:
+            list: (raceID,raceName)
+        """
+        # Got to get a list of races for this race.raceCollection.id
+        logger.info(f"Getting race list for collection ID={raceCollectionID}")
+        selectSQL = "select r.id as raceID, r.name as RaceName FROM race as r"
+        whereSQL = "WHERE r.rc_id = ?"
+        orderBySQL = "ORDER BY r.name"
+        sql = f"{selectSQL} {whereSQL} {orderBySQL}"
+        theVals = (raceCollectionID,)
+        logger.debug(f"sql = {sql}")
+        logger.debug(f"theVals = {theVals}")
+
+        dbCursor = self.conn.cursor()
+        # Make sure no special row_factory. What a pure list.
+        self.conn.row_factory = None
+        # Enabling full sql traceback to logger.debug
+        self.conn.set_trace_callback(logger.debug)
+
+        logger.debug(f"sql = {sql}")
+        logger.debug(f"theVals = {theVals}")
+        try:
+            dbCursor.execute(sql, theVals)
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
+
+        result = dbCursor.fetchall()
+        # Disable full sql traceback to logger.debug
+        self.conn.set_trace_callback(None)
+        logger.info(f"Returning {len(result)} rows")
+        logger.debug(f"result={result}")
+        return result
+
     def getRaceCollection(self, rcId):
         """Get a race collection object from database
 
@@ -1153,6 +1218,133 @@ class GTdb:
         # Track ID existance not tested. DB should provide integrity error: FOREIGN KEY constraint failed
         # All tests passed
         result = (True, "Track Layout Tests Passed")
+        logger.info(f"returning = {result}")
+        return result
+
+    def validateRace(self, race):
+        """Validates the Race rules and returns results
+
+        Args:
+            race (object): Race object
+
+        Returns:
+            list: (bool,msg)
+            bool = False  - Race failed tests
+            msg = string as to why it failed
+        """
+        logger.info(f"Validating race={race}")
+        # Race name must contain at least one charcter
+        logger.debug(
+            f"Checking race name to be sure it contains at lease one character")
+        if race.name == None or race.name == "":
+            msg = f"Race name must contain at least one character"
+            result = (False, msg)
+            logger.info(f"returning = {result}")
+            return result
+        else:
+            logger.info("Passed: Race name contains one or more characters")
+
+        # Race name must be unique for the race_collection
+        logger.debug(
+            f"Checking that race name [{race.name}] is unique for race collection id {race.raceCollection.id} (case insensitve)")
+        xList = self.getRaces(race.raceCollection.id)
+        for row in xList:
+            logger.debug(f"raceId={row[0]}. checking race name: {row[1]}")
+            if row[1].upper() == race.name.upper():  # layout name exist for track
+                msg = f"Race name [{race.name}] for Race ID [{race.id}] already exists"
+                result = (False, msg)
+                logger.info(f"returning = {result}")
+                return result
+        logger.info(
+            f"Passed: Race name is unique for race collection id {race.raceCollection.id}")
+
+        # Weather ID must not be zero
+        logger.debug(f"Checking for valid weather id")
+        if race.weather.id == 0:  # Invalid Weather id
+            msg = f"Race weather id must not be 0"
+            result = (False, msg)
+            logger.info(f"returning = {result}")
+            return result
+        else:
+            logger.info("Passed: Weather id is greater than zero")
+
+        # Does weather id exist
+        if self.getWeather(key='id', value=race.weather.id).id != race.weather.id:
+            msg = f"The Race weather id : {race.weather.id} not found in database"
+            result = (False, msg)
+            logger.info(f"returning = {result}")
+            return result
+        else:
+            logger.info("Passed: Weather id found in database")
+
+        # TrackLayout id must not be zero
+        logger.debug(f"Checking for valid Track Layout")
+        if race.trackLayout.id == 0:
+            msg = f"Race Track Layout id must not be 0"
+            result = (False, msg)
+            logger.info(f"returning = {result}")
+            return result
+        else:
+            logger.info("Passed: Race Track layout id is greater than zero")
+
+        # TrackLayout must exist
+        if self.getLayout(race.trackLayout.id).id == 0:
+            msg = f"The Race track layout not found in database"
+            result = (False, msg)
+            logger.info(f"returning = {result}")
+            return result
+        else:
+            logger.info("Passed: Race Track layout id found in database")
+
+        # Race type required.
+        logger.debug(f"Checking for valid racetype id")
+        if race.raceType.id == 0:
+            msg = f"Race type for race must not be 0"
+            result = (False, msg)
+            logger.info(f"returning = {result}")
+            return result
+        else:
+            logger.info("Passed: Race type id is not 0")
+        # Race type must exist
+        x = self.getRaceTypeList()
+        logger.debug(f"RaceType List = {x}")
+        logger.debug(f"race.raceType.id={race.raceType.id}")
+        passed = False
+        for r in x:
+            if r[0] == race.raceType.id:  # Found the raceType id
+                passed = True
+                break
+        if passed:
+            logger.info("Passed. Race type found")
+        else:
+            msg = f"Race type for race not found in database"
+            result = (False, msg)
+            logger.info(f"returning = {result}")
+            return result
+
+        # Race Collection testing
+        logger.debug(f"Checking for valid race collection")
+        logger.debug(f"race.raceCollection.id={race.raceCollection.id}")
+        # Race Collection id must not be zero
+        if race.raceCollection.id == 0:
+            msg = f"The race collection id for the race must not be zero"
+            result = (False, msg)
+            logger.info(f"returning = {result}")
+            return result
+        else:
+            logger.info("Passed: Race collection id is not 0")
+
+        # Race collection id must exist
+        if self.getRaceCollection(race.raceCollection.id).id == 0:
+            msg = f"The Race collection not found in database"
+            result = (False, msg)
+            logger.info(f"returning = {result}")
+            return result
+        else:
+            logger.info("Passed: Race collection found")
+
+        msg = "Race passed tests"
+        result = (True, msg)
         logger.info(f"returning = {result}")
         return result
 
