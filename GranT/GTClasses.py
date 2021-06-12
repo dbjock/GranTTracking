@@ -113,7 +113,7 @@ class Race(object):
             raceType (object): Race Type Object
             weather (object): Weather Object
         """
-        self.id = 0
+        self.id = id
         self.name = name
         self.racetime = None
         self.limits = None
@@ -127,7 +127,7 @@ class Race(object):
         self.notes = None
 
     def __repr__(self):
-        return f"Race(id={self.id}, name='{self.name}',racetime={self.racetime}, limits={self.limits}, prize1={self.prize1},prize2={self.prize2}, prize3={self.prize3}, notes={self.notes}, {self.trackLayout}, {self.raceCollection}, {self.raceType}, {self.weather}"
+        return f"Race(id={self.id}, name='{self.name}',racetime={self.racetime}, limits={self.limits}, prize1={self.prize1},prize2={self.prize2}, prize3={self.prize3}, notes={self.notes},{self.trackLayout},{self.raceCollection},{self.raceType},{self.weather})"
 
 
 class RaceType(object):
@@ -142,7 +142,7 @@ class RaceType(object):
         self.name = name
 
     def __repr__(self):
-        return f"Racetype(id={self.id}, name={self.name})"
+        return f"raceType(id={self.id}, name={self.name})"
 
 
 class Weather(object):
@@ -157,7 +157,7 @@ class Weather(object):
         self.name = name
 
     def __repr__(self):
-        return f"Weather(id={self.id}, name={self.name})"
+        return f"weather(id={self.id}, name={self.name})"
 
 
 class League(object):
@@ -210,4 +210,4 @@ class TrackLayout(object):
         self.miles = miles
 
     def __repr__(self):
-        return f"tracklayout(id={self.id},name='{self.name}',miles={self.miles}), {self.track}, {self.circuit}"
+        return f"trackLayout(id={self.id},name='{self.name}',miles={self.miles}), {self.track}, {self.circuit}"
