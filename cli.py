@@ -98,6 +98,7 @@ def main():
             'collection': {
                 'leagueId=': None
             },
+            'race': None
         },
         'list': {
             'circuits': None,
@@ -218,7 +219,7 @@ def addCollection(leagueId):
     log.info("Getting race collection name from user")
     print_formatted_text(
         HTML(f"Enter new race collection for the <u><b>{league.name}</b></u> league"))
-    rcName = prompt("   Collection Name: ")
+    rcName = prompt("   Collection Name (Enter to cancel): ")
     log.debug(f"rcName={rcName}")
     if rcName == None or rcName == "":  # User didn't provide data
         log.info("User did not provide race collection name")
@@ -261,7 +262,7 @@ def addCollectionCmd(args):
             print_formatted_text(
                 HTML(f"<ansired>ERROR</ansired> - Unknown add collection argument <b>{args.split('=')[0].strip()}</b>."))
             return
-    else:  # No args passed
+    else:  # Get user to choose a league
         log.info("No args passed. Getting user to select a league")
         id = pickLeague(text="Add a race collection to which league?")
         log.info(f"User picked league id {id}")
@@ -288,26 +289,7 @@ def addCollectionCmd(args):
 def addRaceCmd(args):
     log.debug(f"args passed: {args}")
     log.debug(f"length of args: {len(args)}")
-    # At this time not going to parse any args. Just ignoring
-    cls()
-    # Prompt user for Track
-    x = pickTrack(text="Which track for the new race?")
-    if x == None:  # no track was selected
-        log.info("No track selected")
-        print(
-            f"No track was selected for new race")
-        return
-    track = GTDBConn1.getTrack(value=x)
-
-    # Prompt user for track layout
-    x = pickTrackLayout(track.id, track.name,
-                        text=f'Which layout for the new race?')
-    if x == None:  # no layout was selected
-        log.info("No layout selected")
-        print(f"No layout selected for new race on {track.name} track")
-        return
-    tLayout = GTDBConn1.getLayout(x)
-
+    # At this time not going to parse any args
     # Prompt user for League
     x = pickLeague(text="Which League for the new race?")
     if x == None:  # no league picked
@@ -316,6 +298,9 @@ def addRaceCmd(args):
         return
     log.info(f"Loading league object for leagueid={x}")
     league = GTDBConn1.getLeague(value=x)
+    # tlName = r[1][0:30].ljust(30)
+    x = f"League         : {league.name[0:30].ljust(30)}"
+    print(x)
 
     # Prompt user for leagues race collection
     x = pickRaceCollection(
@@ -326,6 +311,29 @@ def addRaceCmd(args):
         print("No race collection selected")
         return
     rcCollection = GTDBConn1.getRaceCollection(x)
+    x = f"Race Collection: {rcCollection.name[0:30].ljust(30)}"
+    print(x)
+
+    # Prompt user for Track
+    x = pickTrack(text="Which track for the new race?")
+    if x == None:  # no track was selected
+        log.info("No track selected")
+        print(
+            f"No track was selected for new race")
+        return
+    track = GTDBConn1.getTrack(value=x)
+    x = f"Track          : {track.name[0:30].ljust(30)}"
+
+    # Prompt user for track layout
+    x = pickTrackLayout(track.id, track.name,
+                        text=f'Which layout for the new race?')
+    if x == None:  # no layout was selected
+        log.info("No layout selected")
+        print(f"No layout selected for new race on {track.name} track")
+        return
+    tLayout = GTDBConn1.getLayout(x)
+    x = f"Layout         : {tLayout.name[0:30].ljust(30)}"
+    print_formatted_text(HTML(x))
 
     # Prompt user for weather type
     x = pickWeather()
@@ -334,13 +342,28 @@ def addRaceCmd(args):
         print("No weather type choosen")
         return
     weather = GTDBConn1.getWeather(value=x)
-    # Prompt user for Race Type
-    x = f"Track Layout   : {tLayout.track.name} - {tLayout.name} -- layout Id: {tLayout.id}"
+    x = f"Weather        : {weather.name[0:30].ljust(30)}"
+
+    # Prompt user for Race type
+    x = pickRaceType()
+    if x == None:  # User did not choose a race type
+        log.info(f"No race type choosen")
+        print("No race type choosen")
+        return
+    raceType = GTDBConn1.getRaceType(id=x)
+    x = f"Race type      : {raceType.name[0:30].ljust(30)}"
     print(x)
-    x = f"Race Collection: {rcCollection.league.name} - {rcCollection.name} -- collection Id: {rcCollection.id}"
-    print(x)
-    x = f"Weather: {weather.name}"
-    print(x)
+
+    log.info("Getting race name from user")
+    name = prompt("   Race Name (Enter to cancel): ")
+    log.debug(f"name={name}")
+    if name == None or name == "":  # User didn't provide data
+        log.info("User did not provide race name")
+        return [1, "Race name not provided."]
+
+    xRace = GT.Race(id=0, name=name, trackLayout=tLayout,
+                    raceCollection=rcCollection, raceType=raceType, weather=weather)
+    print(GTDBConn1.addRace(xRace))
 
 
 def displayCarCats(theList):
@@ -487,7 +510,6 @@ def listAction(cmd):
         cmd([string]): The object and its args to list
     """
     cmd = cmd.strip()
-    cls()
     # TODO: rename listObj -> obj (like what was done in addAction)
     listObj = cmd.split()[0]
     log.debug(f"listObj={listObj}")
@@ -612,6 +634,27 @@ def pickRaceCollection(leagueId, lName, text='Select one'):
                               text=text,
                               values=picklist).run()
     log.info(f"User choose collection id: {result}")
+    return result
+
+
+def pickRaceType(text="Select a Race type"):
+    """Dialog box for user to select a Race Type
+
+    Args:
+        text (str, optional): [description]. Defaults to "Select a Race type".
+
+    Returns:
+        RaceTypeID (int): The choosen Racetype id
+    """
+    log.info("Getting Race Types for picklist")
+    pickList = GTDBConn1.getRaceTypeList()
+    log.info("Displaying race types for use to choose")
+    result = radiolist_dialog(
+        title="Race Types",
+        text=text,
+        values=pickList
+    ).run()
+    log.info(f"User choose RaceTypeId: {result}")
     return result
 
 
