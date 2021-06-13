@@ -882,10 +882,10 @@ class GTdb:
 
         Returns:
             [obj]: Race Collection objection
-            IF raceCollection.id == 0 then raceColltion not found
+            IF raceCollection.id == 0 then race Collection not found
         """
-        selectSQL = "SELECT rc.id, rc.name, rc.description, l.id as leagueId, l.name as leagueName, l.sortord as leagueSortord FROM race_collection as rc LEFT JOIN league as l ON rc.league_id = l.id"
-        whereSQL = "WHERE rc.id = ?"
+        selectSQL = "SELECT collectionId, collection, description, leagueId, league, leagueSortord FROM vRaceCollection"
+        whereSQL = "WHERE collectionId = ?"
         value = rcId
         sql = f"{selectSQL} {whereSQL}"
         theVals = (value,)
