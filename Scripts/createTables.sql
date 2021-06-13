@@ -160,4 +160,17 @@ CREATE TABLE weather (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT
 DROP INDEX IF EXISTS sortord;
 CREATE INDEX sortord ON league (sortord COLLATE RTRIM ASC);
 
+-- View: vRaceCollection
+DROP VIEW IF EXISTS vRaceCollection;
+CREATE VIEW vRaceCollection AS
+    SELECT rc.id AS collectionId,
+           rc.name AS collection,
+           rc.description,
+           l.id AS leagueId,
+           l.name AS league,
+           l.sortord AS leagueSortord
+      FROM race_collection AS rc
+           LEFT JOIN
+           league AS l ON rc.league_id = l.id;
+
 PRAGMA foreign_keys = on;
