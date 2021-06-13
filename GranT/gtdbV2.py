@@ -547,7 +547,7 @@ class GTdb:
             TrackLayout Object: IF TrackLayoutObject.id == 0 then nothing found
         """
         logger.info(f"Getting track layout id {layoutId}")
-        sql = """SELECT t.id as trackId, t.name AS track, l.id AS layoutId, l.name AS layout, l.miles AS Miles, c.id as circuitId, c.name AS Circuit, cntry.ID as cntryId, cntry.name as Country, cntry.alpha2, cntry.alpha3, cntry.region as Region FROM track as t INNER JOIN track_layout as l ON t.id = l.track_id LEFT JOIN country as cntry ON t.country_id = cntry.ID INNER JOIN circuit AS c ON l.circuit_id = c.id WHERE l.id = ?"""
+        sql = """SELECT trackId, track, layoutId, layout, Miles, circuitId, Circuit, cntryId, Country, alpha2, alpha3, Region FROM vTrackLayout WHERE layoutId=?"""
         theVals = (layoutId,)
         # Execute the SQL
         logger.debug(f"sql: {sql}")
@@ -605,9 +605,9 @@ class GTdb:
             list: (layoutId,layoutName)
         """
         logger.info(f"Getting track layout list: trackId={trackId}")
-        selectSQL = """SELECT l.id AS layoutId, l.name AS layout, l.miles FROM track as t INNER JOIN track_layout as l ON t.id = l.track_id"""
-        orderBySQL = "ORDER BY t.name, l.name"
-        whereSQL = "WHERE t.id = ?"
+        selectSQL = """SELECT layoutId, layout, miles FROM vTrackLayout"""
+        orderBySQL = "ORDER BY layout"
+        whereSQL = "WHERE trackId = ?"
 
         dbCursor = self.conn.cursor()
         # Make sure no special row_factory. What a pure list.

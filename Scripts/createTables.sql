@@ -173,4 +173,27 @@ CREATE VIEW vRaceCollection AS
            LEFT JOIN
            league AS l ON rc.league_id = l.id;
 
+-- View: vTrackLayout
+DROP VIEW IF EXISTS vTrackLayout;
+CREATE VIEW vTrackLayout AS
+    SELECT t.id AS trackId,
+           t.name AS track,
+           l.id AS layoutId,
+           l.name AS layout,
+           l.miles AS Miles,
+           c.id AS circuitId,
+           c.name AS Circuit,
+           cntry.ID AS cntryId,
+           cntry.name AS Country,
+           cntry.alpha2,
+           cntry.alpha3,
+           cntry.region AS Region
+      FROM track AS t
+           INNER JOIN
+           track_layout AS l ON t.id = l.track_id
+           LEFT JOIN
+           country AS cntry ON t.country_id = cntry.ID
+           INNER JOIN
+           circuit AS c ON l.circuit_id = c.id;
+
 PRAGMA foreign_keys = on;
