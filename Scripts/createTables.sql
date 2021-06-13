@@ -92,7 +92,7 @@ CREATE TABLE manufacture (
 -- Table: race
 DROP TABLE IF EXISTS race;
 CREATE TABLE race (
-    ID         INTEGER PRIMARY KEY AUTOINCREMENT,
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
     name       TEXT    COLLATE NOCASE
                        NOT NULL,
     tl_id      INTEGER REFERENCES track_layout (id) ON DELETE RESTRICT

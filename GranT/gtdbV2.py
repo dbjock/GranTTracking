@@ -166,7 +166,21 @@ class GTdb:
             f"Adding race {race.name} for Race Collection {race.raceCollection.name}")
         tResult = self.validateRace(race)
         if tResult[0]:  # Tests passed - Save the Race
-            result = (0, "I would have saved")
+            sql = "INSERT INTO race (name, tl_id, rc_id,racetime,weather_id,limits,type_id,prize1,prize2,prize3,notes) VALUES (:name, :trackLayoutID, :raceColID,:racetime,:weather_id, :limits, :type_id, :prize1, :prize2, :prize3, :notes)"
+            theVals = {'name': race.name,
+                       'trackLayoutID': race.trackLayout.id,
+                       'raceColID': race.raceCollection.id,
+                       'racetime': race.racetime,
+                       'weather_id': race.weather.id,
+                       'limits': race.limits,
+                       'type_id': race.raceType.id,
+                       'prize1': race.prize1,
+                       'prize2': race.prize2,
+                       'prize3': race.prize3,
+                       'notes': race.notes}
+            logger.debug(f"sql={sql}")
+            logger.debug(f"theVals={theVals}")
+            result = self._exeSQL(sql, theVals)
         else:
             logger.warning(tResult[1])
             result = (1, tResult[1])
@@ -823,6 +837,42 @@ class GTdb:
         logger.info(f"Returning {len(result)} rows")
         logger.debug(f"result={result}")
         return result
+
+    def getRaceType(self, id):
+        """Get a Race Type from db by id
+
+        Args:
+            id (int): Race Type unique id
+
+        Returns:
+            RaceTypeObj: Race type object
+        """
+        selectSQL = "SELECT id, name FROM race_type"
+        whereSQL = "WHERE id = ?"
+        value = id
+        theVals = (value,)
+        sql = f"{selectSQL} {whereSQL}"
+        try:
+            # Enabling full sql traceback to logger.debug
+            self.conn.set_trace_callback(logger.debug)
+            c = self.conn.cursor()
+            c.execute(sql, theVals)
+            row = c.fetchone()
+            # Disable full sql traceback to logger.debug
+            self.conn.set_trace_callback(None)
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
+        if row:  # Create a racetype object
+            logger.debug("Found race type")
+            logger.debug(f"row={row}")
+            rt = gtClass.RaceType(id=row[0], name=row[1])
+        else:  # create a blank racetype object
+            rt = gtClass.RaceType(id=0, name="")
+
+        logger.debug(f"rt={rt}")
+        return rt
 
     def getRaceCollection(self, rcId):
         """Get a race collection object from database

@@ -380,8 +380,7 @@ class TestRace(unittest.TestCase):
             logger.info(f"Saving race with dupe name xRace={xRace}")
             result = dbConn1.addRace(xRace)
             logger.info(f"result={result}")
-            # Error Code 100 should be returned for dupe race name
-            self.assertEqual(
+            self.assertNotEqual(
                 result[0], 0, "Failed Add Race : Race name must be unique for Race Collection")
         del dbConn1
 
