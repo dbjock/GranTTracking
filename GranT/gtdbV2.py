@@ -425,7 +425,7 @@ class GTdb:
         self.conn.set_trace_callback(None)
         return result
 
-    def getCircuit(self, key, value):
+    def getCircuit(self, key='id', value=None):
         """Get circuit record from db
 
         Args:
@@ -506,6 +506,53 @@ class GTdb:
         self.conn.set_trace_callback(None)
         return result
 
+    def getCountry(self, countryId):
+        """Return a Country object from db by countryID
+
+        Args:
+            countryID (int): Unique ID for the country
+        """
+        logger.info(f"Getting country by countryId: {countryId}")
+        selectSQL = "SELECT id AS countryId, name AS Country, alpha2, alpha3, region FROM country"
+        whereSQL = "WHERE countryId = ?"
+        sql = f"{selectSQL} {whereSQL}"
+        theVals = (countryId,)
+        logger.debug(f"sql={sql}")
+        logger.debug(f"theVals={theVals}")
+        # Disable the .keys() to get column names.
+        self.conn.row_factory = None
+        # Enabling full sql traceback to logger.debug
+        self.conn.set_trace_callback(logger.debug)
+        try:
+            dbCursor = self.conn.cursor()
+            dbCursor.execute(sql, theVals)
+            row = dbCursor.fetchone()
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
+        # Disable full sql traceback to logger.debug
+        self.conn.set_trace_callback(None)
+
+        if row:  # Populate Country obj with db data
+            logger.info(f"Found countryId: {countryId}")
+            country = gtClass.Country(
+                cntryID=row[0],
+                cntryName=row[1],
+                alpha2=row[2],
+                alpha3=row[3],
+                region=row[4])
+        else:  # Create blank Country obj
+            logger.info(f"Unable to find countryId: {countryId}")
+            country = gtClass.Country(
+                cntryID=0,
+                cntryName=None,
+                alpha2=None,
+                alpha3=None,
+                region=None)
+        logger.info(f"Returning country={country}")
+        return country
+
     def getDriveTrains(self, orderBy='code'):
         """[summary]
 
@@ -547,48 +594,40 @@ class GTdb:
             TrackLayout Object: IF TrackLayoutObject.id == 0 then nothing found
         """
         logger.info(f"Getting track layout id {layoutId}")
-        sql = """SELECT trackId, track, layoutId, layout, Miles, circuitId, Circuit, cntryId, Country, alpha2, alpha3, Region FROM vTrackLayout WHERE layoutId=?"""
+        sql = """SELECT id as layoutId, name as layoutName, miles, track_id, circuit_id FROM track_layout WHERE layoutId=?"""
         theVals = (layoutId,)
         # Execute the SQL
         logger.debug(f"sql: {sql}")
+        logger.debug(f"sql={sql}")
+        logger.debug(f"theVals={theVals}")
+        # Disable the .keys() to get column names.
+        self.conn.row_factory = None
+        # Enabling full sql traceback to logger.debug
+        self.conn.set_trace_callback(logger.debug)
         try:
-            # Enable the .keys() to get column names.
-            self.conn.row_factory = sqlite3.Row
-            # Enabling full sql traceback to logger.debug
-            self.conn.set_trace_callback(logger.debug)
             c = self.conn.cursor()
             c.execute(sql, theVals)
             row = c.fetchone()
-            # Disable the .keys() to get column names
-            self.conn.row_factory = None
-            # Disable full sql traceback to logger.debug
-            self.conn.set_trace_callback(None)
         except:
             logger.critical(
                 f'Unexpected error executing sql: {sql}', exc_info=True)
             sys.exit(1)
 
+        # Disable full sql traceback to logger.debug
+        self.conn.set_trace_callback(None)
+
         if row:  # Populate trackLayout obj
             logger.info(f"Found track layout id {layoutId}")
-            xCircuit = gtClass.Circuit(row['circuitId'], row['Circuit'])
-            logger.debug(f"xCircuit={xCircuit}")
-            xCountry = gtClass.Country(
-                cntryID=row['cntryId'], cntryName=row['Country'],
-                alpha2=row['alpha2'], alpha3=row['alpha3'], region=row['region'])
-            logger.debug(f"xCountry={xCountry}")
-            xTrack = gtClass.Track(
-                row['trackId'], name=row['track'], countryObj=xCountry)
-            logger.debug(f"xTrack={xTrack}")
+            xTrack = self.getTrack(key='trackId', value=row[3])
+            xCircuit = self.getCircuit(key='id', value=row[4])
             xTrackLayout = gtClass.TrackLayout(
-                row['layoutId'], row['layout'], miles=row['Miles'], trackObj=xTrack, circuitObj=xCircuit)
+                row[0], row[1], miles=row[2], trackObj=xTrack, circuitObj=xCircuit)
 
         else:  # Create blank trackLayout obj (no data returned)
             logger.info(f"Unable to find track layout id {layoutId}")
             logger.debug(f"creating empty tracklayout object")
-            xCircuit = gtClass.Circuit(id=0, name=None)
-            xCountry = gtClass.Country(
-                cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)
-            xTrack = gtClass.Track(id=0, name=None, countryObj=xCountry)
+            xCircuit = self.getCircuit(key='id', value=0)
+            xTrack = self.getTrack(key='trackId', value=0)
             xTrackLayout = gtClass.TrackLayout(
                 id=0, name=None, miles=None, trackObj=xTrack, circuitObj=xCircuit)
 
@@ -884,36 +923,42 @@ class GTdb:
             [obj]: Race Collection objection
             IF raceCollection.id == 0 then race Collection not found
         """
-        selectSQL = "SELECT collectionId, collection, description, leagueId, league, leagueSortord FROM vRaceCollection"
+        logger.info(f"Getting Race Collection by id: {rcId}")
+        selectSQL = "SELECT id as collectionId, name, description, league_id FROM race_collection"
         whereSQL = "WHERE collectionId = ?"
         value = rcId
         sql = f"{selectSQL} {whereSQL}"
         theVals = (value,)
         logger.debug(f"sql = {sql}")
         logger.debug(f"theVals = {theVals}")
+        # Disable the .keys() to get column names.
+        self.conn.row_factory = None
+        # Enabling full sql traceback to logger.debug
+        self.conn.set_trace_callback(logger.debug)
         try:
-            # Enabling full sql traceback to logger.debug
-            self.conn.set_trace_callback(logger.debug)
             c = self.conn.cursor()
             c.execute(sql, theVals)
             row = c.fetchone()
-            # Disable full sql traceback to logger.debug
-            self.conn.set_trace_callback(None)
         except:
             logger.critical(
                 f'Unexpected error executing sql: {sql}', exc_info=True)
             sys.exit(1)
+
+        # Disable full sql traceback to logger.debug
+        self.conn.set_trace_callback(None)
+
         if row:  # populate the raceCollection object
             logger.debug("Found race collection")
             logger.debug(f"row={row}")
-            league = gtClass.League(id=row[3], name=row[4], sortord=row[5])
+            league = self.getLeague(key='id', value=row[3])
             logger.debug(f"league={league}")
             raceCollection = gtClass.RaceCollection(
                 id=row[0], name=row[1], desc=row[2], leagueObj=league)
 
         else:  # create a blank raceCollection object
+            league = self.getLeague(key='id', value=0)
             raceCollection = gtClass.RaceCollection(
-                id=0, name="", desc="", leagueObj="")
+                id=0, name=None, desc=None, leagueObj=league)
 
         logger.debug(f"raceCollection={raceCollection}")
         return raceCollection
@@ -992,18 +1037,19 @@ class GTdb:
         key   : the column to search on. trackId, or track. Default is trackId
         Returns : Track Object. IF TrackObject.id == 0 then nothing found.
         """
+        logger.debug(f"getting track key={key}, value={value}")
         if key == 'trackId':
             whereSQL = "WHERE trackId = ?"
         elif key == 'track':
             whereSQL = "WHERE track = ?"
 
-        sqlSelect = """SELECT t.id as trackId, t.name AS track, cntry.ID as cntryId, cntry.name as Country, cntry.alpha2, cntry.alpha3, cntry.region as Region FROM track as t LEFT JOIN country as cntry ON t.country_id = cntry.ID"""
-        sql = sqlSelect + " " + whereSQL
+        sqlSelect = """SELECT id AS trackId, name AS track, country_id as countryId FROM track  """
+        sql = f"{sqlSelect} {whereSQL}"
         theVals = (value,)
         logger.debug(f"sql = {sql}")
         logger.debug(f"theVals = {theVals}")
-        # Enable the .keys() to get column names
-        self.conn.row_factory = sqlite3.Row
+        # Disable the .keys() to get column names.
+        self.conn.row_factory = None
         # Enabling full sql traceback to logger.debug
         self.conn.set_trace_callback(logger.debug)
         try:
@@ -1020,17 +1066,20 @@ class GTdb:
             sys.exit(1)
 
         logger.debug(f"row={row}")
+        # default Country object (blank)
+        xCountry = gtClass.Country(
+            cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)
+
         if row:  # Populate the track object
-            logger.debug("track found")
-            xCountry = gtClass.Country(
-                cntryID=row['cntryId'], cntryName=row['Country'], alpha2=row['alpha2'], alpha3=row['alpha3'], region=row['Region'])
+            logger.info(f"Found Track")
+            if row[2]:  # We have a country
+                xCountry = self.getCountry(row[2])
+
             xTrack = gtClass.Track(
-                id=row['trackId'], name=row['track'], countryObj=xCountry)
+                id=row[0], name=row[1], countryObj=xCountry)
 
         else:  # create a blank track object
             logger.debug("no track found")
-            xCountry = gtClass.Country(
-                cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)
             xTrack = gtClass.Track(id=0, name=None, countryObj=xCountry)
 
         logger.debug(f'track = {xTrack}')
@@ -1064,6 +1113,15 @@ class GTdb:
         return result
 
     def getWeather(self, key='id', value=None):
+        """Return a Weather object from db by key
+
+        Args:
+            key (str, optional): he key/field to get object from db. Defaults to 'id'.
+            value (required to return something): Defaults to None.
+
+        Returns:
+            Weather object:
+        """
         logger.info(f"Getting weather object: {key}={value}")
         selectSQL = "SELECT id, name FROM weather"
         whereSQL = f"WHERE {key} = ?"
