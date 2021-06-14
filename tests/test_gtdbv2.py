@@ -91,6 +91,29 @@ class TestCircuit(unittest.TestCase):
         logger.info("==== END Get Circuit")
 
 
+class TestCountry(unittest.TestCase):
+    def test_getCountry(self):
+        logger.info("==== BEGIN Get Country")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+
+        logger.info("Get Country : Existing Country by id")
+        testVal = 1
+        logger.info(f"Country ID = {testVal}")
+        xCountry = dbConn1.getCountry(testVal)
+        logger.info(f"result is {xCountry}")
+        self.assertEqual(
+            xCountry.id, 1, "Failed Get Country : Existing Country by id. should be countryid 1")
+
+        logger.info("Get Country : Non Existing Country by id")
+        testVal = 9999
+        logger.info(f"Country ID = {testVal}")
+        xCountry = dbConn1.getCountry(testVal)
+        logger.info(f"result is {xCountry}")
+        self.assertEqual(
+            xCountry.id, 0, "Failed Get Country : Non Existing Country by id. should be countryid 0")
+
+
 class TestLeagues(unittest.TestCase):
     def test_getLeague(self):
         logger.info("==== BEGIN Get/read League")
