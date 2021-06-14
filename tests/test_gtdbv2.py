@@ -582,6 +582,67 @@ class TestRace(unittest.TestCase):
             result[0], 0, "Failed Add Race : race_collection.id=999")
         del dbConn1
 
+    def test_getRace(self):
+        logger.info("==== BEGIN Get Race")
+        country = GT.Country(cntryID=1, cntryName="Testing",
+                             alpha2=None, alpha3=None, region=None)
+        circuit = GT.Circuit(id=1, name="Testing")
+        weather = GT.Weather(id=1, name="Testing")
+        league = GT.League(id=1, name="Testing", sortord=1)
+        raceType = GT.RaceType(id=1, name="Test")
+        track = GT.Track(id=1, name="Testing", countryObj=country)
+        raceCollection = GT.RaceCollection(
+            id=1, name="Testing", desc=None, leagueObj=league)
+        tLayout = GT.TrackLayout(
+            id=1, name="TestTrace", miles=1, trackObj=track, circuitObj=circuit)
+
+        logger.info("Get Race : Race id 1000 (make believe race)")
+        dbConn1 = gtdbV2.GTdb(name=':memory:')
+        dbConn1.initDB(scriptPath=f'{_gtScripts}')
+        # setupRace (change any value, tests below will need to be changed.)
+        setupRace = GT.Race(id=0,
+                            name="Testing Race",
+                            trackLayout=tLayout,
+                            raceCollection=raceCollection,
+                            raceType=raceType,
+                            weather=weather)
+        setupRace.racetime = "13:00"
+        setupRace.limits = "15 Laps"
+        setupRace.prize1 = 10000
+        setupRace.prize2 = 5000
+        setupRace.prize3 = 2500
+        setupRace.notes = "I am notes"
+
+        logger.info(f"Saving test race={setupRace}")
+        result = dbConn1.addRace(setupRace)
+
+        logger.info(f"result={result}")
+        if result[0] != 0:
+            logger.info(
+                f"Can not test getting a race. Unable to save a setup test race")
+            self.assertEqual(
+                result[0], 0, "Unable to test Get Race : Unable to save a setup test race")
+        else:
+            # have to get the rowID from the save: Commit successful rowID=6
+            rowId = result[1].split("=")[1]
+            race = dbConn1.getRace(rowId)
+            logger.info(f"result={result}")
+            self.assertNotEqual(
+                race.id, 0, "Failed Getting Race : Race not found")
+            self.assertEqual(race.racetime, "13:00",
+                             "Failed Getting Race: racetime was not correct")
+            self.assertEqual(
+                race.prize1, 10000, "Failed Getting Race: prize1 incorrect value")
+            self.assertEqual(
+                race.prize2, 5000, "Failed Getting Race: prize2 incorrect value")
+            self.assertEqual(
+                race.prize3, 2500, "Failed Getting Race: prize3 incorrect value")
+            self.assertEqual(race.limits, "15 Laps",
+                             "Failed Getting Race: limits incorrect value")
+            self.assertEqual(race.notes, "I am notes",
+                             "Failed Getting Race: notes incorrect value")
+        del dbConn1
+
 
 class TestRaceCollection(unittest.TestCase):
     # 5/29/2021 - DB init is WIP. Tests may need to be adjusted.
@@ -1204,13 +1265,13 @@ class TestWeather(unittest.TestCase):
 
         logger.info("Get a weather object by id")
         testVal = 1
-        testObj = dbConn1.getWeather(value=testVal)
+        testObj = dbConn1.getWeather(testVal)
         self.assertEqual(testObj.id, testVal,
                          "Failed getting by Weather object by id")
 
         logger.info("Get non exist weather by id")
         testVal = 99999
-        testObj = dbConn1.getWeather(value=testVal)
+        testObj = dbConn1.getWeather(testVal)
         self.assertEqual(
             testObj.id, 0, "Failed getting weather by non exist id")
 

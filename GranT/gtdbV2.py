@@ -4,7 +4,6 @@ import sqlite3
 from pathlib import Path
 
 # TODO: Put logger.warning for add/update/delete. Should just rely on _exeSQL for warning. Not sure what called it.
-# TODO: got to work on TrackLayout stuff
 # Custom App modules
 from GranT import GTClasses as gtClass
 
@@ -50,6 +49,8 @@ class GTdb:
             # Enabling full sql traceback to logger.debug
             self.conn.set_trace_callback(logger.debug)
             c.execute(sql, theVals)
+            rowID = c.lastrowid
+            logger.debug(f"RowID = {rowID}")
             self.conn.commit()
         except sqlite3.IntegrityError as e:
             logger.warning(f"sqlite integrity error: {e.args[0]}")
@@ -62,7 +63,7 @@ class GTdb:
         logger.debug("successful commit of sql")
         # Disable full sql traceback to logger.debug
         self.conn.set_trace_callback(None)
-        return [0, "Commit successful"]
+        return [0, f"Commit successful rowID={rowID}"]
 
     def _exeScriptFile(self, scriptFileName=None):
         """
@@ -836,6 +837,76 @@ class GTdb:
                 f'Unexpected error executing sql: {sql}', exc_info=True)
             sys.exit(1)
 
+    def getRace(self, id):
+        """Get a Race object from database by raceId
+
+        Args:
+            id (int): The unique race ID
+
+        Returns:
+            Race Object: The race object.
+            If race.id=0 then race was not found
+        """
+        logger.info(f"Getting race from db for race id: {id}")
+        selectSQL = "SELECT id, name, tl_id, rc_id, weather_id, type_id, racetime, limits, prize1, prize2, prize3, notes FROM race"
+        whereSQL = "WHERE id = ?"
+        value = id
+        theVals = (value,)
+        sql = f"{selectSQL} {whereSQL}"
+        try:
+            # Enabling full sql traceback to logger.debug
+            self.conn.set_trace_callback(logger.debug)
+            c = self.conn.cursor()
+            c.execute(sql, theVals)
+            row = c.fetchone()
+            # Disable full sql traceback to logger.debug
+            self.conn.set_trace_callback(None)
+        except:
+            logger.critical(
+                f'Unexpected error executing sql: {sql}', exc_info=True)
+            sys.exit(1)
+        if row:  # Create a race object
+            logger.info("Found race")
+            logger.debug(f"row={row}")
+            id = row[0]
+            name = row[1]
+            trackLayout = self.getLayout(row[2])
+            raceCollection = self.getRaceCollection(rcId=row[3])
+            weather = self.getWeather(row[4])
+            raceType = self.getRaceType(row[5])
+            racetime = row[6]
+            limits = row[7]
+            prize1 = row[8]
+            prize2 = row[9]
+            prize3 = row[10]
+            notes = row[11]
+        else:  # create a blank racetype object
+            logger.info("Race not found")
+            trackLayout = self.getLayout(0)
+            raceCollection = self.getRaceCollection(rcId=0)
+            weather = self.getWeather(0)
+            raceType = self.getRaceType(0)
+            id = 0
+            name = None
+            racetime = None
+            limits = None
+            prize1 = None
+            prize2 = None
+            prize3 = None
+            notes = None
+
+        race = gtClass.Race(id=id, name=name, trackLayout=trackLayout,
+                            raceCollection=raceCollection, raceType=raceType, weather=weather)
+        race.racetime = racetime
+        race.limits = limits
+        race.prize1 = prize1
+        race.prize2 = prize2
+        race.prize3 = prize3
+        race.notes = notes
+
+        logger.debug(f"race={race}")
+        return race
+
     def getRaces(self, raceCollectionID):
         """Get a list of races for a Race Collection
 
@@ -1112,20 +1183,19 @@ class GTdb:
         logger.info(f"Rows being returned: {len(result)}")
         return result
 
-    def getWeather(self, key='id', value=None):
+    def getWeather(self, id):
         """Return a Weather object from db by key
 
         Args:
-            key (str, optional): he key/field to get object from db. Defaults to 'id'.
-            value (required to return something): Defaults to None.
+            id (int): Unique weather id.
 
         Returns:
             Weather object:
         """
-        logger.info(f"Getting weather object: {key}={value}")
+        logger.info(f"Getting weather object by id: {id}")
         selectSQL = "SELECT id, name FROM weather"
-        whereSQL = f"WHERE {key} = ?"
-        theVals = (value,)
+        whereSQL = f"WHERE id = ?"
+        theVals = (id,)
         sql = f"{selectSQL} {whereSQL}"
         logger.debug(f"{theVals}")
         logger.debug(f"sql: {sql}")
@@ -1377,7 +1447,7 @@ class GTdb:
             logger.info("Passed: Weather id is greater than zero")
 
         # Does weather id exist
-        if self.getWeather(key='id', value=race.weather.id).id != race.weather.id:
+        if self.getWeather(race.weather.id).id != race.weather.id:
             msg = f"The Race weather id : {race.weather.id} not found in database"
             result = (False, msg)
             logger.info(f"returning = {result}")
