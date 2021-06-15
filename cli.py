@@ -108,6 +108,7 @@ def main():
             },
             'drivetrains': None,
             'manufactures': {'orderBy=': None},
+            'race': None,
             'track': {
                 'id=': None,
                 'name=': None
@@ -341,7 +342,7 @@ def addRaceCmd(args):
         log.info(f"No weather type choosen")
         print("No weather type choosen")
         return
-    weather = GTDBConn1.getWeather(value=x)
+    weather = GTDBConn1.getWeather(x)
     x = f"Weather        : {weather.name[0:30].ljust(30)}"
 
     # Prompt user for Race type
@@ -407,6 +408,45 @@ def displayMfgs(theList):
         print(r)
 
 
+def displayRace(race):
+    """Display race information
+
+    Args:
+        race (object): The race class object
+    """
+    # TODO: More stuff to put in here
+    print(f"Race Record: ({race.id}) {race.name}")
+    print(
+        f"  League     : ({race.raceCollection.league.id}) {race.raceCollection.league.name}")
+    print(
+        f"  Collection : ({race.raceCollection.id}) {race.raceCollection.name}")
+    print(f"  Track      : {race.trackLayout.track.name}")
+    print(f"  Layout     : ({race.trackLayout.id}) - {race.trackLayout.name}")
+    print(f"  Race Type  : ({race.raceType.id}) {race.raceType.name}")
+    print(f"  Weather    : ({race.weather.id}) {race.weather.name}")
+    if race.racetime:
+        racetime = race.racetime
+    else:
+        racetime = "-- Nothing Entered --"
+    print(f"  Race Time  :{racetime}")
+    if race.limits:
+        limits = race.limits
+    else:
+        limits = "-- Nothing Entered --"
+    #         Weather    :
+    print(f"  Limits     : {limits}")
+    print(f"  prize1     : {race.prize1}")
+    print(f"  prize2     : {race.prize2}")
+    print(f"  prize3     : {race.prize3}")
+    if race.notes:
+        notes = race.notes
+    else:
+        notes = "-- Nothing Entered --"
+    print(f"  Notes      : {notes}")
+
+    print("** Got more work **")
+
+
 def displayTrack(trackObj):
     """Display track information
 
@@ -419,19 +459,17 @@ def displayTrack(trackObj):
         return
 
     tName = trackObj.name[0:50].ljust(50)
-    x = f"<b><u>Track:</u></b> ({trackObj.id}) {tName}"
-    print_formatted_text(HTML(x))
+    print(f"Track: ({trackObj.id}) {tName}")
 
     # Displaying Country info
-    if trackObj.country.id == None:  # No country info
+    if trackObj.country.id == 0:  # No country info
         cText = f"      {str('No country assigned to this track')[0:50].ljust(50)}"
         region = "N/A"
     else:  # Country info
         cText = f"{trackObj.country.cntryName[0:50].ljust(50)}"
         region = trackObj.country.region
 
-    x = f"<b><u>Country:</u></b> {cText} <b>Region:</b> {region}"
-    print_formatted_text(HTML(x))
+    print(f"Country: {cText} Region: {region}")
 
     # Get track layout List
     tLayoutList = GTDBConn1.getLayoutList(trackObj.id)
@@ -539,17 +577,38 @@ def listAction(cmd):
                     HTML(f"<ansired>ERROR</ansired> - Unknown list manufactures argument <b>{objArgs.split('=')[0].strip()}</b>."))
         else:
             displayMfgs(GTDBConn1.getMfgs())
+    elif listObj == 'race':
+        listRaceCmd(cmd[len(listObj):].strip())
     else:  # Unknown object to list
         print_formatted_text(
             HTML(f'<ansired>ERROR</ansired> - Unknown <ansigreen>list</ansigreen> object <b>{listObj}</b>'))
         log.info("Unknown list object")
 
 
+def listRaceCmd(args):
+    """What to do when ask to list a Race"""
+    log.debug(f"args passed: {args}")
+    log.debug(f"length of args: {len(args)}")
+    if len(args) > 0 and args.find("=") > 0:  # Have Args
+        if args.split('=')[0].strip() == 'id':
+            raceId = args.split('=')[1].strip()
+            log.info(f"Getting race info for race id {raceId}")
+            race = GTDBConn1.getRace(raceId)
+            displayRace(race)
+        else:  # invalid Args passed
+            log.info(
+                f"Unknown list race argument {args.split('=')[0].strip()}")
+            print_formatted_text(
+                HTML(f"<ansired>ERROR</ansired> - Unknown list track argument <b>{args.split('=')[0].strip()}</b>."))
+    else:  # No args passed
+        print("I will need to ask some questions to find the race you are looking for")
+
+
 def listTrackCmd(args):
     """what to do when ask to list a track"""
     log.debug(f"args passed: {args}")
     log.debug(f"length of args: {len(args)}")
-    if len(args) > 0 and args.find("=") > 0:  # Have valid Args
+    if len(args) > 0 and args.find("=") > 0:  # Have Args
         if args.split('=')[0].strip() == 'id':
             trackId = args.split('=')[1].strip()
             log.info(f"Getting track info for track id {trackId}")
