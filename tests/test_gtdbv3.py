@@ -59,3 +59,42 @@ class TestCountry(unittest.TestCase):
         logger.info(f"result is {xCountry}")
         self.assertEqual(
             xCountry.id, 0, "Failed Get Country : Non Existing Country by id. should be countryid 0")
+
+
+class TestCircuit(unittest.TestCase):
+    def test_getCircuit(self):
+        logger.info("==== BEGIN Get Circuit")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+        logger.info("Get Circuit : Existing Circuit by ID")
+        testVal = 1
+        logger.info(f"Circuit ID = {testVal}")
+        xCircuit = gtdbV3.getCircuit(d1, key='id', value=testVal)
+        logger.info(f"result is {xCircuit}")
+        self.assertEqual(
+            xCircuit.id, 1, "Failed Get Circuit : Existing Circuit by ID. should be circuitid 1")
+
+        logger.info("Get Circuit : Non Existing Circuit by ID")
+        testVal = 999
+        logger.info(f"Circuit ID = {testVal}")
+        xCircuit = gtdbV3.getCircuit(d1, key='id', value=testVal)
+        logger.info(f"result is {xCircuit}")
+        self.assertEqual(
+            xCircuit.id, 0, "Failed Get Circuit : Non Existing Circuit by ID. Should be circuitid 0")
+
+        logger.info("Get Circuit by name - Exist")
+        testVal = "Dirt / Snow"
+        logger.info(f"Circuit name = {testVal}")
+        xCircuit = gtdbV3.getCircuit(d1, key='name', value=testVal)
+        logger.info(f"result is {xCircuit}")
+        self.assertNotEqual(xCircuit.id, 0)
+
+        logger.info("Get Circuit by name - Non Exist")
+        testVal = "I donot exist"
+        logger.info(f"Circuit name = {testVal}")
+        xCircuit = gtdbV3.getCircuit(d1, key='id', value=testVal)
+        logger.info(f"result is {xCircuit}")
+        self.assertEqual(xCircuit.id, 0)
+
+        logger.info("==== END Get Circuit")

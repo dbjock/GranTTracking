@@ -113,6 +113,56 @@ def _exeScriptFile(dbConn, scriptFileName=None):
     logger.debug(f"script commited")
 
 
+def getCircuit(dbConn, key='id', value=None):
+    """Get circuit record from db
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        key (str): key to search for value.
+            'id' or 'name'
+        value : Value to search for in key
+
+    Returns:
+        CircuitObject
+    """
+    logger.info(f"Getting a circuit key={key}, value={value}")
+    selectSQL = "SELECT c.id as circuitId, c.name AS Circuit FROM circuit AS c"
+
+    if key == 'id':
+        whereSQL = "WHERE c.id = ?"
+    elif key == 'name':
+        whereSQL = "WHERE c.name = ?"
+    else:  # no key passed
+        logger.critical("Invalid or missing key value passed.")
+        sys.exit(1)
+
+    sql = f"{selectSQL} {whereSQL}"
+    theVals = (value,)
+    logger.debug(f"sql = {sql}")
+    logger.debug(f"theVals = {theVals}")
+    # enable full sql trackback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql, theVals)
+        row = cur.fetchone()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback
+    dbConn.set_trace_callback(None)
+    if row:  # populate ciruit object
+        logger.info(f"Circuit found")
+        xCircuit = gtClass.Circuit(id=row[0], name=row[1])
+    else:  # create blank ciruit object
+        logger.info(f"Circuit not found")
+        xCircuit = gtClass.Circuit(id=0, name=None)
+
+    logger.debug(f"returning: {xCircuit}")
+    return xCircuit
+
+
 def getCountry(dbConn, countryId):
     """Return a Country object from db by countryID
 
