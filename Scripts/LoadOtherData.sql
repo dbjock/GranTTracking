@@ -220,5 +220,11 @@ INSERT INTO race_collection (id, league_id, name, description) VALUES (44, 3, 'P
 INSERT INTO race_collection (id, league_id, name, description) VALUES (45, 3, 'Gr.3 Endurance Series', '');
 INSERT INTO race_collection (id, league_id, name, description) VALUES (46, 3, 'Compentition Endurance Series', '');
 
+-- Table: race
+INSERT INTO race (id, name, tl_id, rc_id, racetime, weather_id, limits, type_id, prize1, prize2, prize3, notes) VALUES (1, 'Race 1', 1, 1, NULL, 1, NULL, 1, 0, 0, 0, NULL);
+INSERT INTO race (id, name, tl_id, rc_id, racetime, weather_id, limits, type_id, prize1, prize2, prize3, notes) VALUES (2, 'Race 2', 52, 1, NULL, 1, NULL, 1, 0, 0, 0, NULL);
+INSERT INTO race (id, name, tl_id, rc_id, racetime, weather_id, limits, type_id, prize1, prize2, prize3, notes) VALUES (3, 'Race 3', 2, 1, NULL, 1, NULL, 1, 0, 0, 0, NULL);
+INSERT INTO race (id, name, tl_id, rc_id, racetime, weather_id, limits, type_id, prize1, prize2, prize3, notes) VALUES (4, 'Race 1', 18, 12, NULL, 1, NULL, 1, 0, 0, 0, NULL);
+INSERT INTO race (id, name, tl_id, rc_id, racetime, weather_id, limits, type_id, prize1, prize2, prize3, notes) VALUES (5, 'Race 2', 31, 12, NULL, 1, NULL, 1, 0, 0, 0, NULL);
 
 PRAGMA foreign_keys = on;
