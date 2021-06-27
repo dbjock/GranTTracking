@@ -179,3 +179,102 @@ class TestTrack(unittest.TestCase):
         self.assertEqual(testTrack.id, 0, 'Failed Get non exist Track by name')
 
         logger.info(f"==== END Get/read Track\n")
+
+    def test_addTrack(self):
+        logger.info(
+            "==== BEGIN TEST Adding a Track")
+        d1 = gtdbV3.create_connection(":memory:")
+
+        # Existing Track Layout name
+        tlNameExist = "Infield B"
+        tlNameNonExist = "Layout name that does not exist"
+
+        logger.info(
+            "0 - Circuit ID Existing: No, Miles empty: No, Track Name Existing: No")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        miles = .1
+        xTlayout = GT.TrackLayout(
+            None, tlNameExist, miles, GT.Track(9999, "I dont exist", GT.Country(cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(id=9999, name="I do not exist"))
+        logger.info(f"{xTlayout}")
+        result = gtdbV3.addTrack(d1, xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
+
+        logger.info(
+            "1 - Circuit ID Existing: No, Miles empty: No, Track Name Existing: Yes")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        miles = .1
+        xTlayout = GT.TrackLayout(
+            None, tlNameExist, miles, GT.Track(7, "Blue Moon Bay Speedway", GT.Country(cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(id=9999, name="I do not exist"))
+        logger.info(f"{xTlayout}")
+        result = gtdbV3.addTrack(d1, xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
+
+        logger.info(
+            "2 - Circuit ID Existing: No, Miles empty: Yes, Track Name Existing: No")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        miles = None
+        xTlayout = GT.TrackLayout(
+            None, tlNameExist, miles, GT.Track(9999, "I dont exist", GT.Country(cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(id=9999, name="I do not exist"))
+        logger.info(f"{xTlayout}")
+        result = gtdbV3.addTrack(d1, xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
+
+        logger.info(
+            "3 - Circuit ID Existing: No, Miles empty: Yes, Track Name Existing: Yes")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        miles = None
+        xTlayout = GT.TrackLayout(
+            None, tlNameExist, miles, GT.Track(7, "Blue Moon Bay Speedway", GT.Country(cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(id=9999, name="I do not exist"))
+        logger.info(f"{xTlayout}")
+        result = gtdbV3.addTrack(d1, xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
+
+        logger.info(
+            "4 - Circuit ID Existing: Yes, Miles empty: No, Track Name Existing: No")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        miles = .1
+        xTlayout = GT.TrackLayout(
+            None, tlNameExist, miles, GT.Track(9999, "I dont exist", GT.Country(cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(id=1, name=None))
+        logger.info(f"{xTlayout}")
+        result = gtdbV3.addTrack(d1, xTlayout)
+        logger.info(f"result = {result}")
+        self.assertEqual(result[0], 0, "Records should be saved")
+
+        logger.info(
+            "5 - Circuit ID Existing: Yes, Miles empty: No, Track Name Existing: Yes")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        miles = .1
+        xTlayout = GT.TrackLayout(
+            None, tlNameExist, miles, GT.Track(7, "Blue Moon Bay Speedway", GT.Country(cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(id=1, name=None))
+        logger.info(f"{xTlayout}")
+        result = gtdbV3.addTrack(d1, xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
+
+        logger.info(
+            "6 - Circuit ID Existing: Yes, Miles empty: Yes, Track Name Existing: No")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        miles = None
+        xTlayout = GT.TrackLayout(
+            None, tlNameExist, miles, GT.Track(9999, "I dont exist", GT.Country(cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(id=1, name=None))
+        logger.info(f"{xTlayout}")
+        result = gtdbV3.addTrack(d1, xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
+
+        logger.info(
+            "7 - Circuit ID Existing: Yes, Miles empty: Yes, Track Name Existing: Yes")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        miles = None
+        xTlayout = GT.TrackLayout(
+            None, tlNameExist, miles, GT.Track(7, "Blue Moon Bay Speedway", GT.Country(cntryID=235, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(id=1, name=None))
+        logger.info(f"{xTlayout}")
+        result = gtdbV3.addTrack(d1, xTlayout)
+        logger.info(f"result = {result}")
+        self.assertNotEqual(result[0], 0, "No records should be created")
+
+        logger.info("==== END TEST Add Track")

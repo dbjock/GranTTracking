@@ -53,6 +53,24 @@ def create_connection(dbLoc=":memory:"):
     sys.exit(1)
 
 
+def _addLayoutRec(dbConn, tLayout):
+    """Internal use only. Add layout rec to db with no checks
+
+    Args:
+            tLayout (TrackLayout Object)
+
+    Returns:
+            list: ResultCode, ResultText
+            ResultCode = 0 Successfull
+            ResultCode != 0 See ResultText for details
+    """
+    logger.debug(f"trackobj = {tLayout}")
+    theVals = {'layoutName': tLayout.name, 'miles': tLayout.miles,
+               'circuitId': tLayout.circuit.id, 'trackId': tLayout.track.id}
+    sql = 'INSERT INTO track_layout (name, miles, track_id, circuit_id) VALUES (:layoutName, :miles, :trackId, :circuitId)'
+    return _exeDML(dbConn, sql, theVals)
+
+
 def _exeDML(dbConn, sql, theVals):
     """Executes DML commands, INSERT, DELETE, UPDATE sql.
 
@@ -89,6 +107,11 @@ def _exeDML(dbConn, sql, theVals):
         dbConn.set_trace_callback(None)
         return [0, f"Commit successful rowID={rowID}"]
 
+    logger.debug("successful commit of sql")
+    # Disable full sql traceback to logger.debug
+    dbConn.set_trace_callback(None)
+    return [0, f"Commit successful rowID={rowID}"]
+
 
 def _exeScriptFile(dbConn, scriptFileName=None):
     """ INTERNAL USE Only. executes a Script file.
@@ -111,6 +134,87 @@ def _exeScriptFile(dbConn, scriptFileName=None):
 
     dbConn.commit()
     logger.debug(f"script commited")
+
+
+def addTrack(dbConn, layout):
+    """Adding a Track and a Layout for it
+
+    Args:
+            layout : Track layout object
+
+    Returns:
+            list: ResultCode, ResultText
+            ResultCode = 0 Successfull
+            ResultCode != 0 See ResultText for details
+    """
+    logger.info(f"Adding a new track {layout}")
+    xtrack = getTrack(dbConn, key='track', value=layout.track.name)
+    if xtrack.id != 0:  # track with same name exists - ReturnCode 100
+        msg = f"Unable to save. Track name already in db. Track name = {layout.track.name}"
+        logger.warning(msg)
+        result = (100, msg)
+        logger.debug(f"returning: {result}")
+        return result
+    else:
+        logger.info("Confirmed track doesn't exist")
+
+    xcircuit = getCircuit(dbConn, key='id', value=layout.circuit.id)
+    if xcircuit.id == 0:  # circuit does not exist -ReturnCode 102
+        msg = f'Unable to save. Circuit does not exist'
+        logger.warning(msg)
+        result = (102, msg)
+        logger.debug(f"returning: {result}")
+        return result
+    else:
+        logger.info("Confirmed circuit exists")
+
+    if not layout.miles:  # Miles must have a value - ReturnCode 103.
+        msg = f"Unable to save. Invalid miles value {layout.miles}"
+        logger.warning(msg)
+        result = (103, msg)
+        logger.debug(f"returning: {result}")
+        return result
+    else:
+        logger.info("Confirmed miles has a value")
+
+    # Tests Passed. Now we add records
+    # Add track record
+    logger.info("Saving new track record")
+    theVals = {'trackName': layout.track.name,
+               'cntryID': layout.track.country.id}
+    sql = "INSERT INTO track (name, country_id) VALUES (:trackName, :cntryID)"
+    logger.debug(f"sql={sql}")
+    logger.debug(f"theVals={theVals}")
+    result = _exeDML(dbConn, sql, theVals)
+    if result[0] == 2:  # integrity error
+        msg = f"error saving track record. error: {result}"
+        logger.error(msg)
+        result = (104, msg)
+        logger.debug(f"returning: {result}")
+        return result
+    else:
+        # Get new track.id from db to update layout object
+        logger.debug("Getting new track.id")
+        uTrack = getTrack(dbConn, key="track", value=layout.track.name)
+        logger.info(f"Successfully saved new track record {uTrack}")
+        logger.debug(
+            "update trackLayout object with new track.id {uTrack.id}")
+        layout.track.id = uTrack.id
+
+    # Add track layout record
+    logger.info("Saving track_layout record")
+    result = _addLayoutRec(dbConn, layout)
+    if result[0] == 2:  # integrity error
+        msg = f"error saving track_layout record. error: {result}"
+        logger.error(msg)
+        result = (105, msg)
+        logger.debug(f"returning: {result}")
+        return result
+    else:
+        logger.info("Successfully saved new track_layout record")
+
+    logger.debug(f"returning: {result}")
+    return result
 
 
 def getCircuit(dbConn, key='id', value=None):
