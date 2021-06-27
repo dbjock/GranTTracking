@@ -98,3 +98,35 @@ class TestCircuit(unittest.TestCase):
         self.assertEqual(xCircuit.id, 0)
 
         logger.info("==== END Get Circuit")
+
+
+class TestLeagues(unittest.TestCase):
+    def test_getLeague(self):
+        logger.info("==== BEGIN Get/read League")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+        logger.info("Get League by id")
+        testVal = 1
+        testObj = gtdbV3.getLeague(d1, value=testVal)
+        self.assertEqual(testObj.id, testVal, "Failed getting by league id")
+
+        logger.info("Get League by name (case insensitve)")
+        testVal = 'amATeur'
+        testObj = gtdbV3.getLeague(d1, key='name', value=testVal)
+        # If not found zero is returned
+        self.assertNotEqual(
+            testObj.id, 0, "Failed getting league by existing name")
+
+        logger.info("Get non exist League by id")
+        testVal = 99999
+        testObj = gtdbV3.getLeague(d1, value=testVal)
+        self.assertEqual(
+            testObj.id, 0, "Failed getting league by non exist league id")
+
+        logger.info("Get non exist League by name")
+        testVal = 'ZZINoExist'
+        testObj = gtdbV3.getLeague(d1, key='name', value=testVal)
+        self.assertEqual(testObj.id, 0)
+
+        logger.info(f"==== END Get/read League\n")

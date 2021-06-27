@@ -210,6 +210,43 @@ def getCountry(dbConn, countryId):
     return country
 
 
+def getLeague(dbConn, key='id', value=None):
+    """Get a league object from database by various fields
+
+    Args:
+            key (str, optional): The key/field to get object from db. Defaults to 'id'.
+            value (required to return something): The value the key must equal to return the object.
+
+    Returns:
+            LeagueObject. If nothing found then LeagueObj.id=0
+    """
+    logger.info(f"Getting a League: {key}={value}")
+    selectSQL = "SELECT id, name, sortord FROM league"
+    whereSQL = f"WHERE {key} = ?"
+    theVals = (value,)
+    sql = f"{selectSQL} {whereSQL}"
+    logger.debug(f"sql={sql}")
+    logger.debug(f"theVals={theVals}")
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql, theVals)
+        row = cur.fetchone()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback
+    dbConn.set_trace_callback(None)
+    if row:  # have data from db
+        league = gtClass.League(id=row[0], name=row[1], sortord=row[2])
+    else:  # No data from db. Create empty object
+        league = gtClass.League(id=0, name="", sortord=0)
+    logger.debug(f'returning: {league}')
+    return league
+
+
 def initDB(dbConn, scriptPath=None):
     """Create tables, views, indexes
 
