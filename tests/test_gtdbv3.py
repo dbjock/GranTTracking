@@ -150,36 +150,6 @@ class TestLeagues(unittest.TestCase):
 
 
 class TestTrack(unittest.TestCase):
-    def test_getTrack(self):
-        logger.info("==== BEGIN Get/read Track")
-        d1 = gtdbV3.create_connection(":memory:")
-        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
-
-        logger.info("Get a Track by the track id")
-        testVal = 4
-        testTrack = gtdbV3.getTrack(d1, value=testVal)
-        self.assertEqual(testTrack.id, testVal, 'Failed Getting a Track by id')
-
-        logger.info("Get a Track by name")
-        testVal = 'Northern Isle Speedway'
-        logger.info(f"Getting track by track name = {testVal}")
-        testTrack = gtdbV3.getTrack(d1, key='track', value=testVal)
-        self.assertEqual(testTrack.name, testVal,
-                         'Failed Getting a Track by name')
-
-        logger.info("Get non exist Track by id")
-        testVal = 99999
-        testTrack = gtdbV3.getTrack(d1, value=testVal)
-        self.assertEqual(
-            testTrack.id, 0, "Failed Get non exist Track by id")
-
-        logger.info("Get non exist Track by name")
-        testVal = 'NON exist track test'
-        testTrack = gtdbV3.getTrack(d1, key='track', value=testVal)
-        self.assertEqual(testTrack.id, 0, 'Failed Get non exist Track by name')
-
-        logger.info(f"==== END Get/read Track\n")
-
     def test_addTrack(self):
         logger.info(
             "==== BEGIN TEST Adding a Track")
@@ -278,3 +248,47 @@ class TestTrack(unittest.TestCase):
         self.assertNotEqual(result[0], 0, "No records should be created")
 
         logger.info("==== END TEST Add Track")
+
+    def test_getTrack(self):
+        logger.info("==== BEGIN Get/read Track")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+        logger.info("Get a Track by the track id")
+        testVal = 4
+        testTrack = gtdbV3.getTrack(d1, value=testVal)
+        self.assertEqual(testTrack.id, testVal, 'Failed Getting a Track by id')
+
+        logger.info("Get a Track by name")
+        testVal = 'Northern Isle Speedway'
+        logger.info(f"Getting track by track name = {testVal}")
+        testTrack = gtdbV3.getTrack(d1, key='track', value=testVal)
+        self.assertEqual(testTrack.name, testVal,
+                         'Failed Getting a Track by name')
+
+        logger.info("Get non exist Track by id")
+        testVal = 99999
+        testTrack = gtdbV3.getTrack(d1, value=testVal)
+        self.assertEqual(
+            testTrack.id, 0, "Failed Get non exist Track by id")
+
+        logger.info("Get non exist Track by name")
+        testVal = 'NON exist track test'
+        testTrack = gtdbV3.getTrack(d1, key='track', value=testVal)
+        self.assertEqual(testTrack.id, 0, 'Failed Get non exist Track by name')
+
+        logger.info(f"==== END Get/read Track\n")
+
+    def test_getTrackList(self):
+        logger.info("==== BEGIN get Tracks")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+        logger.info("Getting a list of tracks")
+        testVal = 17  # First element should be trackid 17
+        testList = gtdbV3.getTrackList(d1)
+        logger.info(f"testList={testList}")
+        self.assertEqual(
+            testList[0][0], testVal, "Failed. First track or should have track id 17")
+
+        logger.info(f"==== END get Tracks\n")

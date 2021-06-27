@@ -290,7 +290,7 @@ def getCircuitList(dbConn):
         sys.exit(1)
     # Disable full sql traceback to logger.debug
     dbConn.set_trace_callback(None)
-    logger.debug(f"Returning {len(result)} rows")
+    logger.info(f"Returning {len(result)} rows")
     return result
 
 
@@ -461,6 +461,35 @@ def getTrack(dbConn, key='trackId', value=None):
 
     logger.debug(f'track = {xTrack}')
     return xTrack
+
+
+def getTrackList(dbConn):
+    """Returns a list of all the tracks in db
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+
+    Returns:
+        list: (trackId, trackName)
+    """
+    logger.info("Getting list of Tracks")
+    selectSQL = "select id, name from track order by name"
+    sql = f"{selectSQL}"
+    logger.debug(f"sql = {sql}")
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql)
+        result = cur.fetchall()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback to logger.debug
+    dbConn.set_trace_callback(None)
+    logger.info(f"Rows being returned: {len(result)}")
+    return result
 
 
 def initDB(dbConn, scriptPath=None):
