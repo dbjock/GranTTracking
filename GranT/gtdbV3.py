@@ -163,6 +163,33 @@ def getCircuit(dbConn, key='id', value=None):
     return xCircuit
 
 
+def getCircuitList(dbConn):
+    """Get a list of all the circuits
+
+    Returns: list(id, name)
+    """
+    logger.info("Getting list of Circuits")
+    selectSQL = "SELECT c.id as id, c.name as name from circuit as c"
+    orderbySQL = "ORDER by name"
+    sql = f"{selectSQL} {orderbySQL}"
+    logger.debug(f"sql = {sql}")
+
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql)
+        result = cur.fetchall()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback to logger.debug
+    dbConn.set_trace_callback(None)
+    logger.debug(f"Returning {len(result)} rows")
+    return result
+
+
 def getCountry(dbConn, countryId):
     """Return a Country object from db by countryID
 

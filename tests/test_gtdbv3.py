@@ -99,6 +99,23 @@ class TestCircuit(unittest.TestCase):
 
         logger.info("==== END Get Circuit")
 
+    def test_getCircuitList(self):
+        logger.info("==== BEGIN Get Circuit List")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+        testList = gtdbV3.getCircuitList(d1)
+        # Test there are more than 1 row
+        logger.info("Checking for at least 1 row returned")
+        self.assertGreater(
+            len(testList), 1, "Failed Get Circuit List returned zero rows")
+        # Test there are only 2 elements per row.
+        logger.info("Checking for at least 2 columns")
+        testRow = testList[0]
+        self.assertGreaterEqual(len(
+            testRow), 2, "Failed Get Circuit List did not return minimum number of columns")
+        logger.info(f"==== END Get Circuit List\n")
+
 
 class TestLeagues(unittest.TestCase):
     def test_getLeague(self):
