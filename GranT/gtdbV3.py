@@ -239,12 +239,69 @@ def getLeague(dbConn, key='id', value=None):
         sys.exit(1)
     # Disable full sql traceback
     dbConn.set_trace_callback(None)
+    logger.debug(f"row={row}")
     if row:  # have data from db
         league = gtClass.League(id=row[0], name=row[1], sortord=row[2])
     else:  # No data from db. Create empty object
         league = gtClass.League(id=0, name="", sortord=0)
     logger.debug(f'returning: {league}')
     return league
+
+
+def getTrack(dbConn, key='trackId', value=None):
+    """Gets a single Track record from database based on key and value passed.
+
+    Args:
+        dbConn ([type]): [description]
+        key (str, optional): Column to search on. trackId, or track. Defaults to 'trackId'.
+        value (optional): Value you are looking for. Defaults to None.
+
+    Returns:
+        Track Object
+        if TrackObject.id == 0 then track was not found
+    """
+    logger.debug(f"getting track key={key}, value={value}")
+    if key == 'trackId':
+        whereSQL = "WHERE trackId = ?"
+    elif key == 'track':
+        whereSQL = "WHERE track = ?"
+
+    sqlSelect = """SELECT id AS trackId, name AS track, country_id as countryId FROM track  """
+    sql = f"{sqlSelect} {whereSQL}"
+    theVals = (value,)
+    logger.debug(f"sql = {sql}")
+    logger.debug(f"theVals = {theVals}")
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql, theVals)
+        row = cur.fetchone()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback
+    dbConn.set_trace_callback(None)
+    logger.debug(f"row={row}")
+    # default Country object (blank)
+    xCountry = gtClass.Country(
+        cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)
+
+    if row:  # Populate the track object
+        logger.info(f"Found Track")
+        if row[2]:  # We have a country
+            xCountry = getCountry(dbConn, row[2])
+
+        xTrack = gtClass.Track(
+            id=row[0], name=row[1], countryObj=xCountry)
+
+    else:  # create a blank track object
+        logger.debug("no track found")
+        xTrack = gtClass.Track(id=0, name=None, countryObj=xCountry)
+
+    logger.debug(f'track = {xTrack}')
+    return xTrack
 
 
 def initDB(dbConn, scriptPath=None):

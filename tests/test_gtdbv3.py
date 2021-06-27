@@ -130,3 +130,35 @@ class TestLeagues(unittest.TestCase):
         self.assertEqual(testObj.id, 0)
 
         logger.info(f"==== END Get/read League\n")
+
+
+class TestTrack(unittest.TestCase):
+    def test_getTrack(self):
+        logger.info("==== BEGIN Get/read Track")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+        logger.info("Get a Track by the track id")
+        testVal = 4
+        testTrack = gtdbV3.getTrack(d1, value=testVal)
+        self.assertEqual(testTrack.id, testVal, 'Failed Getting a Track by id')
+
+        logger.info("Get a Track by name")
+        testVal = 'Northern Isle Speedway'
+        logger.info(f"Getting track by track name = {testVal}")
+        testTrack = gtdbV3.getTrack(d1, key='track', value=testVal)
+        self.assertEqual(testTrack.name, testVal,
+                         'Failed Getting a Track by name')
+
+        logger.info("Get non exist Track by id")
+        testVal = 99999
+        testTrack = gtdbV3.getTrack(d1, value=testVal)
+        self.assertEqual(
+            testTrack.id, 0, "Failed Get non exist Track by id")
+
+        logger.info("Get non exist Track by name")
+        testVal = 'NON exist track test'
+        testTrack = gtdbV3.getTrack(d1, key='track', value=testVal)
+        self.assertEqual(testTrack.id, 0, 'Failed Get non exist Track by name')
+
+        logger.info(f"==== END Get/read Track\n")
