@@ -379,6 +379,34 @@ def getLeague(dbConn, key='id', value=None):
     return league
 
 
+def getLeagueList(dbConn):
+    """Returns a list of all the leagues in the db.
+    Order will be by the sortorder in db
+
+    Returns:
+            list (leagueID, leagueName)
+    """
+    logger.info("Getting list of Leagues")
+    selectSQL = "SELECT id, name FROM league"
+    orderBySQL = "ORDER BY sortord"
+    sql = f"{selectSQL} {orderBySQL}"
+    logger.debug(f"sql = {sql}")
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql, theVals)
+        result = cur.fetchall()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback to logger.debug
+    dbConn.set_trace_callback(None)
+    logger.debug(f"Returning {len(result)} rows")
+    return result
+
+
 def getTrack(dbConn, key='trackId', value=None):
     """Gets a single Track record from database based on key and value passed.
 
