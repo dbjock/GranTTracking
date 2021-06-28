@@ -355,3 +355,37 @@ class TestTrackLayout(unittest.TestCase):
         self.assertEqual(result[0], 0, errMsg)
 
         logger.info("==== END Deleting Track Layout")
+
+
+class TestWeather(unittest.TestCase):
+    def test_getWeatherList(self):
+        logger.info("==== BEGIN Get Weather List")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+        logger.info("Getting a list of all weather types")
+        testList = gtdbV3.getWeatherList(d1)
+        logger.info(f"testList={testList}")
+        self.assertGreater(
+            len(testList), 1, "More than one weather should be returned")
+        self.assertEqual(
+            len(testList[0]), 2, "There should be 2 fields for each weather row")
+
+    def test_getWeather(self):
+        logger.info("==== BEGIN Get/read Weather")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+        logger.info("Get a weather object by id")
+        testVal = 1
+        testObj = gtdbV3.getWeather(d1, testVal)
+        self.assertEqual(testObj.id, testVal,
+                         "Failed getting by Weather object by id")
+
+        logger.info("Get non exist weather by id")
+        testVal = 99999
+        testObj = gtdbV3.getWeather(d1, testVal)
+        self.assertEqual(
+            testObj.id, 0, "Failed getting weather by non exist id")
+
+        logger.info("=== END Get/read Weather")

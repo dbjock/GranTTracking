@@ -620,3 +620,70 @@ def initDB(dbConn, scriptPath=None):
         logger.debug(f"Executing {scriptFile}")
         _exeScriptFile(dbConn, scriptFileName=f'{scriptFile}')
     logger.info("Database init completed")
+
+
+def getWeather(dbConn, id):
+    """Return a Weather object from db by key
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        id (int): Unique weather id.
+
+    Returns:
+        Weather object
+    """
+    logger.info(f"Getting weather object by id: {id}")
+    selectSQL = "SELECT id, name FROM weather"
+    whereSQL = f"WHERE id = ?"
+    theVals = (id,)
+    sql = f"{selectSQL} {whereSQL}"
+    logger.debug(f"{theVals}")
+    logger.debug(f"sql: {sql}")
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql, theVals)
+        row = cur.fetchone()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback
+    dbConn.set_trace_callback(None)
+    logger.debug(f"row={row}")
+    if row:  # have data from db
+        weather = gtClass.Weather(id=row[0], name=row[1])
+    else:  # No data from db. Create empty object
+        weather = gtClass.Weather(id=0, name="")
+    logger.debug(f'weather = {weather}')
+    return weather
+
+
+def getWeatherList(dbConn):
+    """Returns a list of all the the Weather rows
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+
+    Returns:
+        list (weatherID, weatherName)
+    """
+    logger.info("Getting list of weather objects")
+    selectSQL = "SELECT id, name FROM weather ORDER by name"
+    sql = selectSQL
+    logger.debug(f"sql = {sql}")
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql)
+        result = cur.fetchall()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback to logger.debug
+    dbConn.set_trace_callback(None)
+    logger.info(f"Rows being returned: {len(result)}")
+    return result
