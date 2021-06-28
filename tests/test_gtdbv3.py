@@ -316,6 +316,70 @@ class TestTrack(unittest.TestCase):
 
         logger.info(f"==== END get Tracks\n")
 
+    def test_updateTrack(self):
+        logger.info("===== BEGIN Update Track")
+        d1 = gtdbV3.create_connection(":memory:")
+        countryNonExist = GT.Country(
+            cntryID=999, cntryName=None, alpha2=None, alpha3=None, region=None)
+        countryNull = GT.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)
+
+        tExistName = "Red Bull Ring"
+        tNonExistName = "IM the New Name"
+        # trackIdExist must not be trackId of tExistName for valid testing
+        trackIdExist = 1
+        trackIdNonExist = 99999
+
+        testmsg = '1 - TrackId Exist: No.'
+        logger.info(testmsg)
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        testTrack = GT.Track(trackIdNonExist, tNonExistName, GT.Country(
+            cntryID=235, cntryName='', alpha2='', alpha3='', region=''))
+        logger.info(testTrack)
+        result = gtdbV3.updateTrack(d1, testTrack)
+        logger.info(f"result={result}")
+        self.assertNotEqual(result[0], 0)
+
+        testmsg = '2 - Unique Name for existing TrackId: No'
+        logger.info(testmsg)
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        testTrack = GT.Track(trackIdExist, tExistName, GT.Country(
+            cntryID=235, cntryName='', alpha2='', alpha3='', region=''))
+        logger.info(testTrack)
+        result = gtdbV3.updateTrack(d1, testTrack)
+        logger.info(f"result={result}")
+        self.assertNotEqual(result[0], 0)
+
+        testmsg = '3 - Country Exist for existing TrackId: No'
+        logger.info(testmsg)
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        testTrack = GT.Track(trackIdExist, tNonExistName, countryNonExist)
+        logger.info(testTrack)
+        result = gtdbV3.updateTrack(d1, testTrack)
+        logger.info(f"result={result}")
+        self.assertNotEqual(result[0], 0)
+
+        testmsg = '4 - Existing TrackId with a Unique Name and Existing Country: Yes'
+        logger.info(testmsg)
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        testTrack = GT.Track(trackIdExist, tNonExistName, GT.Country(
+            cntryID=235, cntryName='', alpha2='', alpha3='', region=''))
+        logger.info(testTrack)
+        result = gtdbV3.updateTrack(d1, testTrack)
+        logger.info(f"result={result}")
+        self.assertEqual(result[0], 0)
+
+        testmsg = "A - Null CountryId for existing TrackId: Yes"
+        logger.info(testmsg)
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        testTrack = GT.Track(trackIdExist, tNonExistName, countryNull)
+        logger.info(testTrack)
+        result = gtdbV3.updateTrack(d1, testTrack)
+        logger.info(f"result={result}")
+        self.assertEqual(result[0], 0)
+
+        logger.info(f"==== END Upate Track test\n")
+
 
 class TestTrackLayout(unittest.TestCase):
     def test_getLayout(self):

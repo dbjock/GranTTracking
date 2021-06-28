@@ -651,26 +651,6 @@ def getTrackList(dbConn):
     return result
 
 
-def initDB(dbConn, scriptPath=None):
-    """Create tables, views, indexes
-
-    PARM
-    scriptPath : path to script files *Required
-    """
-    logger.info("Database to be initilized")
-    logger.debug(f"scriptPath={scriptPath}")
-    scripts = ['createTables.sql',
-               'LoadLookUpData.sql',
-               'LoadOtherData.sql']
-    logger.debug(f'scripts to run: {scripts}')
-    gtScripts = Path(scriptPath)
-    for sFile in scripts:
-        scriptFile = gtScripts / sFile
-        logger.debug(f"Executing {scriptFile}")
-        _exeScriptFile(dbConn, scriptFileName=f'{scriptFile}')
-    logger.info("Database init completed")
-
-
 def getWeather(dbConn, id):
     """Return a Weather object from db by key
 
@@ -736,3 +716,48 @@ def getWeatherList(dbConn):
     dbConn.set_trace_callback(None)
     logger.info(f"Rows being returned: {len(result)}")
     return result
+
+
+def initDB(dbConn, scriptPath=None):
+    """Create tables, views, indexes
+
+    PARM
+    scriptPath : path to script files *Required
+    """
+    logger.info("Database to be initilized")
+    logger.debug(f"scriptPath={scriptPath}")
+    scripts = ['createTables.sql',
+               'LoadLookUpData.sql',
+               'LoadOtherData.sql']
+    logger.debug(f'scripts to run: {scripts}')
+    gtScripts = Path(scriptPath)
+    for sFile in scripts:
+        scriptFile = gtScripts / sFile
+        logger.debug(f"Executing {scriptFile}")
+        _exeScriptFile(dbConn, scriptFileName=f'{scriptFile}')
+    logger.info("Database init completed")
+
+
+def updateTrack(dbConn, trackObj):
+    """update track record
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        trackObj (track Object)
+
+    Returns:
+        list: ResultCode, ResultText
+              ResultCode 0 = Success
+              ResultCode != 0 = see ResultText for details
+    """
+    logger.debug(f"track record update {trackObj}")
+    # Sanity check - See if tracking id exists
+    testObj = getTrack(dbConn, value=trackObj.id)
+    if testObj.id == 0:  # Not found in db
+        return [1, f"track id {trackObj.id} not in database."]
+
+    theVals = {'trackID': trackObj.id, 'trackName': trackObj.name,
+               'cntryID': trackObj.country.id}
+    sql = "UPDATE track SET name = :trackName, country_id = :cntryID WHERE id = :trackID"
+
+    return _exeDML(dbConn, sql, theVals)
