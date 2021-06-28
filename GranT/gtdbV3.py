@@ -416,6 +416,55 @@ def getCountry(dbConn, countryId):
     return country
 
 
+def getLayout(dbConn, layoutId):
+    """Gets a single Track Layout record from database.
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        layoutId (int): Track layoutID number to get from database.
+    Returns:
+        TrackLayout Object: IF TrackLayoutObject.id == 0 then nothing found
+    """
+    logger.info(f"Getting track layout id {layoutId}")
+    sql = """SELECT id as layoutId, name as layoutName, miles, track_id, circuit_id FROM track_layout WHERE layoutId=?"""
+    theVals = (layoutId,)
+    # Execute the SQL
+    logger.debug(f"sql: {sql}")
+    logger.debug(f"sql={sql}")
+    logger.debug(f"theVals={theVals}")
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql, theVals)
+        row = cur.fetchone()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+
+    # Disable full sql traceback
+    dbConn.set_trace_callback(None)
+
+    if row:  # Populate trackLayout obj
+        logger.info(f"Found track layout id {layoutId}")
+        xTrack = getTrack(dbConn, key='trackId', value=row[3])
+        xCircuit = getCircuit(dbConn, key='id', value=row[4])
+        xTrackLayout = gtClass.TrackLayout(
+            row[0], row[1], miles=row[2], trackObj=xTrack, circuitObj=xCircuit)
+
+    else:  # Create blank trackLayout obj (no data returned)
+        logger.info(f"Unable to find track layout id {layoutId}")
+        logger.debug(f"creating empty tracklayout object")
+        xCircuit = getCircuit(dbConn, key='id', value=0)
+        xTrack = getTrack(dbConn, key='trackId', value=0)
+        xTrackLayout = gtClass.TrackLayout(
+            id=0, name=None, miles=None, trackObj=xTrack, circuitObj=xCircuit)
+
+    logger.debug(f"returning object xTrackLayout={xTrackLayout} ")
+    return xTrackLayout
+
+
 def getLayoutList(dbConn, trackId):
     """Get a list of track layouts for a trackId
 

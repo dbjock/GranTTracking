@@ -318,6 +318,25 @@ class TestTrack(unittest.TestCase):
 
 
 class TestTrackLayout(unittest.TestCase):
+    def test_getLayout(self):
+        logger.info("==== BEGIN Get/Read track Layout")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+        logger.info("Get Track Layout by Track Layout ID: Exists")
+        testVal = 2
+        testLayout = gtdbV3.getLayout(d1, testVal)
+        logger.info(f"testLayout={testLayout}")
+        self.assertEqual(testLayout.id, testVal)
+
+        logger.info("Get Track Layout by Track Layout ID: Non Exists")
+        testVal = 999
+        testLayout = gtdbV3.getLayout(d1, testVal)
+        logger.info(f"testLayout={testLayout}")
+        self.assertEqual(testLayout.id, 0)
+
+        logger.info("==== END Get/Read track Layout\n")
+
     def test_getLayoutList(self):
         logger.info("==== BEGIN get Layout List")
         d1 = gtdbV3.create_connection(":memory:")
