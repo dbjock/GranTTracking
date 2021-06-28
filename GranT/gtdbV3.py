@@ -781,6 +781,37 @@ def updateTrack(dbConn, trackObj):
     return _exeDML(dbConn, sql, theVals)
 
 
+def updateTrackLayout(dbConn, uLayout):
+    """Update the track layout record in database
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        uLayout (TrackLayout Object) : Updated TrackLayout Object
+
+    Returns:
+        list: ResultCode, ResultText
+              ResultCode 0 = Success
+              ResultCode != 0 = see ResultText for details
+    """
+    logger.info(f"Updating Track Layout {uLayout}")
+
+    tResult = validateTrackLayout(dbConn, uLayout)
+    if tResult[0]:  # Tests passed
+        logger.info("Updating track layout id: {uLayout.id}")
+        sql = "UPDATE track_layout SET name = :layoutName, miles = :miles, track_id = :trackId, circuit_id = :circuitId"
+        theVals = {'layoutName': uLayout.name, 'miles': uLayout.miles,
+                   'circuitId': uLayout.circuit.id, 'trackId': uLayout.track.id}
+        logger.debug("sql={sql}")
+        logger.debug("theVals = {theVals}")
+        result = _exeDML(dbConn, sql, theVals)
+    else:
+        logger.warning(tResult[1])
+        result = (1, tResult[1])
+
+    logger.debug(f"returning: {result}")
+    return result
+
+
 def validateTrackLayout(dbConn, trackLayout):
     """Validates TrackLayout rules and returns results
 

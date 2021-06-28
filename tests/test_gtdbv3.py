@@ -498,6 +498,84 @@ class TestTrackLayout(unittest.TestCase):
 
         logger.info("==== END Deleting Track Layout")
 
+    def test_updateTrackLayout(self):
+        logger.info("===== BEGIN Track Layout Update ")
+        d1 = gtdbV3.create_connection(":memory:")
+        testmsg = '1 - Circuit ID Exist: No, Miles a number: Yes, Unique name for Track: Yes'
+        logger.info(testmsg)
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        xLayout = GT.TrackLayout(33, 'IamUnique', 4, GT.Track(7, "Note Tested", GT.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(1, "Note Tested"))
+        xLayout.circuit.id = 0
+        logger.info(f'xLayout={xLayout}')
+        result = gtdbV3.updateTrackLayout(d1, xLayout)
+        logger.info(f"result={result}")
+        self.assertNotEqual(result[0], 0)
+
+        testmsg = '2 - Circuit ID Exist: Yes, Miles a number: No (Null), Unique name for Track: Yes'
+        logger.info(testmsg)
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        xLayout = GT.TrackLayout(33, 'IamUnique', 4, GT.Track(7, "Note Tested", GT.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(1, "Note Tested"))
+        xLayout.miles = None
+        logger.info(f'xLayout={xLayout}')
+        result = gtdbV3.updateTrackLayout(d1, xLayout)
+        logger.info(f"result={result}")
+        self.assertNotEqual(result[0], 0)
+
+        testmsg = '2a - Circuit ID Exist: Yes, Miles a number: No (string), Unique name for Track: Yes'
+        logger.info(testmsg)
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        xLayout = GT.TrackLayout(33, 'IamUnique', 4, GT.Track(7, "Note Tested", GT.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(1, "Note Tested"))
+        xLayout.miles = '1 mile'
+        logger.info(f'xLayout={xLayout}')
+        result = gtdbV3.updateTrackLayout(d1, xLayout)
+        logger.info(f"result={result}")
+        self.assertNotEqual(result[0], 0)
+
+        testmsg = '3 - Circuit ID Exist: Yes, Miles a number: Yes, Unique name for Track: No'
+        logger.info(testmsg)
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        xLayout = GT.TrackLayout(33, 'IamUnique', 4, GT.Track(7, "Note Tested", GT.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(1, "Note Tested"))
+        xLayout.name = 'Infield B II'
+        logger.info(f'xLayout={xLayout}')
+        result = gtdbV3.updateTrackLayout(d1, xLayout)
+        logger.info(f"result={result}")
+        self.assertNotEqual(result[0], 0)
+
+        testmsg = '4 - Circuit ID Exist: Yes, Miles a number: Yes, Unique name for Track: Yes'
+        logger.info(testmsg)
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        xLayout = GT.TrackLayout(33, 'IamUnique', 4, GT.Track(7, "Note Tested", GT.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(1, "Note Tested"))
+        logger.info(f'xLayout={xLayout}')
+        result = gtdbV3.updateTrackLayout(d1, xLayout)
+        logger.info(f"result={result}")
+        self.assertEqual(result[0], 0)
+
+        testmsg = '5 - Testing if duplicate nulls will be caught, so record will not be saved'
+        logger.info(testmsg)
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        xLayout = GT.TrackLayout(33, 'IamUnique', 4, GT.Track(7, "Note Tested", GT.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(1, "Note Tested"))
+        xLayout.name = None
+        logger.info(f'xLayout={xLayout}')
+        result = gtdbV3.updateTrackLayout(d1, xLayout)
+        logger.info(f"result={result}")
+        self.assertNotEqual(result[0], 0)
+
+        testmsg = '6 - Track Id does not exist'
+        logger.info(testmsg)
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        xLayout = GT.TrackLayout(33, 'IamUnique', 4, GT.Track(0, "Note Tested", GT.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)), GT.Circuit(1, "Note Tested"))
+        logger.info(f'xLayout={xLayout}')
+        result = gtdbV3.updateTrackLayout(d1, xLayout)
+        logger.info(f"result={result}")
+        self.assertNotEqual(result[0], 0)
+
 
 class TestWeather(unittest.TestCase):
     def test_getWeatherList(self):
