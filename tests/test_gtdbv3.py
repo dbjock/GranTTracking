@@ -382,6 +382,65 @@ class TestTrack(unittest.TestCase):
 
 
 class TestTrackLayout(unittest.TestCase):
+
+    def test_addTrackLayout(self):
+        logger.info("==== BEGIN Add Track Layout")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+        logger.info(
+            "Add Track Layout : Layout name Dupe for same track")
+        testLayout = GT.TrackLayout(id=0, name=None, miles=None, trackObj=GT.Track(id=0, name=None, countryObj=GT.Country(
+            cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)), circuitObj=GT.Circuit(id=0, name=None))
+        testLayout.name = "Infield B"
+        testLayout.miles = 9999
+        testLayout.track.id = 7
+        testLayout.circuit.id = 3
+        result = gtdbV3.addLayout(d1, testLayout)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(result[0], 0)
+
+        logger.info(
+            "Add Track Layout : Layout name 'None' for same track")
+        testLayout = GT.TrackLayout(id=0, name=None, miles=None, trackObj=GT.Track(id=0, name=None, countryObj=GT.Country(
+            cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)), circuitObj=GT.Circuit(id=0, name=None))
+        testLayout.name = None
+        testLayout.miles = 9999
+        testLayout.track.id = 7
+        testLayout.circuit.id = 3
+        result = gtdbV3.addLayout(d1, testLayout)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed Layout name 'None' for same track")
+
+        logger.info(
+            "Add Track Layout : Layout name empty string for same track")
+        testLayout = GT.TrackLayout(id=0, name=None, miles=None, trackObj=GT.Track(id=0, name=None, countryObj=GT.Country(
+            cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)), circuitObj=GT.Circuit(id=0, name=None))
+        testLayout.name = ""
+        testLayout.miles = 9999
+        testLayout.track.id = 7
+        testLayout.circuit.id = 3
+        result = gtdbV3.addLayout(d1, testLayout)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Add Track Layout : Layout name empty string for same track")
+
+        logger.info(
+            "Add Track Layout : Layout name non existant for same track")
+        testLayout = GT.TrackLayout(id=0, name=None, miles=None, trackObj=GT.Track(id=0, name=None, countryObj=GT.Country(
+            cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)), circuitObj=GT.Circuit(id=0, name=None))
+        testLayout.name = "I am a new track layout"
+        testLayout.miles = 9999
+        testLayout.track.id = 7
+        testLayout.circuit.id = 3
+        result = gtdbV3.addLayout(d1, testLayout)
+        logger.info(f"result is {result}")
+        self.assertEqual(
+            result[0], 0, "Failed Add Track Layout : Layout name non existant for same track")
+
+        logger.info("==== END Add Track Layout")
+
     def test_getLayout(self):
         logger.info("==== BEGIN Get/Read track Layout")
         d1 = gtdbV3.create_connection(":memory:")

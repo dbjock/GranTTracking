@@ -8,14 +8,6 @@ from GranT import GTClasses as gtClass
 
 logger = logging.getLogger(__name__)
 
-# """Create a connection to Sqlite3 db
-
-# Args:
-#   dbfile : database file to connect
-# Returns:
-#   Sqlite3 connection object or None
-# """
-
 
 def create_connection(dbLoc=":memory:"):
     """Create a connection to a sqlite3 db.
@@ -212,6 +204,32 @@ def addTrack(dbConn, layout):
         return result
     else:
         logger.info("Successfully saved new track_layout record")
+
+    logger.debug(f"returning: {result}")
+    return result
+
+
+def addLayout(dbConn, trackLayout):
+    """Adds a Track Layout record
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        trackLayout : TrackLayout Object
+
+    Returns:
+        list: ResultCode, ResultText
+              ResultCode 0 = Success
+              ResultCode != 0 = see ResultText for details
+    """
+    logger.debug(f"addTrackLayout: trackLayout={trackLayout}")
+    logger.info(
+        f"Adding track layout {trackLayout.name} for track {trackLayout.track.name}.")
+    tResult = validateTrackLayout(dbConn, trackLayout)
+    if tResult[0]:  # Tests passed
+        result = _addLayoutRec(dbConn, trackLayout)
+    else:
+        logger.warning(tResult[1])
+        result = (1, tResult[1])
 
     logger.debug(f"returning: {result}")
     return result
@@ -761,3 +779,52 @@ def updateTrack(dbConn, trackObj):
     sql = "UPDATE track SET name = :trackName, country_id = :cntryID WHERE id = :trackID"
 
     return _exeDML(dbConn, sql, theVals)
+
+
+def validateTrackLayout(dbConn, trackLayout):
+    """Validates TrackLayout rules and returns results
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        trackLayout (TrackLayout object): Track Layout that is being saved
+
+    Returns:
+            list: (True/False, msg)
+            True = Tests passed
+            False = See msg for what did not pass
+    """
+    logger.debug(f"trackLayout={trackLayout}")
+    # Layout name must contain at least one charcter
+    logger.info(
+        f"Checking layout name contains at lease one character")
+    if trackLayout.name == None or trackLayout.name == "":
+        msg = f"Track Layout name must contain at least one character"
+        result = (False, msg)
+        logger.info(f"returning = {result}")
+        return result
+
+    # Layout name must be unique for the Track
+    logger.info(
+        f"Checking if layout [{trackLayout.name}] already exists for track (case insensitve)")
+    layoutList = getLayoutList(dbConn, trackLayout.track.id)
+    for row in layoutList:
+        logger.debug(f"tlayoutId={row[0]}. checking layout name: {row[1]}")
+        if row[1].upper() == trackLayout.name.upper():  # layout name exist for track
+            msg = f"Layout name [{trackLayout.name}] for Trackid [{trackLayout.track.id}] already exists"
+            result = (False, msg)
+            logger.info(f"returning = {result}")
+            return result
+
+    # Miles is not a string. (Null is allowed in this test)
+    logger.info(f"Checking miles [{trackLayout.miles}] is not a string")
+    if isinstance(trackLayout.miles, str):  # miles is a string
+        result = (False, f"Miles must not contain letters")
+        logger.info(f"returning = {result}")
+        return result
+    # Miles is not null. not tested. DB should provide integrity error: NOT NULL constraint failed
+    # Circuit ID existance not tested. DB should provide integrity error: FOREIGN KEY constraint failed
+    # Track ID existance not tested. DB should provide integrity error: FOREIGN KEY constraint failed
+    # All tests passed
+    result = (True, "Track Layout Tests Passed")
+    logger.info(f"returning = {result}")
+    return result
