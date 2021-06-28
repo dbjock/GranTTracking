@@ -249,6 +249,29 @@ class TestTrack(unittest.TestCase):
 
         logger.info("==== END TEST Add Track")
 
+    def test_deleteTrack(self):
+        logger.info("===== BEGIN Delete Track")
+        d1 = gtdbV3.create_connection(":memory:")
+
+        # Delete Track - Track Exist: Yes, Track Layouts: Yes
+        testmsg = '1 - Delete existing TrackId'
+        logger.info(testmsg)
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        trackId = 6  # Track has multiple layouts
+        result = gtdbV3.deleteTrack(d1, trackId)
+        logger.info(f"result={result}")
+        self.assertEqual(result[0], 0)
+
+        testmsg = '2 - Delete existing TrackId'
+        logger.info(testmsg)
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        trackId = 99999  # Track has multiple layouts
+        result = gtdbV3.deleteTrack(d1, trackId)
+        logger.info(f"result={result}")
+        self.assertEqual(result[0], 0)
+
+        logger.info("===== END Delete Track")
+
     def test_getTrack(self):
         logger.info("==== BEGIN Get/read Track")
         d1 = gtdbV3.create_connection(":memory:")

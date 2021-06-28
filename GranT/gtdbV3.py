@@ -217,6 +217,52 @@ def addTrack(dbConn, layout):
     return result
 
 
+def deleteTrack(dbConn, trackId):
+    """Delete track and all related track layouts from db
+
+    Args:
+    dbConn (sqlite3.connect): Database connection
+            trackId (int): UniqueID of the track in the db
+
+    Returns:
+            list: ResultCode, ResultText
+                  ResultCode == 0 : successful
+                  Resultcode != 0 : See ResultText for details
+    """
+    logger.info(
+        f"Delete track trackId={trackId} and related track layouts.")
+    result = (1, "method is not ready yet")
+    # 1-Get and delete track_layout records for track id
+    #   Get list of track_layouts for trackid
+    logger.info(f"Getting track layouts for trackid {trackId}")
+    trackLayouts = getLayoutList(dbConn, trackId)
+    logger.info(f"track layouts to delete: {len(trackLayouts)}")
+    logger.info(f"trackLayouts = {trackLayouts}")
+    #   Delete each track layout
+    for tLayout in trackLayouts:
+        layoutId = tLayout[0]
+        logger.debug(f"Deleting trackLayoutID {layoutId}: {tLayout}")
+        result = deleteTrackLayout(dbConn, layoutId)
+        if result[0] != 0:  # error with delete. Stop deleting
+            logger.warning(
+                f"problem deleting track layout id={layoutId}. See {result}.")
+            return result
+
+    # 2-If that was successfull then delete track
+    sql = "DELETE FROM track WHERE id = ?"
+    theVals = (trackId,)
+    logger.debug(f"sql={sql}")
+    logger.debug(f"theVals={theVals}")
+    result = _exeDML(dbConn, sql, theVals)
+    if result[0] == 0:
+        result[1] = f"track id={trackId} deleted"
+    else:
+        logger.warning(
+            f"problem deleting track id={trackId}. See {result}.")
+
+    return result
+
+
 def deleteTrackLayout(dbConn, layoutId):
     """Delete track layout from db
 
