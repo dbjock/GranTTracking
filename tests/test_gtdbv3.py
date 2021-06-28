@@ -292,3 +292,19 @@ class TestTrack(unittest.TestCase):
             testList[0][0], testVal, "Failed. First track or should have track id 17")
 
         logger.info(f"==== END get Tracks\n")
+
+
+class TestTrackLayout(unittest.TestCase):
+    def test_getLayoutList(self):
+        logger.info("==== BEGIN get Layout List")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+        logger.info("Get Track Layout List")
+        testVal = 5  # Track ID 5
+        layoutList = gtdbV3.getLayoutList(d1, testVal)
+        logger.info(f"layoutList={layoutList}")
+        self.assertEqual(layoutList[0][0], 18,
+                         "Failed getting correct trackLayoutId from list")
+
+        logger.info("==== END get Layout List")

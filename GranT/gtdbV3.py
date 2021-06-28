@@ -341,6 +341,41 @@ def getCountry(dbConn, countryId):
     return country
 
 
+def getLayoutList(dbConn, trackId):
+    """Get a list of track layouts for a trackId
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        trackId (int): The trackId of the track the layout list is for
+    Returns:
+        list: (layoutId,layoutName)
+    """
+    logger.info(f"Getting track layout list: trackId={trackId}")
+    selectSQL = """SELECT layoutId, layout, miles FROM vTrackLayout"""
+    orderBySQL = "ORDER BY layout"
+    whereSQL = "WHERE trackId = ?"
+    sql = f"{selectSQL} {whereSQL} {orderBySQL}"
+    theVals = (trackId,)
+    logger.debug(f"sql = {sql}")
+    logger.debug(f"theVals = {theVals}")
+
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql, theVals)
+        result = cur.fetchall()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback to logger.debug
+    dbConn.set_trace_callback(None)
+
+    logger.info(f"Returning {len(result)} rows")
+    return result
+
+
 def getLeague(dbConn, key='id', value=None):
     """Get a league object from database by various fields
 
