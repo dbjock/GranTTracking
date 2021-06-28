@@ -308,3 +308,27 @@ class TestTrackLayout(unittest.TestCase):
                          "Failed getting correct trackLayoutId from list")
 
         logger.info("==== END get Layout List")
+
+    def test_deleteTrackLayout(self):
+        logger.info("==== BEGIN Deleting Track Layout")
+        d1 = gtdbV3.create_connection(":memory:")
+
+        logger.info("Delete track layout exists : yes")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        layoutId = 29
+        logger.info(f"layoutId={layoutId}")
+        result = gtdbV3.deleteTrackLayout(d1, layoutId)
+        logger.info(f"result={result}")
+        errMsg = "delete existing track layout unsuccessful"
+        self.assertEqual(result[0], 0, errMsg)
+
+        logger.info("Delete track layout exists : no")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        layoutId = 99999
+        logger.info(f"layoutId={layoutId}")
+        result = gtdbV3.deleteTrackLayout(d1, layoutId)
+        logger.info(f"result={result}")
+        errMsg = "delete non existing track layout unsuccessful"
+        self.assertEqual(result[0], 0, errMsg)
+
+        logger.info("==== END Deleting Track Layout")

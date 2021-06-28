@@ -217,6 +217,35 @@ def addTrack(dbConn, layout):
     return result
 
 
+def deleteTrackLayout(dbConn, layoutId):
+    """Delete track layout from db
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        layoutId (int): UniqueID of the track layout in the db
+
+    Returns:
+        list: ResultCode, ResultText
+              ResultCode == 0 : successful
+              Resultcode != 0 : See ResultText for details
+    """
+    logger.info(f"Delete track layout id={layoutId}.")
+    result = (1, "method is not ready yet")
+    sql = "DELETE FROM track_layout WHERE id = ?"
+    theVals = (layoutId,)
+    logger.debug(f"sql={sql}")
+    logger.debug(f"theVals={theVals}")
+    result = _exeDML(dbConn, sql, theVals)
+    if result[0] == 0:
+        result[1] = f"track layout id={layoutId} deleted"
+    else:
+        logger.warning(
+            f"problem deleting track layout id={layoutId}. See {result}.")
+
+    logger.info(f"returning {result}")
+    return result
+
+
 def getCircuit(dbConn, key='id', value=None):
     """Get circuit record from db
 
