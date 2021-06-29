@@ -584,6 +584,54 @@ def getLeagueList(dbConn):
     return result
 
 
+def getRaceCollection(dbConn, rcId):
+    """Get a race collection object from database
+
+    Args:
+        dbConn ([type]): [description]
+        rcId (int): Race collection id
+
+    Returns:
+        Race Collection objection
+        IF raceCollection.id == 0 then race Collection not found
+    """
+    logger.info(f"Getting Race Collection by id: {rcId}")
+    selectSQL = "SELECT id as collectionId, name, description, league_id FROM race_collection"
+    whereSQL = "WHERE collectionId = ?"
+    value = rcId
+    sql = f"{selectSQL} {whereSQL}"
+    theVals = (value,)
+    logger.debug(f"sql = {sql}")
+    logger.debug(f"theVals = {theVals}")
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql, theVals)
+        row = cur.fetchone()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback
+    dbConn.set_trace_callback(None)
+    if row:  # populate the raceCollection object
+        logger.debug("Found race collection")
+        logger.debug(f"row={row}")
+        league = getLeague(dbConn, key='id', value=row[3])
+        logger.debug(f"league={league}")
+        raceCollection = gtClass.RaceCollection(
+            id=row[0], name=row[1], desc=row[2], leagueObj=league)
+
+    else:  # create a blank raceCollection object
+        league = getLeague(dbConn, key='id', value=0)
+        raceCollection = gtClass.RaceCollection(
+            id=0, name=None, desc=None, leagueObj=league)
+
+    logger.debug(f"raceCollection={raceCollection}")
+    return raceCollection
+
+
 def getTrack(dbConn, key='trackId', value=None):
     """Gets a single Track record from database based on key and value passed.
 

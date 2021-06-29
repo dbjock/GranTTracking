@@ -149,6 +149,25 @@ class TestLeagues(unittest.TestCase):
         logger.info(f"==== END Get/read League\n")
 
 
+class TestRaceCollection(unittest.TestCase):
+
+    def test_getRaceCollection(self):
+        logger.info("==== BEGIN Get Race Collection")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+        logger.info("Getting an existing Race Collection")
+        testVal = 1
+        r = gtdbV3.getRaceCollection(d1, rcId=testVal)
+        self.assertEqual(r.id, 1, "Failed to get existing race collection")
+
+        logger.info("Getting non existing Race Collection")
+        testVal = 9999
+        r = gtdbV3.getRaceCollection(d1, rcId=testVal)
+        self.assertEqual(
+            r.id, 0, "Failed getting non existing race collection")
+
+
 class TestTrack(unittest.TestCase):
     def test_addTrack(self):
         logger.info(
