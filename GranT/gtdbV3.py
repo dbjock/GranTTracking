@@ -640,6 +640,41 @@ def getRaceCollection(dbConn, rcId):
     return raceCollection
 
 
+def getRaceCollectionList(dbConn, leagueId):
+    """Returns Race Collection list for the leagueID.
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        leagueId (int): leagueId to get race collections for
+
+    Returns:
+        list: (id,name,desc)
+    """
+    logger.info(
+        f"Getting list of race collections for a leagueID {leagueId}")
+    selectSQL = "SELECT id, name, description from race_collection"
+    whereSQL = "WHERE league_id = ?"
+    orderBySQL = "Order by name"
+    sql = f"{selectSQL} {whereSQL} {orderBySQL}"
+    theVals = (leagueId,)
+    logger.debug(f"sql = {sql}")
+    logger.debug(f"theVals = {theVals}")
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql, theVals)
+        result = cur.fetchall()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback to logger.debug
+    dbConn.set_trace_callback(None)
+    logger.info(f"Rows being returned: {len(result)}")
+    return result
+
+
 def getTrack(dbConn, key='trackId', value=None):
     """Gets a single Track record from database based on key and value passed.
 

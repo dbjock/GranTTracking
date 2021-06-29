@@ -167,6 +167,24 @@ class TestRaceCollection(unittest.TestCase):
         self.assertEqual(
             r.id, 0, "Failed getting non existing race collection")
 
+    def test_getRaceCollectionList(self):
+        logger.info("=== BEGIN getRaceCollectionList testing")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+        logger.info("Getting list for existing League")
+        testVal = 2  # leagueId 2 should bring back at least 2 elements
+        testList = gtdbV3.getRaceCollectionList(d1, leagueId=testVal)
+        logger.info(f"testList = {testList}")
+        self.assertEqual(testList[0][0], 12, "Failed. First row incorrect")
+
+        logger.info("Getting list for non existing league")
+        testVal = 9999  # leagueId 10 does not exist
+        testList = gtdbV3.getRaceCollectionList(d1, leagueId=testVal)
+        logger.info(f"testList = {testList}")
+        self.assertEqual(len(testList), 0,
+                         "Failed. Getting list from non exist League")
+
 
 class TestTrack(unittest.TestCase):
     def test_addTrack(self):
