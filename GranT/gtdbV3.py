@@ -49,12 +49,13 @@ def _addLayoutRec(dbConn, tLayout):
     """Internal use only. Add layout rec to db with no checks
 
     Args:
-            tLayout (TrackLayout Object)
+        dbConn (sqlite3.connect): Database connection
+        tLayout (TrackLayout Object)
 
     Returns:
-            list: ResultCode, ResultText
-            ResultCode = 0 Successfull
-            ResultCode != 0 See ResultText for details
+        list: ResultCode, ResultText
+        ResultCode = 0 Successfull
+        ResultCode != 0 See ResultText for details
     """
     logger.debug(f"trackobj = {tLayout}")
     theVals = {'layoutName': tLayout.name, 'miles': tLayout.miles,
@@ -132,7 +133,8 @@ def addTrack(dbConn, layout):
     """Adding a Track and a Layout for it
 
     Args:
-            layout : Track layout object
+        dbConn (sqlite3.connect): Database connection
+        layout : Track layout object
 
     Returns:
             list: ResultCode, ResultText
@@ -239,8 +241,8 @@ def deleteTrack(dbConn, trackId):
     """Delete track and all related track layouts from db
 
     Args:
-    dbConn (sqlite3.connect): Database connection
-            trackId (int): UniqueID of the track in the db
+        dbConn (sqlite3.connect): Database connection
+        trackId (int): UniqueID of the track in the db
 
     Returns:
             list: ResultCode, ResultText
@@ -362,6 +364,9 @@ def getCircuit(dbConn, key='id', value=None):
 
 def getCircuitList(dbConn):
     """Get a list of all the circuits
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
 
     Returns: list(id, name)
     """
@@ -522,11 +527,12 @@ def getLeague(dbConn, key='id', value=None):
     """Get a league object from database by various fields
 
     Args:
-            key (str, optional): The key/field to get object from db. Defaults to 'id'.
-            value (required to return something): The value the key must equal to return the object.
+        dbConn (sqlite3.connect): Database connection
+        key (str, optional): The key/field to get object from db. Defaults to 'id'.
+        value (required to return something): The value the key must equal to return the object.
 
     Returns:
-            LeagueObject. If nothing found then LeagueObj.id=0
+        LeagueObject. If nothing found then LeagueObj.id=0
     """
     logger.info(f"Getting a League: {key}={value}")
     selectSQL = "SELECT id, name, sortord FROM league"
@@ -558,10 +564,12 @@ def getLeague(dbConn, key='id', value=None):
 
 def getLeagueList(dbConn):
     """Returns a list of all the leagues in the db.
-    Order will be by the sortorder in db
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
 
     Returns:
-            list (leagueID, leagueName)
+        list (leagueID, leagueName)
     """
     logger.info("Getting list of Leagues")
     selectSQL = "SELECT id, name FROM league"
@@ -588,7 +596,7 @@ def getRaceCollection(dbConn, rcId):
     """Get a race collection object from database
 
     Args:
-        dbConn ([type]): [description]
+        dbConn (sqlite3.connect): Database connection
         rcId (int): Race collection id
 
     Returns:
@@ -636,7 +644,7 @@ def getTrack(dbConn, key='trackId', value=None):
     """Gets a single Track record from database based on key and value passed.
 
     Args:
-        dbConn ([type]): [description]
+        dbConn (sqlite3.connect): Database connection
         key (str, optional): Column to search on. trackId, or track. Defaults to 'trackId'.
         value (optional): Value you are looking for. Defaults to None.
 
@@ -787,8 +795,9 @@ def getWeatherList(dbConn):
 def initDB(dbConn, scriptPath=None):
     """Create tables, views, indexes
 
-    PARM
-    scriptPath : path to script files *Required
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        scriptPath (str): path to script files
     """
     logger.info("Database to be initilized")
     logger.debug(f"scriptPath={scriptPath}")
