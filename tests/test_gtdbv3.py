@@ -270,6 +270,29 @@ class TestRaceCollection(unittest.TestCase):
                          "Failed. Getting list from non exist League")
 
 
+class TestRacetype(unittest.TestCase):
+    def test_getRaceType(self):
+        logger.info("==== BEGIN Get/read Race Type")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+        logger.info("Getting a list of race types")
+        testList = gtdbV3.getRaceTypeList(d1)
+        logger.info(f"testList={testList}")
+        self.assertGreater(
+            len(testList), 1, "FAILED: Getting race type list. More than one race type should be returned")
+        self.assertGreater(
+            len(testList[0]), 1, "FAILED: Getting race type list. There should be at least 2 fields for each row")
+
+        logger.info("Getting a race type")
+        testRt = gtdbV3.getRaceType(d1, id=1)
+        logger.info(f"testRt={testRt}")
+        self.assertEqual(
+            testRt.id, 1, "Failed: Getting a race type. Race type id = 1")
+
+        logger.info("=== END Get/read Race Type")
+
+
 class TestTrack(unittest.TestCase):
     def test_addTrack(self):
         logger.info(

@@ -716,6 +716,75 @@ def getRaceCollectionList(dbConn, leagueId):
     return result
 
 
+def getRaceType(dbConn, id):
+    """Get a Race Type from db by id
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        id (int): Race Type unique id
+
+    Returns:
+        RaceTypeObj: Race type object
+    """
+    selectSQL = "SELECT id, name FROM race_type"
+    whereSQL = "WHERE id = ?"
+    value = id
+    theVals = (value,)
+    sql = f"{selectSQL} {whereSQL}"
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql, theVals)
+        row = cur.fetchone()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback
+    dbConn.set_trace_callback(None)
+    logger.debug(f"row={row}")
+
+    if row:  # Create a racetype object
+        logger.debug("Found race type")
+        logger.debug(f"row={row}")
+        rt = gtClass.RaceType(id=row[0], name=row[1])
+    else:  # create a blank racetype object
+        rt = gtClass.RaceType(id=0, name="")
+
+    logger.debug(f"rt={rt}")
+    return rt
+
+
+def getRaceTypeList(dbConn):
+    """Return a list of all the race types in db
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+
+    Returns:
+            list: (raceTypeid, raceTypeName)
+    """
+    logger.info("Getting list of race types from db")
+    selectSQL = "SELECT id, name FROM race_type ORDER by name"
+    sql = selectSQL
+    logger.debug(f"sql = {sql}")
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql)
+        result = cur.fetchall()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback
+    dbConn.set_trace_callback(None)
+    logger.debug(f"Returning {len(result)} rows")
+    return result
+
+
 def getTrack(dbConn, key='trackId', value=None):
     """Gets a single Track record from database based on key and value passed.
 
