@@ -151,6 +151,90 @@ class TestLeagues(unittest.TestCase):
 
 class TestRaceCollection(unittest.TestCase):
 
+    def test_addRaceCollection(self):
+        logger.info("=== BEGIN Add RaceCollection testing")
+        d1 = gtdbV3.create_connection(":memory:")
+        existingLeague = GT.League(id=1, name='NA', sortord=0)
+
+        # Add with existing name for league
+        # Note- League 1 should have race collection = "Clubman Cup"
+        logger.info(
+            "Add Race Collection : name existing for League")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        testCollection = GT.RaceCollection(
+            id=0, name="Clubman Cup", desc="", leagueObj=existingLeague)
+        logging.info(f"Saving collection={testCollection}")
+        result = gtdbV3.addRaceCollection(d1, testCollection)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed. Add Race Collection : name existing for League")
+
+        # Add Collection name is null
+        logger.info(
+            "Add Race Collection : name=None, League=existing")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        testCollection = GT.RaceCollection(
+            id=0, name=None, desc="", leagueObj=existingLeague)
+        logging.info(f"Saving collection={testCollection}")
+        result = gtdbV3.addRaceCollection(d1, testCollection)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed. Add Race Collection : name=None, League=existing")
+
+        # Add collection with name=""
+        logger.info(
+            "Add Race Collection : name='', League=existing")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        testCollection = GT.RaceCollection(
+            id=0, name="", desc="", leagueObj=existingLeague)
+        logging.info(f"Saving collection={testCollection}")
+        result = gtdbV3.addRaceCollection(d1, testCollection)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed. Add Race Collection : name='', League=existing")
+
+        # Add with existing collection ID
+        #    -Not tested as the collection id provided in the collection object
+        #     is ignored/not used. The SQL to add/insert the collection object
+        #     does not provide the id and sqlite will auto generate
+
+        # Add with with non existing league id >0
+        logger.info(
+            "Add Race Collection : Non existing League using 9999")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        xLeague = GT.League(id=99999, name='NA', sortord=0)
+        testCollection = GT.RaceCollection(
+            id=0, name="I am brand new", desc="", leagueObj=xLeague)
+        logging.info(f"Saving collection={testCollection}")
+        result = gtdbV3.addRaceCollection(d1, testCollection)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed. Add Race Collection : Non existing League using 9999")
+
+        # Add with with league id 0
+        logger.info(
+            "Add Race Collection : League ID 0")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        xLeague = GT.League(id=0, name='NA', sortord=0)
+        testCollection = GT.RaceCollection(
+            id=0, name="I am brand new", desc="", leagueObj=xLeague)
+        logging.info(f"Saving collection={testCollection}")
+        result = gtdbV3.addRaceCollection(d1, testCollection)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed. Add Race Collection : League ID 0")
+
+        logger.info(
+            "Add Race Collection : non existant name, existing League")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        goodCollection = GT.RaceCollection(
+            id=0, name="I am brand new", desc="", leagueObj=existingLeague)
+        logging.info(f"Saving collection={goodCollection}")
+        result = gtdbV3.addRaceCollection(d1, goodCollection)
+        logger.info(f"result is {result}")
+        self.assertEqual(
+            result[0], 0, "Failed: Add Race Collection : non existant name, existing League")
+
     def test_getRaceCollection(self):
         logger.info("==== BEGIN Get Race Collection")
         d1 = gtdbV3.create_connection(":memory:")
