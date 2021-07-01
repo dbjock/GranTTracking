@@ -237,6 +237,46 @@ def addLayout(dbConn, trackLayout):
     return result
 
 
+def addRace(dbConn, race):
+    """Adding a Race to database
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        race ([Object]): The race object to add
+
+    Returns:
+        list: ResultCode, ResultText
+              ResultCode == 0 Successful
+              ResultCode !=0 Unsuccessful, see ResultText
+    """
+    logger.debug(f"addRace: race={race}")
+    logger.info(
+        f"Adding race {race.name} for Race Collection {race.raceCollection.name}")
+    tResult = validateRace(dbConn, race)
+    if tResult[0]:  # Tests passed - Save the Race
+        sql = "INSERT INTO race (name, tl_id, rc_id,racetime,weather_id,limits,type_id,prize1,prize2,prize3,notes) VALUES (:name, :trackLayoutID, :raceColID,:racetime,:weather_id, :limits, :type_id, :prize1, :prize2, :prize3, :notes)"
+        theVals = {'name': race.name,
+                   'trackLayoutID': race.trackLayout.id,
+                   'raceColID': race.raceCollection.id,
+                   'racetime': race.racetime,
+                   'weather_id': race.weather.id,
+                   'limits': race.limits,
+                   'type_id': race.raceType.id,
+                   'prize1': race.prize1,
+                   'prize2': race.prize2,
+                   'prize3': race.prize3,
+                   'notes': race.notes}
+        logger.debug(f"sql={sql}")
+        logger.debug(f"theVals={theVals}")
+        result = _exeDML(dbConn, sql, theVals)
+    else:
+        logger.warning(tResult[1])
+        result = (1, tResult[1])
+
+    logger.debug(f"returning: {result}")
+    return result
+
+
 def addRaceCollection(dbConn, raceCollection):
     """Add a Race Collection to database
 
@@ -633,6 +673,117 @@ def getLeagueList(dbConn):
     return result
 
 
+def getRace(dbConn, id):
+    """Get a Race object from database by raceId
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        id (int): The unique race ID
+
+    Returns:
+        Race Object: The race object.
+        If race.id=0 then race was not found
+    """
+    logger.info(f"Getting race from db for race id: {id}")
+    selectSQL = "SELECT id, name, tl_id, rc_id, weather_id, type_id, racetime, limits, prize1, prize2, prize3, notes FROM race"
+    whereSQL = "WHERE id = ?"
+    value = id
+    theVals = (value,)
+    sql = f"{selectSQL} {whereSQL}"
+    logger.debug(f"sql={sql}")
+    logger.debug(f"theVals={theVals}")
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql, theVals)
+        row = cur.fetchone()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback to logger.debug
+    dbConn.set_trace_callback(None)
+
+    if row:  # Create a race object
+        logger.info("Found race")
+        logger.debug(f"row={row}")
+        id = row[0]
+        name = row[1]
+        trackLayout = getLayout(dbConn, row[2])
+        raceCollection = getRaceCollection(dbConn, rcId=row[3])
+        weather = getWeather(dbConn, row[4])
+        raceType = getRaceType(dbConn, row[5])
+        racetime = row[6]
+        limits = row[7]
+        prize1 = row[8]
+        prize2 = row[9]
+        prize3 = row[10]
+        notes = row[11]
+    else:  # create a blank racetype object
+        logger.info("Race not found")
+        trackLayout = getLayout(dbConn, 0)
+        raceCollection = getRaceCollection(dbConn, rcId=0)
+        weather = getWeather(dbConn, 0)
+        raceType = getRaceType(dbConn, 0)
+        id = 0
+        name = None
+        racetime = None
+        limits = None
+        prize1 = None
+        prize2 = None
+        prize3 = None
+        notes = None
+
+    race = gtClass.Race(id=id, name=name, trackLayout=trackLayout,
+                        raceCollection=raceCollection, raceType=raceType, weather=weather)
+    race.racetime = racetime
+    race.limits = limits
+    race.prize1 = prize1
+    race.prize2 = prize2
+    race.prize3 = prize3
+    race.notes = notes
+
+    logger.debug(f"race={race}")
+    return race
+
+
+def getRaces(dbConn, raceCollectionID):
+    """Get a list of races for a Race Collection
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        raceCollectionID (int): Race Collection ID
+
+    Returns:
+        list: (raceID,raceName)
+    """
+    # Got to get a list of races for this race.raceCollection.id
+    logger.info(f"Getting race list for collection ID={raceCollectionID}")
+    selectSQL = "select r.id as raceID, r.name as RaceName FROM race as r"
+    whereSQL = "WHERE r.rc_id = ?"
+    orderBySQL = "ORDER BY r.name"
+    sql = f"{selectSQL} {whereSQL} {orderBySQL}"
+    theVals = (raceCollectionID,)
+    logger.debug(f"sql = {sql}")
+    logger.debug(f"theVals = {theVals}")
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql, theVals)
+        result = cur.fetchall()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback
+    dbConn.set_trace_callback(None)
+    logger.info(f"Returning {len(result)} rows")
+    logger.debug(f"result={result}")
+    return result
+
+
 def getRaceCollection(dbConn, rcId):
     """Get a race collection object from database
 
@@ -1011,6 +1162,135 @@ def updateTrackLayout(dbConn, uLayout):
         result = (1, tResult[1])
 
     logger.debug(f"returning: {result}")
+    return result
+
+
+def validateRace(dbConn, race):
+    """Validates the Race rules and returns results
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        race (object): Race object
+
+    Returns:
+        list: (bool,msg)
+        bool = False  - Race failed tests
+        msg = string as to why it failed
+    """
+    logger.info(f"Validating race={race}")
+    # Race name must contain at least one charcter
+    logger.debug(
+        f"Checking race name to be sure it contains at lease one character")
+    if race.name == None or race.name == "":
+        msg = f"Race name must contain at least one character"
+        result = (False, msg)
+        logger.info(f"returning = {result}")
+        return result
+    else:
+        logger.info("Passed: Race name contains one or more characters")
+
+    # Race name must be unique for the race_collection
+    logger.debug(
+        f"Checking that race name [{race.name}] is unique for race collection id {race.raceCollection.id} (case insensitve)")
+    xList = getRaces(dbConn, race.raceCollection.id)
+    for row in xList:
+        logger.debug(f"raceId={row[0]}. checking race name: {row[1]}")
+        if row[1].upper() == race.name.upper():  # layout name exist for track
+            msg = f"Race name [{race.name}] for Race ID [{race.id}] already exists"
+            result = (False, msg)
+            logger.info(f"returning = {result}")
+            return result
+    logger.info(
+        f"Passed: Race name is unique for race collection id {race.raceCollection.id}")
+
+    # Weather ID must not be zero
+    logger.debug(f"Checking for valid weather id")
+    if race.weather.id == 0:  # Invalid Weather id
+        msg = f"Race weather id must not be 0"
+        result = (False, msg)
+        logger.info(f"returning = {result}")
+        return result
+    else:
+        logger.info("Passed: Weather id is greater than zero")
+
+    # Does weather id exist
+    if getWeather(dbConn, race.weather.id).id != race.weather.id:
+        msg = f"The Race weather id : {race.weather.id} not found in database"
+        result = (False, msg)
+        logger.info(f"returning = {result}")
+        return result
+    else:
+        logger.info("Passed: Weather id found in database")
+
+    # TrackLayout id must not be zero
+    logger.debug(f"Checking for valid Track Layout")
+    if race.trackLayout.id == 0:
+        msg = f"Race Track Layout id must not be 0"
+        result = (False, msg)
+        logger.info(f"returning = {result}")
+        return result
+    else:
+        logger.info("Passed: Race Track layout id is greater than zero")
+
+    # TrackLayout must exist
+    if getLayout(dbConn, race.trackLayout.id).id == 0:
+        msg = f"The Race track layout not found in database"
+        result = (False, msg)
+        logger.info(f"returning = {result}")
+        return result
+    else:
+        logger.info("Passed: Race Track layout id found in database")
+
+    # Race type required.
+    logger.debug(f"Checking for valid racetype id")
+    if race.raceType.id == 0:
+        msg = f"Race type for race must not be 0"
+        result = (False, msg)
+        logger.info(f"returning = {result}")
+        return result
+    else:
+        logger.info("Passed: Race type id is not 0")
+    # Race type must exist
+    x = getRaceTypeList(dbConn)
+    logger.debug(f"RaceType List = {x}")
+    logger.debug(f"race.raceType.id={race.raceType.id}")
+    passed = False
+    for r in x:
+        if r[0] == race.raceType.id:  # Found the raceType id
+            passed = True
+            break
+    if passed:
+        logger.info("Passed. Race type found")
+    else:
+        msg = f"Race type for race not found in database"
+        result = (False, msg)
+        logger.info(f"returning = {result}")
+        return result
+
+    # Race Collection testing
+    logger.debug(f"Checking for valid race collection")
+    logger.debug(f"race.raceCollection.id={race.raceCollection.id}")
+    # Race Collection id must not be zero
+    if race.raceCollection.id == 0:
+        msg = f"The race collection id for the race must not be zero"
+        result = (False, msg)
+        logger.info(f"returning = {result}")
+        return result
+    else:
+        logger.info("Passed: Race collection id is not 0")
+
+    # Race collection id must exist
+    if getRaceCollection(dbConn, race.raceCollection.id).id == 0:
+        msg = f"The Race collection not found in database"
+        result = (False, msg)
+        logger.info(f"returning = {result}")
+        return result
+    else:
+        logger.info("Passed: Race collection found")
+
+    msg = "Race passed tests"
+    result = (True, msg)
+    logger.info(f"returning = {result}")
     return result
 
 
