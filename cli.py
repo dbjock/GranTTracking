@@ -16,7 +16,7 @@ from prompt_toolkit.shortcuts import radiolist_dialog
 from prompt_toolkit.shortcuts import input_dialog
 
 # App specific required
-from GranT import gtdbV2 as gtdb
+from GranT import gtdbV3 as gtdb
 from GranT import GTClasses as GT
 from GranT import gtcfg
 
@@ -50,7 +50,8 @@ log_fh.setLevel(logging.DEBUG)
 log.addHandler(log_fh)
 print(f"Logging to {logFile}")
 print(f"Connecting to db {gtcfg.dbcfg['dbFile']}")
-GTDBConn1 = gtdb.GTdb(gtcfg.dbcfg['dbFile'])
+
+dbC1 = gtdb.create_connection(gtcfg.dbcfg['dbFile'])
 
 
 def _sortTuple(tup, key):
@@ -76,8 +77,7 @@ def dbInit():
         log.warning("db init confirmed")
         x = f'<ansired><b>Database being initiliazed</b></ansired>'
         print_formatted_text(HTML(x))
-
-        GTDBConn1.initDB(scriptPath=_gtScripts)
+        gtdb.initDB(dbC1, scriptPath=_gtScripts)
 
         x = f'<ansired><b>Database initilization complete</b></ansired>'
         print_formatted_text(HTML(x))
@@ -212,7 +212,7 @@ def addCollection(leagueId):
     """
 
     log.info(f"getting league object for league id {leagueId}")
-    league = GTDBConn1.getLeague(value=leagueId)
+    league = gtdb.getLeague(dbC1, value=leagueId)
     if league.id == 0:  # League was not found
         log.warning("League not found in database")
         return [1, "League not found"]
@@ -228,7 +228,7 @@ def addCollection(leagueId):
 
     # Validate the race collection name
     log.info(f"Checking if League already has race name: '{rcName}'")
-    rcList = GTDBConn1.getRaceCollectionList(league.id)
+    rcList = gtdb.getRaceCollectionList(dbC1, league.id)
     for r in rcList:
         log.debug(
             f"checking userEntry.upper {rcName.upper()} to list {r[1].upper()}")
@@ -245,7 +245,7 @@ def addCollection(leagueId):
     rCollection = GT.RaceCollection(
         id=0, name=rcName, desc=rcDesc, leagueObj=league)
     log.debug(f"Saving {rCollection}")
-    r = GTDBConn1.addRaceCollection(rCollection)
+    r = gtdb.addRaceCollection(dbC1, rCollection)
     log.debug(f'result from adding racecollection: {r}')
     return r
 
@@ -298,7 +298,7 @@ def addRaceCmd(args):
         print("No league selected for new race")
         return
     log.info(f"Loading league object for leagueid={x}")
-    league = GTDBConn1.getLeague(value=x)
+    league = gtdb.getLeague(dbC1, value=x)
     # tlName = r[1][0:30].ljust(30)
     x = f"League         : {league.name[0:30].ljust(30)}"
     print(x)
@@ -311,7 +311,7 @@ def addRaceCmd(args):
             f"No race collection was selected for league ({league.id}) {league.name}")
         print("No race collection selected")
         return
-    rcCollection = GTDBConn1.getRaceCollection(x)
+    rcCollection = gtdb.getRaceCollection(dbC1, x)
     x = f"Race Collection: {rcCollection.name[0:30].ljust(30)}"
     print(x)
 
@@ -322,7 +322,7 @@ def addRaceCmd(args):
         print(
             f"No track was selected for new race")
         return
-    track = GTDBConn1.getTrack(value=x)
+    track = gtdb.getTrack(dbC1, value=x)
     x = f"Track          : {track.name[0:30].ljust(30)}"
 
     # Prompt user for track layout
@@ -332,7 +332,7 @@ def addRaceCmd(args):
         log.info("No layout selected")
         print(f"No layout selected for new race on {track.name} track")
         return
-    tLayout = GTDBConn1.getLayout(x)
+    tLayout = gtdb.getLayout(dbC1, x)
     x = f"Layout         : {tLayout.name[0:30].ljust(30)}"
     print_formatted_text(HTML(x))
 
@@ -342,7 +342,7 @@ def addRaceCmd(args):
         log.info(f"No weather type choosen")
         print("No weather type choosen")
         return
-    weather = GTDBConn1.getWeather(x)
+    weather = gtdb.getWeather(dbC1, x)
     x = f"Weather        : {weather.name[0:30].ljust(30)}"
 
     # Prompt user for Race type
@@ -351,7 +351,7 @@ def addRaceCmd(args):
         log.info(f"No race type choosen")
         print("No race type choosen")
         return
-    raceType = GTDBConn1.getRaceType(id=x)
+    raceType = gtdb.getRaceType(dbC1, id=x)
     x = f"Race type      : {raceType.name[0:30].ljust(30)}"
     print(x)
 
@@ -364,7 +364,7 @@ def addRaceCmd(args):
 
     xRace = GT.Race(id=0, name=name, trackLayout=tLayout,
                     raceCollection=rcCollection, raceType=raceType, weather=weather)
-    print(GTDBConn1.addRace(xRace))
+    print(gtdb.addRace(dbC1, xRace))
 
 
 def displayCarCats(theList):
@@ -472,7 +472,7 @@ def displayTrack(trackObj):
     print(f"Country: {cText} Region: {region}")
 
     # Get track layout List
-    tLayoutList = GTDBConn1.getLayoutList(trackObj.id)
+    tLayoutList = gtdb.getLayoutList(dbC1, trackObj.id)
     print(f"Layouts:")
     tlID = "ID"
     tlName = "Name".ljust(30)
@@ -556,27 +556,27 @@ def listAction(cmd):
     elif listObj == 'collection':
         listRaceCollections(cmd[len(listObj):].strip())
     elif listObj == 'classes':
-        displayCarCats(GTDBConn1.getCarCats())
+        displayCarCats(gtdb.getCarCats(dbC1))
     elif listObj == 'circuits':
-        displayCircuits(GTDBConn1.getCircuitList())
+        displayCircuits(gtdb.getCircuitList(dbC1))
     elif listObj == 'drivetrains':
-        displayDriveTrains(GTDBConn1.getDriveTrains())
+        displayDriveTrains(gtdb.getDriveTrains(dbC1))
     elif listObj == 'leagues':
-        displayLeagues(GTDBConn1.getLeagueList())
+        displayLeagues(gtdb.getLeagueList(dbC1))
     elif listObj == 'manufactures':
         if cmd.find(' ') != -1:  # Args provided
             objArgs = cmd[cmd.find(' '):].lstrip()
             log.debug(f"objArgs: {objArgs}")
             if objArgs.split('=')[0].strip() == 'orderBy':
                 orderBy = objArgs.split('=')[1].strip()
-                displayMfgs(GTDBConn1.getMfgs(orderBy=orderBy))
+                displayMfgs(gtdb.getMfgs(dbC1, orderBy=orderBy))
             else:  # invalid argument for mfgs
                 log.info(
                     f"Unknown list manufactures argument {objArgs.split('=')[0].strip()}")
                 print_formatted_text(
                     HTML(f"<ansired>ERROR</ansired> - Unknown list manufactures argument <b>{objArgs.split('=')[0].strip()}</b>."))
         else:
-            displayMfgs(GTDBConn1.getMfgs())
+            displayMfgs(gtdb.getMfgList(dbC1))
     elif listObj == 'race':
         listRaceCmd(cmd[len(listObj):].strip())
     else:  # Unknown object to list
@@ -593,7 +593,7 @@ def listRaceCmd(args):
         if args.split('=')[0].strip() == 'id':
             raceId = args.split('=')[1].strip()
             log.info(f"Getting race info for race id {raceId}")
-            race = GTDBConn1.getRace(raceId)
+            race = gtdb.getRace(dbC1, raceId)
             displayRace(race)
         else:  # invalid Args passed
             log.info(
@@ -612,12 +612,12 @@ def listTrackCmd(args):
         if args.split('=')[0].strip() == 'id':
             trackId = args.split('=')[1].strip()
             log.info(f"Getting track info for track id {trackId}")
-            trackRec = GTDBConn1.getTrack(key='trackId', value=trackId)
+            trackRec = gtdb.getTrack(dbC1, key='trackId', value=trackId)
             displayTrack(trackRec)
         elif args.split('=')[0].strip() == 'name':
             tName = args.split('=')[1]
             log.info(f"Getting track info for track name {tName}")
-            trackRec = GTDBConn1.getTrack(key='track', value=tName)
+            trackRec = gtdb.getTrack(dbC1, key='track', value=tName)
             displayTrack(trackRec)
         else:  # invalid Args passed
             log.info(
@@ -629,7 +629,7 @@ def listTrackCmd(args):
         result = pickTrack()
         log.debug(f"result={result}")
         if result != None:  # User selected a track
-            trackRec = GTDBConn1.getTrack(key='trackId', value=result)
+            trackRec = gtdb.getTrack(dbC1, key='trackId', value=result)
             displayTrack(trackRec)
 
 
@@ -662,8 +662,8 @@ def listRaceCollections(args):
             return
 
     log.info(f"Getting collection info for league id {id}")
-    league = GTDBConn1.getLeague(value=id)
-    theList = GTDBConn1.getRaceCollectionList(id)
+    league = gtdb.getLeague(dbC1, value=id)
+    theList = gtdb.getRaceCollectionList(dbC1, id)
     displayCollections(theList, league)
 
 
@@ -674,7 +674,7 @@ def pickLeague(text='Select a League'):
         League ID user choose
     """
     log.info("Getting leagues for picklist")
-    pickList = GTDBConn1.getLeagueList()
+    pickList = gtdb.getLeagueList(dbC1)
     log.info("Displaying leagues for user to choose")
     result = radiolist_dialog(
         title="Leagues",
@@ -687,7 +687,7 @@ def pickLeague(text='Select a League'):
 
 def pickRaceCollection(leagueId, lName, text='Select one'):
     log.info(f"Getting race collections for ({leagueId}) {lName} league")
-    picklist = GTDBConn1.getRaceCollectionList(leagueId)
+    picklist = gtdb.getRaceCollectionList(dbC1, leagueId)
     log.info(f"Displaying collections for user to choose")
     result = radiolist_dialog(title=f"Race Collections for {lName}",
                               text=text,
@@ -706,7 +706,7 @@ def pickRaceType(text="Select a Race type"):
         RaceTypeID (int): The choosen Racetype id
     """
     log.info("Getting Race Types for picklist")
-    pickList = GTDBConn1.getRaceTypeList()
+    pickList = gtdb.getRaceTypeList(dbC1)
     log.info("Displaying race types for use to choose")
     result = radiolist_dialog(
         title="Race Types",
@@ -722,7 +722,7 @@ def pickTrack(text="Select a Track"):
     Returns: the trackID user picked
     """
     log.info("Getting tracks for picklist")
-    pickList = GTDBConn1.getTrackList()
+    pickList = gtdb.getTrackList(dbC1)
     log.info("display tracks for user to choose")
     result = radiolist_dialog(
         title="Tracks",
@@ -745,7 +745,7 @@ def pickTrackLayout(trackID, trackName, text='Select one'):
         layoutID(int)
     """
     log.info("getting track layouts for trackID:{trackID}")
-    pickList = GTDBConn1.getLayoutList(trackID)
+    pickList = gtdb.getLayoutList(dbC1, trackID)
     log.info("Display track layouts for user to choose")
     result = radiolist_dialog(title=f"Track Layouts for track {trackName}",
                               text=text,
@@ -764,7 +764,7 @@ def pickWeather(text='Select type of Weather'):
         int: The unique id of the Weather
     """
     log.info("Getting list of weather choices")
-    pickList = GTDBConn1.getWeatherList()
+    pickList = gtdb.getWeatherList(dbC1)
     log.info('Displaying weather types for user to choose')
     result = radiolist_dialog(
         title="Weather Types",
