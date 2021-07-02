@@ -164,6 +164,16 @@ class TestLeagues(unittest.TestCase):
 
         logger.info(f"==== END Get/read League\n")
 
+    def test_getLeagueList(self):
+        logger.info("==== BEGIN Get League List")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        testList = gtdbV3.getLeagueList(d1)
+        # Test for more than 1 row
+        logger.info("Checking to be sure more than one row is returned")
+        self.assertGreater(
+            len(testList), 1, "Failed Get League List. returned zero rows")
+
 
 class TestMfg(unittest.TestCase):
 

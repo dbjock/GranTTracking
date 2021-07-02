@@ -778,7 +778,7 @@ def getLeagueList(dbConn):
     dbConn.set_trace_callback(logger.debug)
     try:
         cur = dbConn.cursor()
-        cur.execute(sql, theVals)
+        cur.execute(sql)
         result = cur.fetchall()
     except:
         logger.critical(
