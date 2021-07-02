@@ -237,6 +237,35 @@ def addLayout(dbConn, trackLayout):
     return result
 
 
+def addMfg(dbConn, mfgObj):
+    """[summary]
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        mfgObj : Manufacture class object
+
+    Returns:
+        list:  (ResultCode, ResultText)
+                ResultCode == 0: Success Add
+                Resultcode <> 0: See ResultText for details[description]
+            Fields which cause common errors.
+            - mfgObj.mfgName must be unique in db (case insensitive).
+            - mfgObj.country.id must exist in Country table in db.
+            mfgObj.id is ignored
+    """
+    logger.debug(f"add mfg: MfgObj= {mfgObj}")
+    sql = "INSERT INTO manufacture (name, country_id) VALUES (:mfgName, :cntryID)"
+    theVals = {'mfgName': mfgObj.name, 'cntryID': mfgObj.country.id}
+    r = _exeDML(dbConn, sql, theVals)
+    if r[0] == 0:
+        r[1] = f"Manufacture name: {mfgObj.name} added"
+    else:
+        logger.debug(f"problem with manufacture add {r}.")
+
+    logger.debug(f"returning {r}")
+    return r
+
+
 def addRace(dbConn, race):
     """Adding a Race to database
 
@@ -318,6 +347,31 @@ def addRaceCollection(dbConn, raceCollection):
     return rtrnMsg
 
 
+def deleteMfg(dbConn, mfgId):
+    """Delete manufacture record from database
+
+    ARGS:
+        dbConn (sqlite3.connect): Database connection
+        mfgId: UniqueID of Manufacture in DB(Manufacture.id)
+
+    Returns:
+        list: (ResultCode, ResultText)
+                ResultCode == 0: it worked
+                Resultcode <> 0: See ResultText for details
+    """
+    logger.debug(f"delete manufacture id={mfgId}")
+    sql = "DELETE FROM manufacture WHERE id = ?"
+    theVals = (mfgId,)
+    result = _exeDML(dbConn, sql, theVals)
+    if result[0] == 0:
+        result[1] = "Manufacture Deleted"
+    else:
+        logger.debug(f"problem with manufacture delete {r}.")
+
+    logger.debug(f"returning {result}")
+    return result
+
+
 def deleteTrack(dbConn, trackId):
     """Delete track and all related track layouts from db
 
@@ -390,6 +444,36 @@ def deleteTrackLayout(dbConn, layoutId):
             f"problem deleting track layout id={layoutId}. See {result}.")
 
     logger.info(f"returning {result}")
+    return result
+
+
+def getCarCats(dbConn):
+    """Gets all the car category/classes in db and returns as a list
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+
+    Returns:
+        list(id, carClass, desc, sortorder)
+        """
+    logger.info("Getting list of all the car categories")
+    selectSQL = "SELECT c.id as id, c.name as carClass, c.description as desc, c.sortOrder as sortorder FROM category as c ORDER BY c.sortOrder"
+    sql = selectSQL
+    logger.debug(f"sql = {sql}")
+
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql)
+        result = cur.fetchall()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback to logger.debug
+    dbConn.set_trace_callback(None)
+    logger.info(f"Returning {len(result)} rows")
     return result
 
 
@@ -518,6 +602,39 @@ def getCountry(dbConn, countryId):
             region=None)
     logger.info(f"Returning country={country}")
     return country
+
+
+def getDriveTrains(dbConn, orderBy='code'):
+    """[summary]
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        orderBy (str, optional): The field for the list to be ordered by
+        Defaults to 'code'.
+
+    Returns:
+            list: (id, code, description)
+    """
+    logger.info(f"Getting all drive trains ordered by {orderBy} ")
+    selectSQL = "select id, code, description FROM drivetrain"
+    orderBySQL = f"ORDER BY {orderBy}"
+    sql = f"{selectSQL} {orderBySQL}"
+    logger.debug(f"sql: {sql}")
+
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql)
+        result = cur.fetchall()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback to logger.debug
+    dbConn.set_trace_callback(None)
+    logger.info(f"Returning {len(result)} rows")
+    return result
 
 
 def getLayout(dbConn, layoutId):
@@ -670,6 +787,101 @@ def getLeagueList(dbConn):
     # Disable full sql traceback to logger.debug
     dbConn.set_trace_callback(None)
     logger.debug(f"Returning {len(result)} rows")
+    return result
+
+
+def getMfg(dbConn, key='mfgId', value=None):
+    """
+    Gets a manufacture record from the database based on the key being used.
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        value : Is the value being search for.
+        key   : the column to search on. mfgId, or Make. Default is mfgid
+
+    Returns:
+        ManufactureObject. IF ManufactureObject.id = 0 then nothing found
+    """
+    logger.debug(f"Getting Manufacture: {key}={value}")
+    selectSQL = """SELECT mfg.id as mfgId,
+			mfg.name AS Make,
+			country_id as cntryId
+			FROM manufacture AS mfg"""
+
+    whereSQL = f" WHERE {key} = ?"
+
+    theVars = (value,)
+    sql = f"{selectSQL} {whereSQL}"
+    # Ready to execute SQL
+    logger.debug(f"theVars: {theVars}")
+    logger.debug(f"sql: {sql}")
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql, theVars)
+        row = cur.fetchone()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback
+    dbConn.set_trace_callback(None)
+    logger.debug(f"row={row}")
+    # default Country object (blank)
+    xCountry = gtClass.Country(
+        cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)
+
+    if row:  # Populate Manufacture object
+        logger.debug("manufacture found.")
+        if row[2]:  # We have a country. Load country object
+            xCountry = getCountry(dbConn, row[2])
+
+        xMake = gtClass.Manufacture(
+            id=row[0], name=row[1], countryObj=xCountry)
+        logger.debug(f"returning manufacture object")
+    else:
+        # Create blank Manufacture object
+        logger.debug("manufacture not found.")
+        xMake = gtClass.Manufacture(
+            id=0, name='', countryObj=xCountry)
+        logger.debug(f"returning blank manufacture object")
+
+    logger.debug(f"Returning : {xMake}")
+    return xMake
+
+
+def getMfgList(dbConn):
+    """Returns a list of manufactures.
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+
+    Returns:
+        list: (MfgId,Make)
+    """
+    logger.info(f"Getting all manufactures")
+    selectSQL = """SELECT mfg.id as id, mfg.name AS Make FROM manufacture AS mfg"""
+    orderBySQL = f"ORDER BY mfg.id"
+
+    sql = f"{selectSQL} {orderBySQL}"
+
+    # Ready to execute SQL
+    logger.debug(f"sql: {sql}")
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql)
+        result = cur.fetchall()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback to logger.debug
+    dbConn.set_trace_callback(None)
+    logger.info(f"Rows being returned: {len(result)}")
     return result
 
 
@@ -1107,6 +1319,44 @@ def initDB(dbConn, scriptPath=None):
         logger.debug(f"Executing {scriptFile}")
         _exeScriptFile(dbConn, scriptFileName=f'{scriptFile}')
     logger.info("Database init completed")
+
+
+def updateMfg(dbConn, mfgObj):
+    """Update a manufacture record in database
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        mfgObj Manufacture object
+        - Record that will be UPDATED is based on mfgObj.id.
+        WARNING! - Do not change original mfgObj.id. Unexpected results will occur with sqlite
+
+    Returns:
+        list: ResultCode, ResultText
+                ResultCode == 0: Success execution
+                Resultcode != 0: - See ResultText for details
+    """
+    logger.debug(f"manufacture record update {mfgObj}")
+    # Sanity check - does the mfgRecord exist in db?
+    logger.debug("sanity check. confirm mfg Record exists.")
+    testMfg = getMfg(dbConn, value=mfgObj.id)
+    if testMfg.id == 0:  # Mfg is not in database
+        result = [1, f"manufacture id {mfgObj.id} not in database."]
+        logger.debug(f"returning {result}")
+        return result
+
+    logger.debug("sanity check passed. execute SQL")
+    theVals = {'mfgID': mfgObj.id, 'mfgName': mfgObj.name,
+               'cntryID': mfgObj.country.id}
+    sql = "UPDATE manufacture SET name = :mfgName, country_id = :cntryID WHERE id = :mfgID"
+
+    result = _exeDML(dbConn, sql, theVals)
+    if result[0] == 0:
+        result[1] = f"Manufacture id: {mfgObj.id} Updated"
+    else:
+        logger.debug(f"problem updating manufacture id: {mfgObj.id}")
+
+    logger.info(f"returning {result}")
+    return result
 
 
 def updateTrack(dbConn, trackObj):

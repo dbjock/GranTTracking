@@ -38,6 +38,22 @@ logger.addHandler(fileHandler)
 print(f"Logging to {_logfile}")
 
 
+class TestCarCat(unittest.TestCase):
+    def test_getCarCats(self):
+        logger.info("==== BEGIN Get Car category tests")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+        logger.info("Getting all car category/classes")
+        testVal = 1  # First row, first element should be this
+        testList = gtdbV3.getCarCats(d1)
+        logger.info(f"testList = {testList}")
+        self.assertEqual(testList[0][0], testVal,
+                         "Failed getting car category and classes")
+
+        logger.info("==== END Get Car category tests")
+
+
 class TestCountry(unittest.TestCase):
     def test_getCountry(self):
         logger.info("==== BEGIN Get Country")
@@ -147,6 +163,197 @@ class TestLeagues(unittest.TestCase):
         self.assertEqual(testObj.id, 0)
 
         logger.info(f"==== END Get/read League\n")
+
+
+class TestMfg(unittest.TestCase):
+
+    def test_addMfg(self):
+        """Test various adding a manufacture scenerios
+        """
+        logger.info(
+            "==== BEGIN Add Manufacture (Requirements: Name is unique. Required to have a country)")
+        d1 = gtdbV3.create_connection(":memory:")
+
+        logger.info(
+            "Add Manufacture - Name: Non-Existing, Country ID: Existing")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        mfgName = 'NEW Manufacture'
+        testMfg = GT.Manufacture(
+            id=0, name=mfgName, countryObj=GT.Country(cntryID=235, cntryName='United Kingdom of Great Britain and Northern Ireland', alpha2='GB', alpha3='GBR', region='Europe'))
+        result = gtdbV3.addMfg(d1, testMfg)
+        logger.info(f"result is {result}")
+        self.assertEqual(
+            result[0], 0, "Failed: Add Manufacture - Name: Non-Existing, Country ID: Existing. Record should have been saved")
+
+        logger.info("Add Manufacture - Name: Existing, Country ID: Existing")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        mfgName = 'Honda'
+        testMfg = GT.Manufacture(
+            id=0, name=mfgName, countryObj=GT.Country(cntryID=235, cntryName='United Kingdom of Great Britain and Northern Ireland', alpha2='GB', alpha3='GBR', region='Europe'))
+        result = gtdbV3.addMfg(d1, testMfg)
+        self.assertNotEqual(
+            result[0], 0, "Failed: Add Manufacture - Name: Existing, Country ID: Existing - Record should not have been saved")
+
+        logger.info(
+            "Add Manufacture - Name: Existing (all caps), Country ID: Existing")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        mfgName = 'HONDA'
+        testMfg = GT.Manufacture(
+            id=0, name=mfgName, countryObj=GT.Country(cntryID=235, cntryName='United Kingdom of Great Britain and Northern Ireland', alpha2='GB', alpha3='GBR', region='Europe'))
+        result = gtdbV3.addMfg(d1, testMfg)
+        self.assertNotEqual(
+            result[0], 0, "Failed: Add Manufacture - Name: Existing (all caps), Country ID: Existing - Record should not have been saved")
+
+        logger.info(
+            "Add Manufacture - Name: Non-Existing, Country ID: Non-Existing")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        mfgName = 'NEW manufacture'
+        testMfg = GT.Manufacture(
+            id=0, name=mfgName, countryObj=GT.Country(cntryID=999, cntryName=None, alpha2=None, alpha3=None, region=None))
+        result = gtdbV3.addMfg(d1, testMfg)
+        self.assertNotEqual(
+            result[0], 0, "Failed: Add Manufacture - Name: Non-Existing, Country ID: Non-Existing. Record should not have been saved")
+
+        logger.info("Add Manufacture - Name: Existing, Country ID: Null/None")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        mfgName = 'Honda'
+        testMfg = GT.Manufacture(
+            id=0, name=mfgName, countryObj=GT.Country(cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None))
+        result = gtdbV3.addMfg(d1, testMfg)
+        self.assertNotEqual(
+            result[0], 0, "Failed: Add Manufacture - Name: Existing, Country ID: Null/None. Record should not have been saved")
+
+        logger.info(
+            "Add Manufacture - Name: Non-Existing, Country ID: Null/None")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        mfgName = 'new Manufacture'
+        testMfg = GT.Manufacture(
+            id=0, name=mfgName, countryObj=GT.Country(cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None))
+        result = gtdbV3.addMfg(d1, testMfg)
+        self.assertNotEqual(
+            result[0], 0, "Failed: Add Manufacture - Name: Non-Existing, Country ID: Null/None. Record should not have been saved")
+
+        logger.info(
+            "Add Manufacture - Name: Non-Existing, Country ID: Non-Existing")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        mfgName = 'Another new one that should fail'
+        testMfg = GT.Manufacture(
+            id=0, name=mfgName, countryObj=GT.Country(cntryID=999, cntryName=None, alpha2=None, alpha3=None, region=None))
+        result = gtdbV3.addMfg(d1, testMfg)
+        self.assertNotEqual(
+            result[0], 0, "Failed: Add Manufacture - Name: Non-Existing, Country ID: Non-Existing. Record should not have been saved")
+
+    def test_deleteMfg(self):
+        logger.info("==== BEGIN Delete Manufacture")
+        d1 = gtdbV3.create_connection(":memory:")
+
+        logger.info("Delete Manufacture = Manufacture ID: Non Existing")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        mfgId = 999999
+        result = gtdbV3.deleteMfg(d1, mfgId)
+        # Sqlite.. the delete works, even if record doesn't exist.
+        self.assertEqual(result[0], 0)
+
+        logger.info("Delete Manufacture = Manufacture ID: Existing")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        mfgId = 1
+        result = gtdbV3.deleteMfg(d1, mfgId)
+        self.assertEqual(
+            result[0], 0, "Failed: Delete Manufacture = Manufacture ID: Existing")
+
+        logger.info("==== END Delete Manufacture\n")
+
+    def test_getMfg(self):
+        logger.info("==== BEGIN Get/read Manufacture")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        logger.info("Get Manufacture by id")
+        mfgId = 4
+        testMfg = gtdbV3.getMfg(d1, value=mfgId)
+        self.assertEqual(testMfg.id, mfgId)
+
+        logger.info("Get Manufacture by all name (case insensitve")
+        mfgName = 'honda'
+        testMfg = gtdbV3.getMfg(d1, key='Make', value=mfgName)
+        self.assertNotEqual(testMfg.id, 0)
+
+        logger.info("Get non exist Manfuacture by id")
+        mfgId = 99999
+        testMfg = gtdbV3.getMfg(d1, value=mfgId)
+        self.assertEqual(testMfg.id, 0)
+
+        logger.info("Get non exist Manfuacture by name")
+        mfgName = 'ZZINoExist'
+        testMfg = gtdbV3.getMfg(d1, key='Make', value=mfgName)
+        self.assertEqual(testMfg.id, 0)
+
+        logger.info(f"==== END Get/read Manufacture\n")
+
+    def test_updateMfg(self):
+        logger.info(
+            "==== BEGIN UPDATE Manufacture (Assuming Get manufacture works)")
+        d1 = gtdbV3.create_connection(":memory:")
+
+        logger.info(
+            "Update Manufacture: Name: Change, Country ID: No change.")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        mfgName = "MY new NAME"
+        testMfg = gtdbV3.getMfg(d1, value=1)
+        testMfg.name = mfgName
+        result = gtdbV3.updateMfg(d1, testMfg)
+        self.assertEqual(result[0], 0)
+        # Need to confirm it was saved to db
+        logger.info("Confirming update saved in db")
+        testMfg = gtdbV3.getMfg(d1, key='Make', value=mfgName)
+        self.assertEqual(testMfg.name, mfgName)
+        self.assertNotEqual(testMfg.id, 0)
+
+        logger.info(
+            "Update Manufacture: Name: No Change, Country ID: Change to null.")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        testMfg = gtdbV3.getMfg(d1, value=4)
+        testMfg.country = GT.Country(
+            cntryID=None, cntryName=None, alpha2=None, alpha3=None, region=None)
+        result = gtdbV3.updateMfg(d1, testMfg)
+        self.assertNotEqual(result[0], 0)
+
+        logger.info(
+            "Update Manufacture: Name: Change, Country ID: No Change, Mfg ID: Non Existing.")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        testMfg = gtdbV3.getMfg(d1, value=14)
+        testMfg.id = 99999
+        result = gtdbV3.updateMfg(d1, testMfg)
+        self.assertNotEqual(result[0], 0)
+
+        logger.info(
+            "Update Manufacture: Name: Change to Existing, Country ID: No change ")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        xMfg = gtdbV3.getMfg(d1, value=3)
+        testMfg = gtdbV3.getMfg(d1, value=14)
+        testMfg.name = xMfg.name
+        result = gtdbV3.updateMfg(d1, testMfg)
+        self.assertNotEqual(result[0], 0)
+
+        logger.info(
+            "Update Manufacture: Name: No change, Country ID: Change to Non Existing")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        testMfg = gtdbV3.getMfg(d1, value=14)
+        testMfg.country = GT.Country(
+            cntryID=999, cntryName=None, alpha2=None, alpha3=None, region=None)
+        result = gtdbV3.updateMfg(d1, testMfg)
+        self.assertNotEqual(result[0], 0)
+
+    def test_getMfgList(self):
+        logger.info("==== BEGIN get AllMfg List")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+        logger.info("Get mfg sorted by default (id)")
+        testVal = 1  # first element should be mfgID 1
+        testList = gtdbV3.getMfgList(d1)
+        logger.info(f"layoutList={testList}")
+        self.assertEqual(testList[0][0], testVal,
+                         "Failed mfg sorting by id")
 
 
 class TestRaceCollection(unittest.TestCase):
@@ -667,6 +874,7 @@ class TestTrack(unittest.TestCase):
         trackId = 6  # Track has multiple layouts
         result = gtdbV3.deleteTrack(d1, trackId)
         logger.info(f"result={result}")
+        # Sqlite.. the delete works, even if record doesn't exist.
         self.assertEqual(result[0], 0)
 
         testmsg = '2 - Delete existing TrackId'
