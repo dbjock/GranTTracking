@@ -104,7 +104,8 @@ def main():
             'circuits': None,
             'classes': None,
             'collection': {
-                'leagueId=': None
+                'leagueId=': None,
+                'id=': None
             },
             'drivetrains': None,
             'manufactures': {'orderBy=': None},
@@ -386,8 +387,49 @@ def displayCircuits(theList):
     print("=" * 78)
 
 
-def displayCollections(theList, leagueObj):
+def displayCollection(raceColObj):
+    """Display race info for a race collection
 
+    Args:
+        raceColObj : Race Collection object
+    """
+    # League and collection info
+    htmlLeague = html.escape(
+        f'{raceColObj.league.name}')
+    htmlCollection = html.escape(
+        f"{raceColObj.name}")
+    print_formatted_text(HTML(
+        f"<b>League     :</b> <ansigreen>{htmlLeague}</ansigreen> ({raceColObj.league.id}) - <ansigreen>{htmlCollection}</ansigreen> ({raceColObj.id})"))
+    print_formatted_text(
+        HTML(f" <ansigreen>{html.escape(raceColObj.desc)}</ansigreen>"))
+
+    print("Race(s):")
+    id = f"ID".rjust(3)
+    rName = "Name".ljust(10)
+    trackNlayout = "Track - Layout"
+    tlMiles = "Miles".ljust(5)
+    print_formatted_text(
+        HTML(f"{id} | {rName} | {trackNlayout.ljust(40)} | {tlMiles} | racetime"))
+
+    print("-" * 78)  # header seperator
+    for x in gtdb.getRaces(dbC1, raceColObj.id):
+        race = gtdb.getRace(dbC1, x[0])
+        id = f"{race.id:d}".rjust(3)
+        rName = html.escape(race.name.ljust(10))
+        trackNlayout = html.escape(
+            f"{race.trackLayout.track.name} - {race.trackLayout.name}")
+        tlMiles = "{:.2f}".format(race.trackLayout.miles).rjust(5)
+        print_formatted_text(
+            HTML(f"<ansigreen>{id}</ansigreen> | <ansigreen>{rName}</ansigreen> | <ansigreen>{trackNlayout.ljust(40)}</ansigreen> | <ansigreen>{tlMiles}</ansigreen> | <ansigreen>racetime</ansigreen>"))
+
+
+def displayCollections(leagueObj):
+    """Display race collections for the league
+
+    Args:
+        leagueObj : League object
+    """
+    theList = gtdb.getRaceCollectionList(dbC1, leagueObj.id)
     print_formatted_text(
         HTML(f"Race Collections for League: <ansigreen>{html.escape(leagueObj.name)}</ansigreen> ({leagueObj.id})"))
     print(f"  ID  | Collection Name")
@@ -470,7 +512,12 @@ def displayRace(race):
     else:
         notes = "-- Nothing Entered --"
     print(f"  Notes      : {notes}")
-
+    # Results:
+    # ID  |Place | XP      | Credits | Car                         | Time  |Crd P/M |XP P/M  |
+    # xxxx| 1    | 999,999 | 999,999 |xxxxxxxxxxxxxxxxxxxxxxxxxxxxx| MM:SS | 99,999 | 99,999 |
+    # xxxx| 1    | 999,999 | 999,999 |xxxxxxxxxxxxxxxxxxxxxxxxxxxxx| MM:SS | 99,999 | 99,999 |
+    # xxxx| 1    | 999,999 | 999,999 |xxxxxxxxxxxxxxxxxxxxxxxxxxxxx| MM:SS | 99,999 | 99,999 |
+    # xxxx| 1    | 999,999 | 999,999 |xxxxxxxxxxxxxxxxxxxxxxxxxxxxx| MM:SS | 99,999 | 99,999 |
     print("** Got more work **")
 
 
@@ -675,6 +722,22 @@ def listRaceCollections(args):
     if len(args) > 0 and args.find("=") > 0:  # Have valid Args
         if args.split('=')[0].strip() == 'leagueId':
             id = args.split('=')[1].strip()
+            league = gtdb.getLeague(dbC1, value=id)
+            if league.id != 0:
+                displayCollections(league)
+            else:
+                print_formatted_text(
+                    HTML(f"<ansired> ERROR </ansired> <b>League not found</b>"))
+            return
+        if args.split('=')[0].strip() == 'id':
+            id = args.split('=')[1].strip()
+            rCollection = gtdb.getRaceCollection(dbC1, id)
+            if rCollection.id != 0:
+                displayCollection(rCollection)
+            else:
+                print_formatted_text(
+                    HTML(f"<ansired> ERROR </ansired> <b>Collection id not found</b>"))
+            return
         else:  # unknown Args passed
             log.info(
                 f"Unknown list collection argument {args.split('=')[0].strip()}")
@@ -693,8 +756,7 @@ def listRaceCollections(args):
 
     log.info(f"Getting collection info for league id {id}")
     league = gtdb.getLeague(dbC1, value=id)
-    theList = gtdb.getRaceCollectionList(dbC1, id)
-    displayCollections(theList, league)
+    displayCollections(league)
 
 
 def pickLeague(text='Select a League'):
