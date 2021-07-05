@@ -387,9 +387,17 @@ def displayCircuits(theList):
 
 
 def displayCollections(theList, leagueObj):
-    print(f"Race Collections for League: ({leagueObj.id}) {leagueObj.name}")
-    for r in theList:
-        print(r)
+
+    print_formatted_text(
+        HTML(f"Race Collections for League: <ansigreen>{html.escape(leagueObj.name)}</ansigreen> ({leagueObj.id})"))
+    print(f"  ID  | Collection Name")
+    print("-" * 78)  # header seperator
+    for row in theList:
+        col1 = f"{row[0]:d}".rjust(3)
+        col2 = html.escape(row[1].ljust(40))
+        print_formatted_text(
+            HTML(f"  <ansigreen>{col1}</ansigreen> | <ansigreen>{col2}</ansigreen>"))
+    print("=" * 78)
 
 
 def displayDriveTrains(theList):
