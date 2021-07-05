@@ -4,8 +4,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 import sys
+import html
 from pathlib import Path
-from string import Template
 
 # Addtional external libs
 from prompt_toolkit import prompt
@@ -37,7 +37,7 @@ console.setFormatter(smlFMT)
 log = logging.getLogger('')
 log.setLevel(logging.DEBUG)
 log.addHandler(console)
-logFile = Path(gtcfg.logcfg['logDir']) / 'test-cli.log'
+logFile = Path(gtcfg.logcfg['logDir']) / 'cli.log'
 print(logFile)
 
 log_fh = RotatingFileHandler(
@@ -415,15 +415,37 @@ def displayRace(race):
         race (object): The race class object
     """
     # TODO: More stuff to put in here
-    print(f"Race Record: ({race.id}) {race.name}")
-    print(
-        f"  League     : ({race.raceCollection.league.id}) {race.raceCollection.league.name}")
-    print(
-        f"  Collection : ({race.raceCollection.id}) {race.raceCollection.name}")
-    print(f"  Track      : {race.trackLayout.track.name}")
-    print(f"  Layout     : ({race.trackLayout.id}) - {race.trackLayout.name}")
-    print(f"  Race Type  : ({race.raceType.id}) {race.raceType.name}")
-    print(f"  Weather    : ({race.weather.id}) {race.weather.name}")
+    # League and collection info
+    htmlLeague = html.escape(
+        f'{race.raceCollection.league.name}')
+    htmlCollection = html.escape(
+        f"{race.raceCollection.name}")
+    print_formatted_text(HTML(
+        f"<b>League     :</b> <ansigreen>{htmlLeague}</ansigreen> ({race.raceCollection.league.id}) - <ansigreen>{htmlCollection}</ansigreen> ({race.raceCollection.id})"))
+    # Race info and type
+    htmlData = html.escape(f'{race.name}')
+    print_formatted_text(
+        HTML(f'<b>Race       :</b> <ansigreen>{htmlData}</ansigreen> ({race.id})   <b>Type: </b> <ansigreen>{race.raceType.name}</ansigreen>'))
+    # Track and Layout
+    htmlData = html.escape(
+        f"{race.trackLayout.track.name} - {race.trackLayout.name}")
+    print_formatted_text(HTML(f"  <ansigreen>{htmlData}</ansigreen>"))
+    # Prizes
+    p1 = f"1st"[0:7].ljust(7)
+    p2 = f"2nd"[0:7].ljust(7)
+    p3 = f"3rd"[0:7].ljust(7)
+    print(f"  {p1} |{p2} |{p3} |")
+    print(f"  {'-'*27}")
+    p1 = f"{race.prize1:,d}"[0:7].rjust(7)
+    p2 = f"{race.prize2:,d}"[0:7].rjust(7)
+    p3 = f"{race.prize3:,d}"[0:7].rjust(7)
+    print_formatted_text(HTML(
+        f"  <ansigreen>{p1}</ansigreen> |<ansigreen>{p2}</ansigreen> |<ansigreen>{p3}</ansigreen> |"))
+
+    # Weather and miles
+    print_formatted_text(
+        HTML(f"  <b>Miles :</b> <ansigreen>{race.trackLayout.miles}</ansigreen> <b>Weather : </b><ansigreen>{race.weather.name}</ansigreen>"))
+
     if race.racetime:
         racetime = race.racetime
     else:
@@ -435,9 +457,6 @@ def displayRace(race):
         limits = "-- Nothing Entered --"
     #         Weather    :
     print(f"  Limits     : {limits}")
-    print(f"  prize1     : {race.prize1}")
-    print(f"  prize2     : {race.prize2}")
-    print(f"  prize3     : {race.prize3}")
     if race.notes:
         notes = race.notes
     else:
@@ -594,7 +613,10 @@ def listRaceCmd(args):
             raceId = args.split('=')[1].strip()
             log.info(f"Getting race info for race id {raceId}")
             race = gtdb.getRace(dbC1, raceId)
-            displayRace(race)
+            if race.id == 0:
+                print("Race not found")
+            else:
+                displayRace(race)
         else:  # invalid Args passed
             log.info(
                 f"Unknown list race argument {args.split('=')[0].strip()}")
