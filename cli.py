@@ -37,6 +37,9 @@ console.setFormatter(smlFMT)
 log = logging.getLogger('')
 log.setLevel(logging.DEBUG)
 log.addHandler(console)
+# create log folder if it does not exists
+Path(gtcfg.logcfg['logDir']).mkdir(parents=True, exist_ok=True)
+
 logFile = Path(gtcfg.logcfg['logDir']) / 'cli.log'
 print(logFile)
 
@@ -50,8 +53,16 @@ log_fh.setLevel(logging.DEBUG)
 log.addHandler(log_fh)
 print(f"Logging to {logFile}")
 print(f"Connecting to db {gtcfg.dbcfg['dbFile']}")
-
-dbC1 = gtdb.create_connection(gtcfg.dbcfg['dbFile'])
+# create Path to database if it does not exists
+Path(Path(gtcfg.dbcfg['dbFile']).parent).mkdir(parents=True, exist_ok=True)
+if Path(gtcfg.dbcfg['dbFile']).exists():
+    dbC1 = gtdb.create_connection(gtcfg.dbcfg['dbFile'])
+    print(f"Connected to db {gtcfg.dbcfg['dbFile']}")
+else:
+    print(f"DB file does not exists: {gtcfg.dbcfg['dbFile']}")
+    print(f"Creating new one: {gtcfg.dbcfg['dbFile']}")
+    dbC1 = gtdb.create_connection(gtcfg.dbcfg['dbFile'])
+    gtdb.initDB(dbC1, scriptPath=_gtScripts)
 
 
 def _sortTuple(tup, key):
@@ -84,7 +95,6 @@ def dbInit():
 
 
 def main():
-
     cls()
     print("enter Exit or Help for more info")
     completer = NestedCompleter.from_nested_dict({
