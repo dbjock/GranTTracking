@@ -298,7 +298,8 @@ INSERT INTO race_type (ID, name) VALUES (1, 'Lap');
 INSERT INTO race_type (ID, name) VALUES (2, 'Endurance');
 
 -- Table: weather
-INSERT INTO weather (id, name) VALUES (1, 'NA');
-INSERT INTO weather (id, name) VALUES (2, 'Weather 2');
+INSERT INTO weather (id, name) VALUES (1, 'Fine/Clear');
+INSERT INTO weather (id, name) VALUES (2, 'Cloudy');
+INSERT INTO weather (id, name) VALUES (3, 'Rain');
 
 PRAGMA foreign_keys = on;
