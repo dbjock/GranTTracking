@@ -14,7 +14,7 @@ venv/
 #GT App Specific
 Snippings.txt
 Logs/
-Data/
+Data/*
 *.conf
 *.lnk
 gen_test*.py
