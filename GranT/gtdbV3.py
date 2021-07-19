@@ -283,7 +283,7 @@ def addRace(dbConn, race):
         f"Adding race {race.name} for Race Collection {race.raceCollection.name}")
     tResult = validateRace(dbConn, race)
     if tResult[0]:  # Tests passed - Save the Race
-        sql = "INSERT INTO race (name, tl_id, rc_id,racetime,weather_id,limits,type_id,prize1,prize2,prize3,notes) VALUES (:name, :trackLayoutID, :raceColID,:racetime,:weather_id, :limits, :type_id, :prize1, :prize2, :prize3, :notes)"
+        sql = "INSERT INTO race (name, tl_id, rc_id,racetime,weather_id,limits,type_id,notes) VALUES (:name, :trackLayoutID, :raceColID,:racetime,:weather_id, :limits, :type_id, :notes)"
         theVals = {'name': race.name,
                    'trackLayoutID': race.trackLayout.id,
                    'raceColID': race.raceCollection.id,
@@ -291,9 +291,6 @@ def addRace(dbConn, race):
                    'weather_id': race.weather.id,
                    'limits': race.limits,
                    'type_id': race.raceType.id,
-                   'prize1': race.prize1,
-                   'prize2': race.prize2,
-                   'prize3': race.prize3,
                    'notes': race.notes}
         logger.debug(f"sql={sql}")
         logger.debug(f"theVals={theVals}")
@@ -336,10 +333,14 @@ def addRaceCollection(dbConn, raceCollection):
             return rtrnMsg
 
     # Tests Passed
-    logger.info("Attempting to safe the race collection")
-    theVals = {'colName': raceCollection.name, 'colDesc': raceCollection.desc,
-               'leagueId': raceCollection.league.id}
-    sql = "INSERT INTO race_collection (league_id, name, description) VALUES (:leagueId, :colName, :colDesc)"
+    theVals = {'colName': raceCollection.name,
+               'colDesc': raceCollection.desc,
+               'leagueId': raceCollection.league.id,
+               'catId': raceCollection.classcat.id,
+               'prize1': raceCollection.prize1,
+               'prize2': raceCollection.prize2,
+               'prize3': raceCollection.prize3}
+    sql = "INSERT INTO race_collection (league_id, name, description, cat_id, prize1, prize2, prize3) VALUES (:leagueId, :colName, :colDesc, :catId, :prize1, :prize2, :prize3)"
     logger.debug(f"sql={sql}")
     logger.debug(f"theVals={theVals}")
     rtrnMsg = _exeDML(dbConn, sql, theVals)
@@ -445,6 +446,49 @@ def deleteTrackLayout(dbConn, layoutId):
 
     logger.info(f"returning {result}")
     return result
+
+
+def getCarCat(dbConn, id):
+    """Get a Car Class Category from db
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        id (id): Clar Class Cateory ID
+
+    Returns:
+        ClassCat object
+        IF ClassCat.id == 0 then ClassCat was not found
+    """
+    logger.info(f"Getting classCat by id: {id}")
+    selectSQL = "SELECT id,name,description,sortOrder FROM category"
+    whereSQL = "WHERE id = ?"
+    value = id
+    sql = f"{selectSQL} {whereSQL}"
+    theVals = (value,)
+    logger.debug(f"sql = {sql}")
+    logger.debug(f"theVals = {theVals}")
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql, theVals)
+        row = cur.fetchone()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback
+    dbConn.set_trace_callback(None)
+    logger.debug(f"row={row}")
+    if row:  # Create ClassCat object
+        rtnObj = gtClass.ClassCat(
+            id=row[0], name=row[1], desc=row[2])
+        rtnObj.sortOrder = row[3]
+    else:  # Create an empty ClassCat object
+        rtnObj = gtClass.ClassCat(id=0, name="", desc="")
+
+    logger.debug(f"rtnObj={rtnObj}")
+    return rtnObj
 
 
 def getCarCats(dbConn):
@@ -897,7 +941,7 @@ def getRace(dbConn, id):
         If race.id=0 then race was not found
     """
     logger.info(f"Getting race from db for race id: {id}")
-    selectSQL = "SELECT id, name, tl_id, rc_id, weather_id, type_id, racetime, limits, prize1, prize2, prize3, notes FROM race"
+    selectSQL = "SELECT id, name, tl_id, rc_id, weather_id, type_id, racetime, limits, notes FROM race"
     whereSQL = "WHERE id = ?"
     value = id
     theVals = (value,)
@@ -928,10 +972,7 @@ def getRace(dbConn, id):
         raceType = getRaceType(dbConn, row[5])
         racetime = row[6]
         limits = row[7]
-        prize1 = row[8]
-        prize2 = row[9]
-        prize3 = row[10]
-        notes = row[11]
+        notes = row[8]
     else:  # create a blank racetype object
         logger.info("Race not found")
         trackLayout = getLayout(dbConn, 0)
@@ -942,18 +983,12 @@ def getRace(dbConn, id):
         name = None
         racetime = None
         limits = None
-        prize1 = None
-        prize2 = None
-        prize3 = None
         notes = None
 
     race = gtClass.Race(id=id, name=name, trackLayout=trackLayout,
                         raceCollection=raceCollection, raceType=raceType, weather=weather)
     race.racetime = racetime
     race.limits = limits
-    race.prize1 = prize1
-    race.prize2 = prize2
-    race.prize3 = prize3
     race.notes = notes
 
     logger.debug(f"race={race}")
@@ -1004,11 +1039,11 @@ def getRaceCollection(dbConn, rcId):
         rcId (int): Race collection id
 
     Returns:
-        Race Collection objection
+        Race Collection object
         IF raceCollection.id == 0 then race Collection not found
     """
     logger.info(f"Getting Race Collection by id: {rcId}")
-    selectSQL = "SELECT id as collectionId, name, description, league_id FROM race_collection"
+    selectSQL = "SELECT id as collectionId,name,description,league_id,cat_id,prize1,prize2,prize3 FROM race_collection"
     whereSQL = "WHERE collectionId = ?"
     value = rcId
     sql = f"{selectSQL} {whereSQL}"
@@ -1030,10 +1065,20 @@ def getRaceCollection(dbConn, rcId):
     if row:  # populate the raceCollection object
         logger.debug("Found race collection")
         logger.debug(f"row={row}")
+
         league = getLeague(dbConn, key='id', value=row[3])
         logger.debug(f"league={league}")
+
         raceCollection = gtClass.RaceCollection(
             id=row[0], name=row[1], desc=row[2], leagueObj=league)
+
+        # Getting the car class category
+        catClass = getCarCat(dbConn, id=row[4])
+        if catClass.id == 0:  # no catClass assigned to raceCollection
+            raceCollection.classcat = gtClass.ClassCat(
+                id=None, name="", desc="")
+        else:
+            raceCollection.classcat = catClass
 
     else:  # create a blank raceCollection object
         league = getLeague(dbConn, key='id', value=0)

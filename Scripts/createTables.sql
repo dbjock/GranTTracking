@@ -104,9 +104,6 @@ CREATE TABLE race (
     limits     TEXT,
     type_id    INTEGER REFERENCES race_type (ID) ON DELETE RESTRICT
                        NOT NULL,
-    prize1     INTEGER,
-    prize2     INTEGER,
-    prize3     INTEGER,
     notes      TEXT
 );
 
@@ -117,7 +114,11 @@ CREATE TABLE race_collection (
     league_id INTEGER      REFERENCES league (id) ON DELETE RESTRICT
                            NOT NULL,
     name      TEXT,
-    description TEXT
+    description TEXT,
+    cat_id        INTEGER      REFERENCES category (id) ON DELETE RESTRICT,
+    prize1     INTEGER NOT NULL,
+    prize2     INTEGER NOT NULL,
+    prize3     INTEGER NOT NULL
 );
 
 -- Table: race_type

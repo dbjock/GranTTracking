@@ -51,7 +51,7 @@ class DriveTrain(object):
 class ClassCat(object):
     def __init__(self, id, name, desc):
         """
-        Class/Category object. Used in cars, and optional for races to.
+        Class/Category object. Classification for cars.
 
         id   : type int. Unique for all class/cat's in db.
         name : type str. Short name of the class/cat. Unique in db.
@@ -60,9 +60,10 @@ class ClassCat(object):
         self.id = id
         self.name = name
         self.desc = desc
+        self.sortOrder = None
 
     def __repr__(self):
-        return f"ClassCat(id={self.id}, name='{self.name}', desc='{self.desc}')"
+        return f"ClassCat(id={self.id}, name='{self.name}', desc='{self.desc}', sortOrder='{self.sortOrder}')"
 
 
 class Circuit(object):
@@ -94,9 +95,14 @@ class RaceCollection(object):
         self.name = name
         self.desc = desc
         self.league = leagueObj
+        # classcat is the ClassCat object
+        self.classcat = ClassCat(id=None, name="", desc="")
+        self.prize1 = 0
+        self.prize2 = 0
+        self.prize3 = 0
 
     def __repr__(self):
-        return f"RaceCollection(id={self.id}, name='{self.name}', desc='{self.desc}',league={self.league}"
+        return f"RaceCollection(id={self.id}, name='{self.name}', desc='{self.desc}',league={self.league}, classcat={self.classcat}, prize1={self.prize1},prize2={self.prize2}, prize3={self.prize3})"
 
 
 class Race(object):
@@ -121,13 +127,10 @@ class Race(object):
         self.raceCollection = raceCollection
         self.raceType = raceType
         self.weather = weather
-        self.prize1 = 0
-        self.prize2 = 0
-        self.prize3 = 0
         self.notes = None
 
     def __repr__(self):
-        return f"Race(id={self.id}, name='{self.name}',racetime={self.racetime}, limits={self.limits}, prize1={self.prize1},prize2={self.prize2}, prize3={self.prize3}, notes={self.notes},{self.trackLayout},{self.raceCollection},{self.raceType},{self.weather})"
+        return f"Race(id={self.id}, name='{self.name}',racetime={self.racetime}, limits={self.limits}, notes={self.notes},{self.trackLayout},{self.raceCollection},{self.raceType},{self.weather})"
 
 
 class RaceType(object):
