@@ -10,6 +10,7 @@ from pathlib import Path
 # Addtional external libs
 from prompt_toolkit import prompt
 from prompt_toolkit import PromptSession
+from prompt_toolkit.validation import Validator
 from prompt_toolkit import print_formatted_text, HTML
 from prompt_toolkit.completion import NestedCompleter
 from prompt_toolkit.shortcuts import radiolist_dialog
@@ -74,6 +75,11 @@ def _sortTuple(tup, key):
             example: 1 for results: [(3,"azd"),(1,"zzd")]
     """
     return(sorted(tup, key=lambda x: x[key]))
+
+
+def _isNum(text):
+    """Used for validation to ensure numbers are provided"""
+    return text.isdigit()
 
 
 def dbInit():
@@ -212,7 +218,7 @@ def addAction(cmd):
 
 
 def addCollection(leagueId):
-    """Add a race collection
+    """Add a race collection dialog with user
 
     Args:
         leagueId (int): The league ID to add the race collection to
@@ -251,10 +257,36 @@ def addCollection(leagueId):
     log.info("Getting race collection desc from user")
     rcDesc = prompt(
         f"   Description: ")
-    # Now to prepare object for saving to the database
-    log.debug("creating rCollection")
+
     rCollection = GT.RaceCollection(
         id=0, name=rcName, desc=rcDesc, leagueObj=league)
+
+    # What car class category is this restricted to
+    log.info("Getting car class category")
+    rCollection.classcat.id = pickCarCategory(
+        text="Which car class category is this restricted to?")
+    if rCollection.classcat.id:  # A car class has been selected
+        selCarClass = gtdb.getCarCat(dbC1, rCollection.classcat.id)
+        xTmp = f"{selCarClass.name} {selCarClass.desc}"
+    else:  # No car class selected
+        xTmp = f" "
+    x = f"   Car Class Category: {xTmp.ljust(50)}"
+    print_formatted_text(HTML(x))
+
+    log.info(f"User picked car Cat id {rCollection.classcat.id}")
+
+    # Prize info
+    numCheck = Validator.from_callable(_isNum,
+                                       error_message='This input contains non-numeric characters',
+                                       move_cursor_to_end=True)
+    log.info(f"Getting prize info from user")
+    rCollection.prize1 = prompt(
+        f"   1st Prize: ", validator=numCheck)
+    rCollection.prize2 = prompt(
+        f"   2nd Prize: ", validator=numCheck)
+    rCollection.prize3 = prompt(
+        f"   3rd Prize: ", validator=numCheck)
+    # Save object to database
     log.debug(f"Saving {rCollection}")
     r = gtdb.addRaceCollection(dbC1, rCollection)
     log.debug(f'result from adding racecollection: {r}')
@@ -285,9 +317,10 @@ def addCollectionCmd(args):
         log.info(
             f"Get user input for adding a race collection to league id = {id}")
 
+    # Now ask all the questions to the user
     r = addCollection(id)
     if r[0] != 0:  # Save was not successful
-        x = f'  <ansiyellow>Unable to add Race Collection. Return Code: {r[0]} Desc: {r[1]}</ansiyellow>'
+        x = f'  <ansired>Unable to add Race Collection. Return Code: {r[0]} Desc: {r[1]}</ansired>'
         print_formatted_text(HTML(x))
         log.info(
             f"Unable to add Race Collection. Return Code: {r[0]} Desc: {r[1]}")
@@ -422,7 +455,7 @@ def displayCollection(raceColObj):
         HTML(f"{id} | {rName} | {trackNlayout.ljust(40)} | {tlMiles} | racetime"))
 
     print("-" * 78)  # header seperator
-    for x in gtdb.getRaces(dbC1, raceColObj.id):
+    for x in gtdb.getRaceList(dbC1, raceColObj.id):
         race = gtdb.getRace(dbC1, x[0])
         id = f"{race.id:d}".rjust(3)
         rName = html.escape(race.name.ljust(10))
@@ -439,17 +472,36 @@ def displayCollections(leagueObj):
     Args:
         leagueObj : League object
     """
+    # list: (id,name,desc,catClass, Prize1, Prize2, Prize3)
     theList = gtdb.getRaceCollectionList(dbC1, leagueObj.id)
     print_formatted_text(
         HTML(f"Race Collections for League: <ansigreen>{html.escape(leagueObj.name)}</ansigreen> ({leagueObj.id})"))
-    print(f"  ID  | Collection Name")
-    print("-" * 78)  # header seperator
+    # Header
+    col1 = f' ID'
+    col2 = f'Collection Name'.ljust(40)
+    col3 = f'Class'.ljust(6)
+    col4 = f'1st ~'.ljust(10)
+    col5 = f'2nd ~'.ljust(10)
+    col6 = f'3rd ~'.ljust(10)
+    print(f"  {col1} | {col2} | {col3} | {col4} | {col5} | {col6}")
+    print("-" * 98)  # header seperator
+    # Data
     for row in theList:
+        # print(row)
         col1 = f"{row[0]:d}".rjust(3)
         col2 = html.escape(row[1].ljust(40))
+        if row[3]:  # Car Class Cat has a value
+            xcarClass = row[3]
+        else:  # Car Class Cat has no value
+            xcarClass = ""
+        col3 = html.escape(xcarClass.ljust(6))  # catClass
+        # prizes
+        col4 = html.escape(f'{row[4]:,}'.rjust(10))
+        col5 = html.escape(f'{row[5]:,}'.rjust(10))
+        col6 = html.escape(f'{row[6]:,}'.rjust(10))
         print_formatted_text(
-            HTML(f"  <ansigreen>{col1}</ansigreen> | <ansigreen>{col2}</ansigreen>"))
-    print("=" * 78)
+            HTML(f"  <ansigreen>{col1}</ansigreen> | <ansigreen>{col2}</ansigreen> | <ansigreen>{col3}</ansigreen> | <ansigreen>{col4}</ansigreen> | <ansigreen>{col5}</ansigreen> | <ansigreen>{col6}</ansigreen>"))
+    print("=" * 98)
 
 
 def displayDriveTrains(theList):
@@ -640,11 +692,11 @@ def listAction(cmd):
     elif listObj == 'collection':
         listRaceCollections(cmd[len(listObj):].strip())
     elif listObj == 'classes':
-        displayCarCats(gtdb.getCarCats(dbC1))
+        displayCarCats(gtdb.getCarCatList(dbC1))
     elif listObj == 'circuits':
         displayCircuits(gtdb.getCircuitList(dbC1))
     elif listObj == 'drivetrains':
-        displayDriveTrains(gtdb.getDriveTrains(dbC1))
+        displayDriveTrains(gtdb.getDriveTrainList(dbC1))
     elif listObj == 'leagues':
         displayLeagues(gtdb.getLeagueList(dbC1))
     elif listObj == 'manufactures':
@@ -767,6 +819,24 @@ def listRaceCollections(args):
     log.info(f"Getting collection info for league id {id}")
     league = gtdb.getLeague(dbC1, value=id)
     displayCollections(league)
+
+
+def pickCarCategory(text='Select a Car Class Category'):
+    """Dialbog box for user to select a car class category
+
+    Returns:
+        ClassCat.id user choose
+    """
+    log.info("Getting car class categories for picklist")
+    pickList = gtdb.getCarCatList(dbC1)
+    log.info("Displaying Car Class Categories to user to choose")
+    result = radiolist_dialog(
+        title="Class Categories",
+        text=text,
+        values=pickList
+    ).run()
+    log.info(f"user choose id: {result}")
+    return result
 
 
 def pickLeague(text='Select a League'):
