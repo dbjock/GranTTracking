@@ -491,7 +491,7 @@ def getCarCat(dbConn, id):
     return rtnObj
 
 
-def getCarCats(dbConn):
+def getCarCatList(dbConn):
     """Gets all the car category/classes in db and returns as a list
 
     Args:
@@ -648,7 +648,7 @@ def getCountry(dbConn, countryId):
     return country
 
 
-def getDriveTrains(dbConn, orderBy='code'):
+def getDriveTrainList(dbConn, orderBy='code'):
     """[summary]
 
     Args:
@@ -995,7 +995,7 @@ def getRace(dbConn, id):
     return race
 
 
-def getRaces(dbConn, raceCollectionID):
+def getRaceList(dbConn, raceCollectionID):
     """Get a list of races for a Race Collection
 
     Args:
@@ -1488,7 +1488,7 @@ def validateRace(dbConn, race):
     # Race name must be unique for the race_collection
     logger.debug(
         f"Checking that race name [{race.name}] is unique for race collection id {race.raceCollection.id} (case insensitve)")
-    xList = getRaces(dbConn, race.raceCollection.id)
+    xList = getRaceList(dbConn, race.raceCollection.id)
     for row in xList:
         logger.debug(f"raceId={row[0]}. checking race name: {row[1]}")
         if row[1].upper() == race.name.upper():  # layout name exist for track
