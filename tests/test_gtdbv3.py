@@ -46,7 +46,7 @@ class TestCarCat(unittest.TestCase):
 
         logger.info("Getting a list of car category/classes")
         testVal = 1  # First row, first element should be this
-        testList = gtdbV3.getCarCats(d1)
+        testList = gtdbV3.getCarCatList(d1)
         logger.info(f"testList = {testList}")
         self.assertEqual(testList[0][0], testVal,
                          "Failed getting car category and classes")
@@ -425,7 +425,7 @@ class TestRaceCollection(unittest.TestCase):
         # Add with existing collection ID
         #    -Not tested as the collection id provided in the collection object
         #     is ignored/not used. The SQL to add/insert the collection object
-        #     does not provide the id and sqlite will auto generate
+        #     does not provide the id and sqlite will auto increment
 
         # Add with with non existing league id >0
         logger.info(
@@ -453,6 +453,19 @@ class TestRaceCollection(unittest.TestCase):
         self.assertNotEqual(
             result[0], 0, "Failed. Add Race Collection : League ID 0")
 
+        # Add race collection where ClassCat id has no match
+        logger.info("Add Race Collection: Class Cateogry does not exist")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        goodCollection = GT.RaceCollection(
+            id=0, name="I am brand new", desc="", leagueObj=existingLeague)
+        goodCollection.classcat.id = 99999
+        logging.info(f"Saving collection={goodCollection}")
+        result = gtdbV3.addRaceCollection(d1, goodCollection)
+        logger.info(f"result is {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed: Add Race Collection: Class Cateogry does not exist")
+
+        # Add race collection that should work
         logger.info(
             "Add Race Collection : non existant name, existing League")
         gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
