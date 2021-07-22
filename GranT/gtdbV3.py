@@ -1080,6 +1080,11 @@ def getRaceCollection(dbConn, rcId):
         else:
             raceCollection.classcat = catClass
 
+        # Prize money
+        raceCollection.prize1 = row[5]
+        raceCollection.prize2 = row[6]
+        raceCollection.prize3 = row[7]
+
     else:  # create a blank raceCollection object
         league = getLeague(dbConn, key='id', value=0)
         raceCollection = gtClass.RaceCollection(
