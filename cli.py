@@ -6,15 +6,14 @@ import os
 import sys
 import html
 from pathlib import Path
+from datetime import datetime
 
 # Addtional external libs
-from prompt_toolkit import prompt
-from prompt_toolkit import PromptSession
-from prompt_toolkit.validation import Validator
+from prompt_toolkit import prompt, PromptSession
 from prompt_toolkit import print_formatted_text, HTML
+from prompt_toolkit.validation import Validator
 from prompt_toolkit.completion import NestedCompleter
-from prompt_toolkit.shortcuts import radiolist_dialog
-from prompt_toolkit.shortcuts import input_dialog
+from prompt_toolkit.shortcuts import radiolist_dialog, input_dialog
 
 # App specific required
 from GranT import gtdbV3 as gtdb
@@ -80,6 +79,16 @@ def _sortTuple(tup, key):
 def _isNum(text):
     """Used for validation to ensure numbers are provided"""
     return text.isdigit()
+
+
+def _valTime(text):
+    """Used to validate if text is time"""
+    timeformat = "%H:%M"
+    try:
+        validtime = datetime.strptime(text, timeformat)
+        return True
+    except ValueError:
+        return False
 
 
 def dbInit():
@@ -388,6 +397,7 @@ def addRaceCmd(args):
         return
     weather = gtdb.getWeather(dbC1, x)
     x = f"Weather        : {weather.name[0:30].ljust(30)}"
+    print_formatted_text(HTML(x))
 
     # Prompt user for Race type
     x = pickRaceType()
@@ -398,17 +408,49 @@ def addRaceCmd(args):
     raceType = gtdb.getRaceType(dbC1, id=x)
     x = f"Race type      : {raceType.name[0:30].ljust(30)}"
     print(x)
+    # print_formatted_text(HTML(x))
 
+    # Prompt user for Race Name
     log.info("Getting race name from user")
     name = prompt("   Race Name (Enter to cancel): ")
     log.debug(f"name={name}")
     if name == None or name == "":  # User didn't provide data
         log.info("User did not provide race name")
         return [1, "Race name not provided."]
-
+    # Now have all the required data to create the Race Object
     xRace = GT.Race(id=0, name=name, trackLayout=tLayout,
                     raceCollection=rcCollection, raceType=raceType, weather=weather)
-    print(gtdb.addRace(dbC1, xRace))
+
+    # Prompt user for Race time
+    log.info("Getting Race time from user")
+    validator = Validator.from_callable(
+        _valTime, error_message='Not a valid time format', move_cursor_to_end=True)
+    raceTime = prompt(f"   Time of Day for race (HH:MM): ",
+                      validator=validator)
+    log.debug(f"raceTime={raceTime}")
+    xRace.racetime = raceTime
+
+    # Prompt user for limits i.e. lap/max time restrictions
+    log.info("Getting lap/max time limits from user")
+    xRace.limits = prompt(f"    Limits: ")
+    log.debug(f"limits={xRace.limits}")
+
+    # Prompt user for any notes about race
+    log.info("Getting notes about race from user")
+    xRace.notes = prompt(f"    Notes: ")
+    log.debug(f"notes={xRace.notes}")
+
+    # Saving race object to database
+    log.info(f"Saving: {xRace}")
+    result = gtdb.addRace(dbC1, xRace)
+    if result[0] != 0:  # Save was not successful
+        msg = f'  <ansired>Unable to add Race. Return Code: {result[0]} Desc: {result[1]}</ansired>'
+        log.info(
+            f"Unable to add Race. Return Code: {result[0]} Desc: {result[1]}")
+    else:
+        msg = f'  <ansigreen>Race Collection Added</ansigreen>'
+        log.info(f"Race added")
+    print_formatted_text(HTML(msg))
 
 
 def displayCarCats(theList):
@@ -442,28 +484,39 @@ def displayCollection(raceColObj):
     htmlCollection = html.escape(
         f"{raceColObj.name}")
     print_formatted_text(HTML(
-        f"<b>League     :</b> <ansigreen>{htmlLeague}</ansigreen> ({raceColObj.league.id}) - <ansigreen>{htmlCollection}</ansigreen> ({raceColObj.id})"))
-    print_formatted_text(
-        HTML(f" <ansigreen>{html.escape(raceColObj.desc)}</ansigreen>"))
+        f"League     : <ansigreen>{htmlLeague}</ansigreen> ({raceColObj.league.id}) - <ansigreen>{htmlCollection}</ansigreen> ({raceColObj.id})"))
+    # Race collection description
+    htmlText = f"Desciption : <ansigreen>{html.escape(raceColObj.desc)}</ansigreen>"
+    print_formatted_text(HTML(htmlText))
+    # Prizes and Class
+    prize1 = f"{raceColObj.prize1:,d}"[0:7].ljust(7)
+    prize2 = f"{raceColObj.prize2:,d}"[0:7].ljust(7)
+    prize3 = f"{raceColObj.prize3:,d}"[0:7].ljust(7)
+    htmlText = f" Class : <ansigreen>{raceColObj.classcat.name}</ansigreen>  1st: <ansigreen>{prize1}</ansigreen> 2nd: <ansigreen>{prize2}</ansigreen> 3rd: <ansigreen>{prize3}</ansigreen>"
+    print_formatted_text(HTML(htmlText))
 
-    print("Race(s):")
+    print("\nRace(s):")
     id = f"ID".rjust(3)
-    rName = "Name".ljust(10)
-    trackNlayout = "Track - Layout"
+    rName = "Name".ljust(7)
+    trackNlayout = "Track : Layout"
     tlMiles = "Miles".ljust(5)
+    racetime = "Time "
+    weather = "weather"
     print_formatted_text(
-        HTML(f"{id} | {rName} | {trackNlayout.ljust(40)} | {tlMiles} | racetime"))
+        HTML(f"{id} | {rName} | {trackNlayout[0:60].ljust(60)} | {tlMiles} | {racetime} | {weather}"))
 
-    print("-" * 78)  # header seperator
+    print("-" * 106)  # header seperator
     for x in gtdb.getRaceList(dbC1, raceColObj.id):
         race = gtdb.getRace(dbC1, x[0])
         id = f"{race.id:d}".rjust(3)
-        rName = html.escape(race.name.ljust(10))
+        rName = html.escape(race.name[0:7].ljust(7))
         trackNlayout = html.escape(
-            f"{race.trackLayout.track.name} - {race.trackLayout.name}")
+            f"{race.trackLayout.track.name} : {race.trackLayout.name}")
         tlMiles = "{:.2f}".format(race.trackLayout.miles).rjust(5)
+        racetime = html.escape(race.racetime.ljust(5))
+        weather = html.escape(race.weather.name)
         print_formatted_text(
-            HTML(f"<ansigreen>{id}</ansigreen> | <ansigreen>{rName}</ansigreen> | <ansigreen>{trackNlayout.ljust(40)}</ansigreen> | <ansigreen>{tlMiles}</ansigreen> | <ansigreen>racetime</ansigreen>"))
+            HTML(f"<ansigreen>{id}</ansigreen> | <ansigreen>{rName}</ansigreen> | <ansigreen>{trackNlayout[0:60].ljust(60)}</ansigreen> | <ansigreen>{tlMiles}</ansigreen> | <ansigreen>{racetime}</ansigreen> | <ansigreen>{weather}</ansigreen>"))
 
 
 def displayCollections(leagueObj):
