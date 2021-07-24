@@ -479,15 +479,13 @@ def addRace(rcCollection):
     log.info(f"Saving: {xRace}")
     result = gtdb.addRace(dbC1, xRace)
     if result[0] != 0:  # Save was not successful
-        msg = f'  <ansired>Unable to add Race. Return Code: {result[0]} Desc: {result[1]}</ansired>'
         log.info(
             f"Unable to add Race. Return Code: {result[0]} Desc: {result[1]}")
+        htmlLine = f'  <b><ansired>Unable to add Race. Return Code: {result[0]} Desc: {result[1]}</ansired></b>'
+        print_formatted_text(HTML(htmlLine))
     else:
-        msg = f'  <ansigreen>Race Added</ansigreen>'
         log.info(f"Race added")
-        print_formatted_text(HTML(msg))
-        # now display the list collection id=46
-
+        htmlLine = f'  <ansigreen>Race Added</ansigreen>'
         displayCollection(rcCollection)
 
 
