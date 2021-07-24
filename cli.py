@@ -123,7 +123,9 @@ def main():
             'collection': {
                 'leagueId=': None
             },
-            'race': None
+            'race': {
+                'collectionId=': None
+            }
         },
         'list': {
             'circuits': None,
@@ -342,42 +344,71 @@ def addCollectionCmd(args):
 
 
 def addRaceCmd(args):
+    """What do do when asked to add a Race"""
+    cls()
+    print("Adding a Race")
     log.debug(f"args passed: {args}")
     log.debug(f"length of args: {len(args)}")
-    # At this time not going to parse any args
-    # Prompt user for League
-    x = pickLeague(text="Which League for the new race?")
-    if x == None:  # no league picked
-        log.info("No league selected.")
-        print("No league selected for new race")
-        return
-    log.info(f"Loading league object for leagueid={x}")
-    league = gtdb.getLeague(dbC1, value=x)
-    # tlName = r[1][0:30].ljust(30)
-    x = f"League         : {league.name[0:30].ljust(30)}"
-    print(x)
+    if len(args) > 0 and args.find("=") > 0:  # Valid arg string passed
+        if args.split('=')[0].strip() == 'collectionId':
+            log.info(f"Getting race collection object")
+            rcCollection = gtdb.getRaceCollection(
+                dbC1, args.split("=")[1].strip())
+            if rcCollection.id == 0:  # Race Collection not found
+                log.info(
+                    f"Race collection id:{args.split('=')[1].strip()} was not found")
+                print_formatted_text(
+                    HTML(f"<ansired> ERROR </ansired> <b>Collection id not found</b>"))
+                return
 
-    # Prompt user for leagues race collection
-    x = pickRaceCollection(
-        league.id, league.name, text=f"Which race collection for the new race?")
-    if x == None:  # no race collection selected
-        log.info(
-            f"No race collection was selected for league ({league.id}) {league.name}")
-        print("No race collection selected")
-        return
-    rcCollection = gtdb.getRaceCollection(dbC1, x)
-    x = f"Race Collection: {rcCollection.name[0:30].ljust(30)}"
-    print(x)
+        else:  # unknown arg passed
+            log.info(
+                f"Unknown add race argument {args.split('=')[0].strip()} ")
+            print_formatted_text(
+                HTML(f"<ansired>ERROR</ansired> - Unknown add race argument <b>{args.split('=')[0].strip()}</b>."))
+            return
+    else:  # prompt user to get collection id
+        # Need to prompt user to find out which collection to add the race to
+        # Prompt user for League
+        log.info("Prompting user for League id")
+        x = pickLeague(text="Which League for the new race?")
+        if x == None:  # no league picked
+            log.info("No league selected.")
+            print("No league selected for new race")
+            return
+        log.info(f"Loading league object for leagueid={x}")
+        league = gtdb.getLeague(dbC1, value=x)
+
+        # Prompt user for leagues race collection
+        log.info("Prompting user for race collection id")
+        x = pickRaceCollection(
+            league.id, league.name, text=f"Which race collection for the new race?")
+        if x == None:  # no race collection selected
+            log.info(
+                f"No race collection was selected for league ({league.id}) {league.name}")
+            print("No race collection selected")
+            return
+        log.info(f"Loading race collection for id={x}")
+        rcCollection = gtdb.getRaceCollection(dbC1, x)
+
+    # Now can proceed with adding a race
+    log.info("Proceeding to get further info to add race")
+    addRace(rcCollection)
+
+
+def addRace(rcCollection):
+    """Add a race to the race collection"""
 
     # Prompt user for Track
-    x = pickTrack(text="Which track for the new race?")
+    log.info("Prompt user for track")
+    x = pickTrack(
+        text=f"Which track for the new {rcCollection.name} race?")
     if x == None:  # no track was selected
         log.info("No track selected")
         print(
             f"No track was selected for new race")
         return
     track = gtdb.getTrack(dbC1, value=x)
-    x = f"Track          : {track.name[0:30].ljust(30)}"
 
     # Prompt user for track layout
     x = pickTrackLayout(track.id, track.name,
@@ -387,8 +418,6 @@ def addRaceCmd(args):
         print(f"No layout selected for new race on {track.name} track")
         return
     tLayout = gtdb.getLayout(dbC1, x)
-    x = f"Layout         : {tLayout.name[0:30].ljust(30)}"
-    print_formatted_text(HTML(x))
 
     # Prompt user for weather type
     x = pickWeather()
@@ -397,8 +426,6 @@ def addRaceCmd(args):
         print("No weather type choosen")
         return
     weather = gtdb.getWeather(dbC1, x)
-    x = f"Weather        : {weather.name[0:30].ljust(30)}"
-    print_formatted_text(HTML(x))
 
     # Prompt user for Race type
     x = pickRaceType()
@@ -407,13 +434,20 @@ def addRaceCmd(args):
         print("No race type choosen")
         return
     raceType = gtdb.getRaceType(dbC1, id=x)
-    x = f"Race type      : {raceType.name[0:30].ljust(30)}"
-    print(x)
-    # print_formatted_text(HTML(x))
+
+    # Display what user selected
+    displayCollection(rcCollection)
+    print("")
+    # Need Track, Layout, weather and race type
+    htmltrackNlayout = html.escape(f"{track.name} : {tLayout.name}")
+    htmlLine = f"Track and Layout: <ansigreen>{htmltrackNlayout}</ansigreen>"
+    print_formatted_text(HTML(htmlLine))
 
     # Prompt user for Race Name
     log.info("Getting race name from user")
-    name = prompt("   Race Name (Enter to cancel): ")
+    htmlLine = f"<b>Enter a unique race name for this race collection</b>"
+    print_formatted_text(HTML(htmlLine))
+    name = prompt("  (Enter to cancel) >> ")
     log.debug(f"name={name}")
     if name == None or name == "":  # User didn't provide data
         log.info("User did not provide race name")
@@ -426,19 +460,19 @@ def addRaceCmd(args):
     log.info("Getting Race time from user")
     validator = Validator.from_callable(
         _valTime, error_message='Not a valid time format', move_cursor_to_end=True)
-    raceTime = prompt(f"   Time of Day for race (HH:MM): ",
+    raceTime = prompt(f"   Time of Day for race (HH:MM) >> ",
                       validator=validator)
     log.debug(f"raceTime={raceTime}")
     xRace.racetime = raceTime
 
     # Prompt user for limits i.e. lap/max time restrictions
     log.info("Getting lap/max time limits from user")
-    xRace.limits = prompt(f"    Limits: ")
+    xRace.limits = prompt(f"    Limits >> ")
     log.debug(f"limits={xRace.limits}")
 
     # Prompt user for any notes about race
     log.info("Getting notes about race from user")
-    xRace.notes = prompt(f"    Notes: ")
+    xRace.notes = prompt(f"    Notes >> ")
     log.debug(f"notes={xRace.notes}")
 
     # Saving race object to database
@@ -449,9 +483,12 @@ def addRaceCmd(args):
         log.info(
             f"Unable to add Race. Return Code: {result[0]} Desc: {result[1]}")
     else:
-        msg = f'  <ansigreen>Race Collection Added</ansigreen>'
+        msg = f'  <ansigreen>Race Added</ansigreen>'
         log.info(f"Race added")
-    print_formatted_text(HTML(msg))
+        print_formatted_text(HTML(msg))
+        # now display the list collection id=46
+
+        displayCollection(rcCollection)
 
 
 def displayCarCats(theList):
@@ -518,6 +555,7 @@ def displayCollection(raceColObj):
         weather = html.escape(race.weather.name)
         print_formatted_text(
             HTML(f"<ansigreen>{id}</ansigreen> | <ansigreen>{rName}</ansigreen> | <ansigreen>{trackNlayout[0:60].ljust(60)}</ansigreen> | <ansigreen>{tlMiles}</ansigreen> | <ansigreen>{racetime}</ansigreen> | <ansigreen>{weather}</ansigreen>"))
+    print("=" * 106)  # End of display
 
 
 def displayCollections(leagueObj):
@@ -1011,14 +1049,21 @@ def pickTrackLayout(trackID, trackName, text='Select one'):
 
     Returns:
         layoutID(int)
+
+    If there is only one track layout, this will automaticly return
+    that layouts id, thus not prompting use to choose.
     """
-    log.info("getting track layouts for trackID:{trackID}")
+    log.info(f"getting track layouts for trackID:{trackID}")
     pickList = gtdb.getLayoutList(dbC1, trackID)
-    log.info("Display track layouts for user to choose")
-    result = radiolist_dialog(title=f"Track Layouts for track {trackName}",
-                              text=text,
-                              values=pickList).run()
-    log.info(f"User choose: {result}")
+    if len(pickList) == 1:
+        result = pickList[0][0]
+        log.info(f"Only one to choose. returning {result}")
+    else:
+        log.info("Display track layouts for user to choose")
+        result = radiolist_dialog(title=f"Track Layouts for track {trackName}",
+                                  text=text,
+                                  values=pickList).run()
+        log.info(f"User choose: {result}")
     return result
 
 
