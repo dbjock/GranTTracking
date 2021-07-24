@@ -1256,17 +1256,19 @@ def getTrack(dbConn, key='trackId', value=None):
 
 
 def getTrackList(dbConn):
-    """Returns a list of all the tracks in db
+    """Returns a list of all the tracks and num for layouts in db
 
     Args:
         dbConn (sqlite3.connect): Database connection
 
     Returns:
-        list: (trackId, trackName)
+        list: (trackId, trackName, numLayouts)
     """
     logger.info("Getting list of Tracks")
-    selectSQL = "select id, name from track order by name"
-    sql = f"{selectSQL}"
+    selectSQL = "SELECT tl.track_id,t.name,count(tl.id) as layouts"
+    fromSQL = "FROM track as t LEFT join track_layout as tl ON t.id = tl.track_id GROUP BY tl.track_id"
+    orderBySQL = "ORDER BY t.name"
+    sql = f"{selectSQL} {fromSQL} {orderBySQL}"
     logger.debug(f"sql = {sql}")
     # Enabling full sql traceback to logger.debug
     dbConn.set_trace_callback(logger.debug)
