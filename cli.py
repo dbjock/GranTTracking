@@ -139,6 +139,7 @@ def main():
                 'id=': None,
                 'name=': None
             },
+            'tracks': None,
         },
         'exit': None,
     })
@@ -647,18 +648,20 @@ def displayTrack(trackObj):
         print("=" * 78)
         return
 
-    tName = trackObj.name[0:50].ljust(50)
-    print(f"Track: ({trackObj.id}) {tName}")
+    xtext = html.escape(f"{trackObj.name}")
+    print_formatted_text(
+        HTML(f"Track: <ansigreen>{xtext}</ansigreen> ({trackObj.id})"))
 
     # Displaying Country info
     if trackObj.country.id == 0:  # No country info
-        cText = f"      {str('No country assigned to this track')[0:50].ljust(50)}"
+        xtext = f"{str('None selected')[0:50].ljust(50)}"
         region = "N/A"
     else:  # Country info
-        cText = f"{trackObj.country.cntryName[0:50].ljust(50)}"
-        region = trackObj.country.region
+        xtext = html.escape(f"{trackObj.country.cntryName[0:50].ljust(50)}")
+        region = html.escape(f"{trackObj.country.region}")
 
-    print(f"Country: {cText} Region: {region}")
+    print_formatted_text(HTML(
+        f"Country: <ansigreen>{xtext}</ansigreen> Region: <ansigreen>{region}</ansigreen>"))
 
     # Get track layout List
     tLayoutList = gtdb.getLayoutList(dbC1, trackObj.id)
@@ -672,12 +675,50 @@ def displayTrack(trackObj):
     # display track layouts
     for r in tLayoutList:
         tlID = str(r[0])[0:2].rjust(2)
-        tlName = r[1][0:30].ljust(30)
+        tlName = html.escape(r[1][0:30].ljust(30))
         tlMiles = "{:.2f}".format(r[2]).rjust(5)
-        rowStr = f" {tlID} | {tlName} | {tlMiles} |"
-        print(rowStr)
+
+        rowStr = HTML(
+            f" <ansigreen>{tlID}</ansigreen> | <ansigreen>{tlName}</ansigreen> | <ansigreen>{tlMiles}</ansigreen> |")
+        print_formatted_text(rowStr)
 
     print("=" * 80)
+
+
+def displayTracks():
+    """Displays table of track info
+    """
+    log.info("Getting list of tracks")
+    theList = gtdb.getTrackList(dbC1)
+    print_formatted_text(
+        HTML(f"Number of Tracks: <ansigreen>{len(theList)}</ansigreen>"))
+    # Header
+    tID = f" ID"
+    tName = f"Track Name"[0:30].ljust(30)
+    region = f"Region"[0:10].ljust(10)
+    country = f"Country"[0:54].ljust(54)
+    layouts = f"Layouts"
+    print_formatted_text(
+        HTML(f"{tID} | {tName} | {region} | {country} | {layouts}"))
+    print("-" * 117)
+    # Details
+    for row in theList:
+        log.info(f"Getting track detail for trackid {row[0]}")
+        track = gtdb.getTrack(dbC1, key='trackId', value=row[0])
+        tID = str(row[0])[0:2].rjust(2)
+        tName = html.escape(track.name[0:30].ljust(30))
+        # Displaying Country info
+        if track.country.id == 0:  # No country info
+            country = str('----')[0:54].ljust(54)
+            region = "N/A"[0:10].ljust(10)
+        else:  # Country info
+            country = html.escape(track.country.cntryName[0:54]).ljust(54)
+            region = html.escape(track.country.region[0:10].ljust(10))
+        layouts = str(row[2])[0:2].rjust(2)
+        print_formatted_text(
+            HTML(f" <ansigreen>{tID}</ansigreen> | <ansigreen>{tName}</ansigreen> | <ansigreen>{region}</ansigreen> | <ansigreen>{country}</ansigreen> | <ansigreen>{layouts}</ansigreen>"))
+
+    print("=" * 117)
 
 
 def help(arg):
@@ -768,6 +809,8 @@ def listAction(cmd):
             displayMfgs(gtdb.getMfgList(dbC1))
     elif listObj == 'race':
         listRaceCmd(cmd[len(listObj):].strip())
+    elif listObj == 'tracks':
+        displayTracks()
     else:  # Unknown object to list
         print_formatted_text(
             HTML(f'<ansired>ERROR</ansired> - Unknown <ansigreen>list</ansigreen> object <b>{listObj}</b>'))
