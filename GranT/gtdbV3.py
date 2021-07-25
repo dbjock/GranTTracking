@@ -1102,15 +1102,15 @@ def getRaceCollectionList(dbConn, leagueId):
         leagueId (int): leagueId to get race collections for
 
     Returns:
-        list: (id,name,desc,catClass, Prize1, Prize2, Prize3)
+        list: (id,name,desc,catClass, Prize1, Prize2, Prize3,raceCount)
     """
     logger.info(
         f"Getting list of race collections for a leagueID {leagueId}")
-    selectSQL = "SELECT rc.id, rc.name, rc.description, cat.name as catClass, rc.prize1,  rc.prize2, rc.prize3"
-    fromSQL = "FROM race_collection as rc LEFT JOIN category as cat ON rc.cat_id = cat.id"
-    whereSQL = "WHERE league_id = ?"
+    selectSQL = "SELECT rc.id, rc.name, rc.description, cat.name as catClass, rc.prize1,  rc.prize2, rc.prize3,Count(race.id) AS races"
+    fromSQL = "FROM race_collection AS rc LEFT JOIN category AS cat ON rc.cat_id = cat.id LEFT JOIN race ON race.rc_id = rc.id"
+    groupBySQL = "GROUP BY rc.id HAVING rc.league_id=?"
     orderBySQL = "ORDER BY rc.name"
-    sql = f"{selectSQL} {fromSQL} {whereSQL} {orderBySQL}"
+    sql = f"{selectSQL} {fromSQL} {groupBySQL} {orderBySQL}"
     theVals = (leagueId,)
     logger.debug(f"sql = {sql}")
     logger.debug(f"theVals = {theVals}")

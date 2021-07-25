@@ -562,36 +562,39 @@ def displayCollections(leagueObj):
     Args:
         leagueObj : League object
     """
-    # list: (id,name,desc,catClass, Prize1, Prize2, Prize3)
     theList = gtdb.getRaceCollectionList(dbC1, leagueObj.id)
     print_formatted_text(
         HTML(f"Race Collections for League: <ansigreen>{html.escape(leagueObj.name)}</ansigreen> ({leagueObj.id})"))
     # Header
-    col1 = f' ID'
-    col2 = f'Collection Name'.ljust(40)
-    col3 = f'Class'.ljust(6)
-    col4 = f'1st ~'.ljust(10)
-    col5 = f'2nd ~'.ljust(10)
-    col6 = f'3rd ~'.ljust(10)
-    print(f"  {col1} | {col2} | {col3} | {col4} | {col5} | {col6}")
-    print("-" * 98)  # header seperator
+    colID = f' ID'
+    colName = f'Collection Name'.ljust(40)
+    carClass = f'Class'.ljust(6)
+    prize1 = f'1st ~'.ljust(10)
+    prize2 = f'2nd ~'.ljust(10)
+    prize3 = f'3rd ~'.ljust(10)
+    races = f'Races'
+    print(
+        f"  {colID} | {colName} | {carClass} | {prize1} | {prize2} | {prize3} | {races}")
+    print("-" * 104)  # header seperator
     # Data
+    # list: (id,name,desc,catClass, Prize1, Prize2, Prize3,raceCount)
     for row in theList:
         # print(row)
-        col1 = f"{row[0]:d}".rjust(3)
-        col2 = html.escape(row[1].ljust(40))
+        colID = f"{row[0]:d}".rjust(3)
+        colName = html.escape(row[1].ljust(40))
         if row[3]:  # Car Class Cat has a value
             xcarClass = row[3]
         else:  # Car Class Cat has no value
             xcarClass = ""
-        col3 = html.escape(xcarClass.ljust(6))  # catClass
+        carClass = html.escape(xcarClass.ljust(6))  # catClass
         # prizes
-        col4 = html.escape(f'{row[4]:,}'.rjust(10))
-        col5 = html.escape(f'{row[5]:,}'.rjust(10))
-        col6 = html.escape(f'{row[6]:,}'.rjust(10))
+        prize1 = html.escape(f'{row[4]:,}'.rjust(10))
+        prize2 = html.escape(f'{row[5]:,}'.rjust(10))
+        prize3 = html.escape(f'{row[6]:,}'.rjust(10))
+        races = f"{row[7]:d}".rjust(4)
         print_formatted_text(
-            HTML(f"  <ansigreen>{col1}</ansigreen> | <ansigreen>{col2}</ansigreen> | <ansigreen>{col3}</ansigreen> | <ansigreen>{col4}</ansigreen> | <ansigreen>{col5}</ansigreen> | <ansigreen>{col6}</ansigreen>"))
-    print("=" * 98)
+            HTML(f"  <ansigreen>{colID}</ansigreen> | <ansigreen>{colName}</ansigreen> | <ansigreen>{carClass}</ansigreen> | <ansigreen>{prize1}</ansigreen> | <ansigreen>{prize2}</ansigreen> | <ansigreen>{prize3}</ansigreen> | <ansigreen>{races}</ansigreen>"))
+    print("=" * 104)
 
 
 def displayDriveTrains(theList):
