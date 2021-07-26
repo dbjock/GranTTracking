@@ -139,7 +139,8 @@ def main():
             'race': None,
             'track': {
                 'id=': None,
-                'name=': None
+                'name=': None,
+                'layoutId=': None
             },
             'tracks': None,
         },
@@ -515,6 +516,7 @@ def displayCollection(raceColObj):
         raceColObj : Race Collection object
     """
     # League and collection info
+    log.info(f"Displaying information for race collection id {raceColObj.id}")
     htmlLeague = html.escape(
         f'{raceColObj.league.name}')
     htmlCollection = html.escape(
@@ -534,26 +536,26 @@ def displayCollection(raceColObj):
     print("\nRace(s):")
     id = f"ID".rjust(3)
     rName = "Name".ljust(7)
-    trackNlayout = "Track : Layout"
+    trackNlayout = "Track (id): Layout (id)"
     tlMiles = "Miles".ljust(5)
     racetime = "Time "
     weather = "weather"
     print_formatted_text(
-        HTML(f"{id} | {rName} | {trackNlayout[0:60].ljust(60)} | {tlMiles} | {racetime} | {weather}"))
+        HTML(f"{id} | {rName} | {trackNlayout[0:65].ljust(65)} | {tlMiles} | {racetime} | {weather}"))
 
-    print("-" * 106)  # header seperator
+    print("-" * 110)  # header seperator
     for x in gtdb.getRaceList(dbC1, raceColObj.id):
         race = gtdb.getRace(dbC1, x[0])
         id = f"{race.id:d}".rjust(3)
         rName = html.escape(race.name[0:7].ljust(7))
         trackNlayout = html.escape(
-            f"{race.trackLayout.track.name} : {race.trackLayout.name}")
+            f"{race.trackLayout.track.name} ({race.trackLayout.track.id}): {race.trackLayout.name} ({race.trackLayout.id})")
         tlMiles = "{:.2f}".format(race.trackLayout.miles).rjust(5)
         racetime = html.escape(race.racetime.ljust(5))
         weather = html.escape(race.weather.name)
         print_formatted_text(
-            HTML(f"<ansigreen>{id}</ansigreen> | <ansigreen>{rName}</ansigreen> | <ansigreen>{trackNlayout[0:60].ljust(60)}</ansigreen> | <ansigreen>{tlMiles}</ansigreen> | <ansigreen>{racetime}</ansigreen> | <ansigreen>{weather}</ansigreen>"))
-    print("=" * 106)  # End of display
+            HTML(f"<ansigreen>{id}</ansigreen> | <ansigreen>{rName}</ansigreen> | <ansigreen>{trackNlayout[0:65].ljust(65)}</ansigreen> | <ansigreen>{tlMiles}</ansigreen> | <ansigreen>{racetime}</ansigreen> | <ansigreen>{weather}</ansigreen>"))
+    print("=" * 110)  # End of display
 
 
 def displayCollections(leagueObj):
@@ -683,24 +685,26 @@ def displayTrack(trackObj):
         trackObj
     """
     if trackObj.id == 0:  # No track found
-        print("No Track found matching the criteria")
-        print("=" * 78)
+        log.info("Track was not found")
+        print_formatted_text(
+            HTML(f"<ansired> ERROR </ansired> <b>Track not found</b>"))
         return
 
-    xtext = html.escape(f"{trackObj.name}")
+    log.info("Displaying information for trackID: {trackObj.id}")
+    htmltName = html.escape(f"{trackObj.name}")
     print_formatted_text(
-        HTML(f"Track: <ansigreen>{xtext}</ansigreen> ({trackObj.id})"))
+        HTML(f"Track  : <ansigreen>{htmltName}</ansigreen> ({trackObj.id})"))
 
     # Displaying Country info
     if trackObj.country.id == 0:  # No country info
         xtext = f"{str('None selected')[0:50].ljust(50)}"
         region = "N/A"
     else:  # Country info
-        xtext = html.escape(f"{trackObj.country.cntryName[0:50].ljust(50)}")
+        xtext = html.escape(f"{trackObj.country.cntryName}")
         region = html.escape(f"{trackObj.country.region}")
 
     print_formatted_text(HTML(
-        f"Country: <ansigreen>{xtext}</ansigreen> Region: <ansigreen>{region}</ansigreen>"))
+        f"Country: <ansigreen>{xtext}</ansigreen> (<ansigreen>{region}</ansigreen>)"))
 
     # Get track layout List
     tLayoutList = gtdb.getLayoutList(dbC1, trackObj.id)
@@ -708,20 +712,21 @@ def displayTrack(trackObj):
     tlID = "ID"
     tlName = "Name".ljust(30)
     tlMiles = "Miles"
-    rowStr = f" {tlID} | {tlName} | {tlMiles} |"
+    races = "Races"
+    rowStr = f" {tlID} | {tlName} | {tlMiles} | {races}"
     print(rowStr)
-    print("-" * 80)  # header seperator
+    print("-" * 55)  # header seperator
     # display track layouts
     for r in tLayoutList:
         tlID = str(r[0])[0:2].rjust(2)
         tlName = html.escape(r[1][0:30].ljust(30))
         tlMiles = "{:.2f}".format(r[2]).rjust(5)
-
+        races = f"{r[3]:d}".rjust(4)
         rowStr = HTML(
-            f" <ansigreen>{tlID}</ansigreen> | <ansigreen>{tlName}</ansigreen> | <ansigreen>{tlMiles}</ansigreen> |")
+            f" <ansigreen>{tlID}</ansigreen> | <ansigreen>{tlName}</ansigreen> | <ansigreen>{tlMiles}</ansigreen> | <ansigreen>{races}</ansigreen>")
         print_formatted_text(rowStr)
 
-    print("=" * 80)
+    print("=" * 55)
 
 
 def displayTracks():
@@ -758,6 +763,67 @@ def displayTracks():
             HTML(f" <ansigreen>{tID}</ansigreen> | <ansigreen>{tName}</ansigreen> | <ansigreen>{region}</ansigreen> | <ansigreen>{country}</ansigreen> | <ansigreen>{layouts}</ansigreen>"))
 
     print("=" * 117)
+
+
+def displayTrackLayout(trackLayout):
+    """Display Track Layout information
+
+    Args:
+        trackLayout ([type]): track Layout object
+    """
+    if trackLayout.id == 0:
+        log.info("Track Layout was not found")
+        print_formatted_text(
+            HTML(f"<ansired> ERROR </ansired> <b>Track Layout not found</b>"))
+        return
+    log.info(
+        f"Displaying track layout info for trackLayoutId: {trackLayout.id}")
+    # Formatting header data
+    trackNlayout = html.escape(
+        f"{trackLayout.track.name} ({trackLayout.track.id}): {trackLayout.name} ({trackLayout.id})")
+    htmlCountry = html.escape(
+        f"{trackLayout.track.country.cntryName} ({trackLayout.track.country.region})")
+    miles = "{:.2f}".format(trackLayout.miles).rjust(5)
+    # Print the Track and Layout info
+    htmlLine = f"Track Layout Info for: <ansigreen>{trackNlayout}</ansigreen>"
+    print_formatted_text(HTML(htmlLine))
+    htmlLine = f"Miles: <ansigreen>{miles}</ansigreen>  Country: <ansigreen>{htmlCountry}</ansigreen>"
+    print_formatted_text(HTML(htmlLine))
+    print_formatted_text(HTML("Race(s)"))
+    # Race Header line
+    raceID = " ID"
+    rName = "Race".ljust(7)
+    leagueNcollection = "League (id) - Collection (id)".ljust(70)
+    carClass = f'Class'.ljust(6)
+    prize1 = f'1st ~'.ljust(10)
+    prize2 = f'2nd ~'.ljust(10)
+    prize3 = f'3rd ~'.ljust(10)
+    racetime = "Time "
+    print_formatted_text(HTML(
+        f"{raceID} | {rName} | {leagueNcollection} | {carClass} | {prize1} | {prize2} | {prize3} | {racetime}"))
+    print("-" * 142)
+    # Race detail info
+    selectSQL = "SELECT r.id, r.name, l.name || ' (' || l.id || ') - ' || rc.name || ' (' || rc.id || ')' AS wtf, carcat.name as Class, r.racetime, rc.prize1, rc.prize2, rc.prize3, rt.name type, w.name AS weather"
+    fromSQL = "FROM race AS r JOIN track_layout AS tl ON r.tl_id = tl.id JOIN race_type AS rt ON r.type_id = rt.id JOIN weather AS w ON r.weather_id = w.id JOIN race_collection AS rc ON r.rc_id = rc.id JOIN league AS l ON rc.league_id = l.id JOIN category as carcat ON rc.cat_id = carcat.id"
+    whereSQL = "WHERE tl.id = ?"
+    orderBySQL = "ORDER BY l.name, rc.name"
+    # Getting the details
+    for row in gtdb.directSql(dbC1, f"{selectSQL} {fromSQL} {whereSQL} {orderBySQL}", (trackLayout.id,)):
+        raceID = f"{row[0]:d}".rjust(3)
+        rName = html.escape(row[1][0:7].ljust(7))
+        leagueNcollection = html.escape(row[2].ljust(70))
+        carClass = row[3].ljust(6)
+        racetime = html.escape(row[4].ljust(5))
+        prize1 = f'{int(row[5]):,}'.rjust(10)
+        prize2 = f'{int(row[6]):,}'.rjust(10)
+        prize3 = f'{int(row[7]):,}'.rjust(10)
+
+        print_formatted_text(HTML(
+            f"<ansigreen>{raceID}</ansigreen> | <ansigreen>{rName}</ansigreen> | <ansigreen>{leagueNcollection}</ansigreen> | <ansigreen>{carClass}</ansigreen> | <ansigreen>{prize1}</ansigreen> | <ansigreen>{prize2}</ansigreen> | <ansigreen>{prize3}</ansigreen> | <ansigreen>{racetime}</ansigreen>"))
+
+    # TODO: Finish the display of this
+    print("=" * 142)
+    return
 
 
 def help(arg):
@@ -893,6 +959,12 @@ def listTrackCmd(args):
             log.info(f"Getting track info for track name {tName}")
             trackRec = gtdb.getTrack(dbC1, key='track', value=tName)
             displayTrack(trackRec)
+        elif args.split('=')[0].strip() == 'layoutId':
+            layoutId = args.split('=')[1].strip()
+            log.info(
+                f"Getting track layout info for track layout id {layoutId}")
+            trackLayout = gtdb.getLayout(dbC1, layoutId)
+            displayTrackLayout(trackLayout)
         else:  # invalid Args passed
             log.info(
                 f"Unknown list track argument {args.split('=')[0].strip()}")

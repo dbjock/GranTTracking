@@ -737,13 +737,14 @@ def getLayoutList(dbConn, trackId):
         dbConn (sqlite3.connect): Database connection
         trackId (int): The trackId of the track the layout list is for
     Returns:
-        list: (layoutId,layoutName)
+        list: (layoutId, layout,Miles,Races)
     """
     logger.info(f"Getting track layout list: trackId={trackId}")
-    selectSQL = """SELECT layoutId, layout, miles FROM vTrackLayout"""
+    selectSQL = "SELECT tl.id AS layoutId, tl.name AS layout, tl.miles AS Miles, count(race.tl_id) AS Races"
+    fromSQL = "FROM track_layout AS tl LEFT JOIN race ON tl.id = race.tl_id"
+    groupBySQL = "GROUP BY tl.id HAVING tl.track_id = ?"
     orderBySQL = "ORDER BY layout"
-    whereSQL = "WHERE trackId = ?"
-    sql = f"{selectSQL} {whereSQL} {orderBySQL}"
+    sql = f"{selectSQL} {fromSQL} {groupBySQL} {orderBySQL}"
     theVals = (trackId,)
     logger.debug(f"sql = {sql}")
     logger.debug(f"theVals = {theVals}")
@@ -1643,4 +1644,35 @@ def validateTrackLayout(dbConn, trackLayout):
     # All tests passed
     result = (True, "Track Layout Tests Passed")
     logger.info(f"returning = {result}")
+    return result
+
+
+def directSql(dbConn, sql, theVals):
+    """Execute hand crafted sql.
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        sql (str): SQL to run
+        theVals (list,dict): Values to be sanitized
+
+    Returns:
+        list: results for the SQL
+    """
+    logger.debug(f"DIRECTsql = {sql}")
+    logger.debug(f"DIRECTVals = {theVals}")
+
+    # Enabling full sql traceback to logger.debug
+    dbConn.set_trace_callback(logger.debug)
+    try:
+        cur = dbConn.cursor()
+        cur.execute(sql, theVals)
+        result = cur.fetchall()
+    except:
+        logger.critical(
+            f'Unexpected error executing sql: {sql}', exc_info=True)
+        sys.exit(1)
+    # Disable full sql traceback to logger.debug
+    dbConn.set_trace_callback(None)
+
+    logger.info(f"Returning {len(result)} rows")
     return result
