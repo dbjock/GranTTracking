@@ -40,7 +40,6 @@ log.addHandler(console)
 Path(gtcfg.logcfg['logDir']).mkdir(parents=True, exist_ok=True)
 
 logFile = Path(gtcfg.logcfg['logDir']) / 'cli.log'
-print(logFile)
 
 log_fh = RotatingFileHandler(
     logFile, mode='a', maxBytes=1048576, backupCount=2)
@@ -50,20 +49,25 @@ log_fh.setFormatter(extFMT)
 log_fh.setLevel(logging.DEBUG)
 # Add logging filehander log_fh to the logger
 log.addHandler(log_fh)
-print(f"Logging to {logFile}")
-
-print(f"Connecting to db {gtcfg.dbcfg['dbFile']}")
+linePrmpt = '  system> '
+print(f"{linePrmpt} Logging to: {logFile}")
 # create Path to database if it does not exists
 Path(Path(gtcfg.dbcfg['dbFile']).parent).mkdir(parents=True, exist_ok=True)
-
+print(f"{linePrmpt} Database  : {gtcfg.dbcfg['dbFile']}")
 if not Path(gtcfg.dbcfg['dbFile']).exists():
-    log.info("Creating new db")
-    print(f"DB file does not exists: {gtcfg.dbcfg['dbFile']}")
-    print(f"Creating new one: {gtcfg.dbcfg['dbFile']}")
+    newDB = True
+    log.debug(f"Db file not found: newDB={newDB}")
+else:
+    newDB = False
+    log.debug(f"Db found: newDB={newDB}")
 
+# sqlite will create a database file if it does not exist.
 dbC1 = gtdb.create_connection(gtcfg.dbcfg['dbFile'])
-print(f"Connected to db {gtcfg.dbcfg['dbFile']}")
-gtdb.initDB(dbC1, scriptPath=_gtScripts)
+
+if newDB:
+    log.info(f"Initializing new database: {gtcfg.dbcfg['dbFile']}")
+    print(f"{linePrmpt} Initializing new database")
+    gtdb.initDB(dbC1, scriptPath=_gtScripts)
 
 
 def _sortTuple(tup, key):
@@ -111,7 +115,6 @@ def dbInit():
 
 
 def main():
-    cls()
     print("enter Exit or Help for more info")
     completer = NestedCompleter.from_nested_dict({
         'help': {
