@@ -1257,7 +1257,7 @@ def getTrack(dbConn, key='trackId', value=None):
 
 
 def getTrackList(dbConn):
-    """Returns a list of all the tracks and num for layouts in db
+    """Returns a list of all the tracks and the number of layouts for each track
 
     Args:
         dbConn (sqlite3.connect): Database connection

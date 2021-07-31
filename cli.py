@@ -23,7 +23,6 @@ from GranT import gtcfg
 _gtPath = Path.cwd()
 _gtScripts = _gtPath / 'Scripts'
 
-
 # Log Formatters
 smlFMT = logging.Formatter(
     '%(asctime)s %(levelname)-8s %(message)s')
@@ -52,17 +51,19 @@ log_fh.setLevel(logging.DEBUG)
 # Add logging filehander log_fh to the logger
 log.addHandler(log_fh)
 print(f"Logging to {logFile}")
+
 print(f"Connecting to db {gtcfg.dbcfg['dbFile']}")
 # create Path to database if it does not exists
 Path(Path(gtcfg.dbcfg['dbFile']).parent).mkdir(parents=True, exist_ok=True)
-if Path(gtcfg.dbcfg['dbFile']).exists():
-    dbC1 = gtdb.create_connection(gtcfg.dbcfg['dbFile'])
-    print(f"Connected to db {gtcfg.dbcfg['dbFile']}")
-else:
+
+if not Path(gtcfg.dbcfg['dbFile']).exists():
+    log.info("Creating new db")
     print(f"DB file does not exists: {gtcfg.dbcfg['dbFile']}")
     print(f"Creating new one: {gtcfg.dbcfg['dbFile']}")
-    dbC1 = gtdb.create_connection(gtcfg.dbcfg['dbFile'])
-    gtdb.initDB(dbC1, scriptPath=_gtScripts)
+
+dbC1 = gtdb.create_connection(gtcfg.dbcfg['dbFile'])
+print(f"Connected to db {gtcfg.dbcfg['dbFile']}")
+gtdb.initDB(dbC1, scriptPath=_gtScripts)
 
 
 def _sortTuple(tup, key):
@@ -345,7 +346,8 @@ def addCollectionCmd(args):
 
 
 def addRaceCmd(args):
-    """What do do when asked to add a Race"""
+    """Check and see what args have been passed before
+    before drilling down on the questions to ask to add a Race"""
     cls()
     print("Adding a Race")
     log.debug(f"args passed: {args}")
@@ -820,8 +822,6 @@ def displayTrackLayout(trackLayout):
 
         print_formatted_text(HTML(
             f"<ansigreen>{raceID}</ansigreen> | <ansigreen>{rName}</ansigreen> | <ansigreen>{leagueNcollection}</ansigreen> | <ansigreen>{carClass}</ansigreen> | <ansigreen>{prize1}</ansigreen> | <ansigreen>{prize2}</ansigreen> | <ansigreen>{prize3}</ansigreen> | <ansigreen>{racetime}</ansigreen>"))
-
-    # TODO: Finish the display of this
     print("=" * 142)
     return
 
