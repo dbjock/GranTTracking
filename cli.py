@@ -12,7 +12,7 @@ from datetime import datetime
 from prompt_toolkit import prompt, PromptSession
 from prompt_toolkit import print_formatted_text, HTML
 from prompt_toolkit.validation import Validator
-from prompt_toolkit.completion import NestedCompleter
+from prompt_toolkit.completion import NestedCompleter, WordCompleter
 from prompt_toolkit.shortcuts import radiolist_dialog, input_dialog
 
 # App specific required
@@ -20,9 +20,11 @@ from GranT import gtdbV3 as gtdb
 from GranT import GTClasses as GT
 from GranT import gtcfg
 
-_gtPath = Path.cwd()
-_gtScripts = _gtPath / 'Scripts'
-
+# _gtPath = Path.cwd()
+# _gtScripts = _gtPath / 'Scripts'
+gtcfg.curcfg['gtPath'] = Path.cwd()
+gtcfg.curcfg['gtScripts'] = gtcfg.curcfg['gtPath'] / 'Scripts'
+gtcfg.curcfg['layoutUpdated'] = True
 # Log Formatters
 smlFMT = logging.Formatter(
     '%(asctime)s %(levelname)-8s %(message)s')
@@ -67,7 +69,7 @@ dbC1 = gtdb.create_connection(gtcfg.dbcfg['dbFile'])
 if newDB:
     log.info(f"Initializing new database: {gtcfg.dbcfg['dbFile']}")
     print(f"{linePrmpt} Initializing new database")
-    gtdb.initDB(dbC1, scriptPath=_gtScripts)
+    gtdb.initDB(dbC1, scriptPath=gtcfg.curcfg['gtScripts'])
 
 
 def _sortTuple(tup, key):
@@ -108,7 +110,7 @@ def dbInit():
         log.warning("db init confirmed")
         x = f'<ansired><b>Database being initiliazed</b></ansired>'
         print_formatted_text(HTML(x))
-        gtdb.initDB(dbC1, scriptPath=_gtScripts)
+        gtdb.initDB(dbC1, scriptPath=gtcfg.curcfg['gtScripts'])
 
         x = f'<ansired><b>Database initilization complete</b></ansired>'
         print_formatted_text(HTML(x))
@@ -116,7 +118,7 @@ def dbInit():
 
 def main():
     print("enter Exit or Help for more info")
-    completer = NestedCompleter.from_nested_dict({
+    cmdHelper = {
         'help': {
             'exit': None,
             'list': None,
@@ -149,7 +151,8 @@ def main():
             'tracks': None,
         },
         'exit': None,
-    })
+    }
+    completer = NestedCompleter.from_nested_dict(cmdHelper)
 
     session = PromptSession()
 
@@ -348,117 +351,208 @@ def addCollectionCmd(args):
         log.info(f"Race Collection Added")
 
 
+def addRace(collectionId=None, layoutId=None, weatherId=None, raceTypeId=None):
+    """Being depricated"""
+    pass
+
+
 def addRaceCmd(args):
     """Check and see what args have been passed before
     before drilling down on the questions to ask to add a Race"""
-    cls()
-    print("Adding a Race")
     log.debug(f"args passed: {args}")
     log.debug(f"length of args: {len(args)}")
-    if len(args) > 0 and args.find("=") > 0:  # Valid arg string passed
-        if args.split('=')[0].strip() == 'collectionId':
-            log.info(f"Getting race collection object")
-            rcCollection = gtdb.getRaceCollection(
-                dbC1, args.split("=")[1].strip())
-            if rcCollection.id == 0:  # Race Collection not found
+    collectionId = None
+    layoutId = None
+    weatherId = None
+    raceTypeId = None
+    for setting in args.split():
+        if setting.split("=")[0].upper() == 'COLLECTIONID':
+            collectionId = setting.split("=")[1]
+        elif setting.split("=")[0].upper() == 'LAYOUTID':
+            layoutId = setting.split("=")[1]
+        elif setting.split("=")[0].upper() == 'WEATHERID':
+            weatherId = setting.split("=")[1]
+        elif setting.split("=")[0].upper() == 'RACETYPEID':
+            raceTypeId = setting.split("=")[1]
+
+    log.debug(
+        f"collectionId={collectionId}: layoutId={layoutId}: weatherId={weatherId}: raceTypeId={raceTypeId}")
+
+    if collectionId:
+        log.info(f"Validating collectionId {collectionId}")
+        rcCollection = gtdb.getRaceCollection(dbC1, collectionId)
+        if rcCollection.id == 0:  # Race Collection not found
+            log.info(
+                f"collectionId:{collectionId} was not found. Prompt user to get.")
+            x = pickLeague(
+                text=f"The collectionId {collectionId} was not found. Please select a League")
+            if x == None:  # no league picked
+                log.info("No league selected")
+                print("Unable to get a collectionId for the new race")
+                return
+            else:  # League picked. Get collectionId for the league from user.
+                log.info(f"Loading league object for leagueid={x}")
+                league = gtdb.getLeague(dbC1, value=x)
+                # Prompt user to select collection from the league
+                log.info("Prompting user for race collection id")
+                collectionId = pickRaceCollection(
+                    league.id, league.name, text=f"Which race collection for the new race?")
+                if collectionId == None:  # no race collection selected
+                    log.info(
+                        f"No race collection selected for leagueId={league.id}")
+                    print("Unable to get a collectionId for the new race")
+                    return
+        else:  # Race Collection found
+            pass
+    else:  # Need to get info from user
+        log.info(f"No collectionId provided. Prompting user to get the id")
+        x = pickLeague(
+            text="No collectionId was provided. Please select a League")
+        if x == None:  # no leauge picked
+            log.info("No league selected.")
+            print("Unable to get a collection id for the new race")
+            return
+        else:  # Get collectionId for the league from user.
+            log.info(f"Loading league object for leagueid={x}")
+            league = gtdb.getLeague(dbC1, value=x)
+            # Prompt user to select collection from the league
+            log.info("Prompting user for race collection id")
+            collectionId = pickRaceCollection(
+                league.id, league.name, text=f"Which race collection for the new race?")
+            if collectionId == None:  # no race collection selected
                 log.info(
-                    f"Race collection id:{args.split('=')[1].strip()} was not found")
-                print_formatted_text(
-                    HTML(f"<ansired> ERROR </ansired> <b>Collection id not found</b>"))
+                    f"No race collection was selected for league ({league.id}) {league.name}")
+                print("Unable to get a collection id for the new race")
                 return
 
-        else:  # unknown arg passed
+    if layoutId:
+        log.info(f"Validating layoutId {layoutId}")
+        tLayout = gtdb.getLayout(dbC1, layoutId)
+        if tLayout.id == 0:  # TrackLayout not found
+            log.info(f"layoutId:{layoutId} was not found. Prompt user for it")
+            # Prompt user for Track
+            x = pickTrack(
+                text=f"The layoutId {layoutId} was not found. Please select a Track")
+            if x == None:  # no track was selected
+                log.info("No track selected")
+                print(f"Unable to get a layoutId for new race")
+                return
+            else:  # Track was selected. Get layout from user.
+                log.info(f"Loading track object for trackId={x}")
+                track = gtdb.getTrack(dbC1, value=x)
+                log.info(f"Prompting user for layout id")
+                layoutId = pickTrackLayout(track.id, track.name,
+                                           text=f'Which layout for the new race?')
+                if layoutId == None:  # no layout was selected
+                    log.info(f"No layout selected for trackId {track.id}")
+                    print(f"Unable to get a layoutId for new race")
+                    return
+        else:  # TrackLayout found
+            pass
+    else:  # Need to get info from user
+        log.info(f"No layoutId provided. Prompting user to get it.")
+        x = pickTrack(text=f"No layoutId was provided. Please select a Track")
+        if x == None:  # no track selected
+            log.info("No track selected.")
+            print("Unable to get a layoutId for new race")
+            return
+        else:  # Track selected. Get layout from user
+            log.info(f"Loading track object for trackId={x}")
+            track = gtdb.getTrack(dbC1, value=x)
+            log.info(f"Prompting user for layout id")
+            layoutId = pickTrackLayout(track.id, track.name,
+                                       text=f'Which layout for the new race?')
+            if layoutId == None:  # no layout was selected
+                log.info(f"No layout selected for trackId {track.id}")
+                print(f"Unable to get a layoutId for new race")
+                return
+
+    if weatherId:
+        log.info(f"Validating weatherId {weatherId}")
+        weather = gtdb.getWeather(dbC1, weatherId)
+        if weather.id == 0:  # Not found, get info from user
             log.info(
-                f"Unknown add race argument {args.split('=')[0].strip()} ")
-            print_formatted_text(
-                HTML(f"<ansired>ERROR</ansired> - Unknown add race argument <b>{args.split('=')[0].strip()}</b>."))
+                f"weatherId:{weatherId} was not found. Prompt user for it")
+            weatherId = pickWeather(
+                text=f"The weatherId {weatherId} was not found. Please select Weather")
+            if weatherId == None:  # User not choose weather
+                log.info(f"No weather selected")
+                print(f"Unable to get a weatherId for new race")
+                return
+    else:  # Need to get info from user
+        log.info(
+            f"weatherId:{weatherId} not provided. Prompting user for it")
+        weatherId = pickWeather(
+            text=f"No weatherId provided. Please select Weather")
+        if weatherId == None:  # User not choose weather
+            log.info(f"No weather selected")
+            print(f"Unable to get a weatherId for new race")
             return
-    else:  # prompt user to get collection id
-        # Need to prompt user to find out which collection to add the race to
-        # Prompt user for League
-        log.info("Prompting user for League id")
-        x = pickLeague(text="Which League for the new race?")
-        if x == None:  # no league picked
-            log.info("No league selected.")
-            print("No league selected for new race")
-            return
-        log.info(f"Loading league object for leagueid={x}")
-        league = gtdb.getLeague(dbC1, value=x)
 
-        # Prompt user for leagues race collection
-        log.info("Prompting user for race collection id")
-        x = pickRaceCollection(
-            league.id, league.name, text=f"Which race collection for the new race?")
-        if x == None:  # no race collection selected
+    if raceTypeId:
+        log.info(f"Validating raceTypeId {raceTypeId}")
+        raceType = gtdb.getRaceType(dbC1, raceTypeId)
+        if raceType.id == 0:  # Not found. Prompt user for info
             log.info(
-                f"No race collection was selected for league ({league.id}) {league.name}")
-            print("No race collection selected")
+                f"raceTypeId: {raceTypeId} was not found. Prompt user for it")
+            raceTypeId = pickRaceType(
+                text=f"The raceTypeId {raceTypeId} was not found. Please select a race type")
+            if raceTypeId == None:  # User didn't choose
+                log.info(f"No race type selected")
+                print(f"Unable to get a raceTypeId for new race")
+                return
+        else:  # Good
+            pass
+    else:  # Need to get info from user
+        log.info(
+            f"raceTypeId: {raceTypeId} not provided. Prompt user for it")
+        raceTypeId = pickRaceType(
+            text=f"No raceTypeId was provided. Please select a race type")
+        if raceTypeId == None:  # User didn't choose
+            log.info(f"No race type selected")
+            print(f"Unable to get a raceTypeId for new race")
             return
-        log.info(f"Loading race collection for id={x}")
-        rcCollection = gtdb.getRaceCollection(dbC1, x)
 
-    # Now can proceed with adding a race
-    log.info("Proceeding to get further info to add race")
-    addRace(rcCollection)
-
-
-def addRace(rcCollection):
-    """Add a race to the race collection"""
-
-    # Prompt user for Track
-    log.info("Prompt user for track")
-    x = pickTrack(
-        text=f"Which track for the new {rcCollection.name} race?")
-    if x == None:  # no track was selected
-        log.info("No track selected")
-        print(
-            f"No track was selected for new race")
-        return
-    track = gtdb.getTrack(dbC1, value=x)
-
-    # Prompt user for track layout
-    x = pickTrackLayout(track.id, track.name,
-                        text=f'Which layout for the new race?')
-    if x == None:  # no layout was selected
-        log.info("No layout selected")
-        print(f"No layout selected for new race on {track.name} track")
-        return
-    tLayout = gtdb.getLayout(dbC1, x)
-
-    # Prompt user for weather type
-    x = pickWeather()
-    if x == None:  # User did not choose a weather type
-        log.info(f"No weather type choosen")
-        print("No weather type choosen")
-        return
-    weather = gtdb.getWeather(dbC1, x)
-
-    # Prompt user for Race type
-    x = pickRaceType()
-    if x == None:  # User did not choose a race type
-        log.info(f"No race type choosen")
-        print("No race type choosen")
-        return
-    raceType = gtdb.getRaceType(dbC1, id=x)
+    # Getting required objects from database
+    log.info("Getting race collection object from database")
+    rcCollection = gtdb.getRaceCollection(dbC1, collectionId)
+    log.info("Getting track layout object from database")
+    tLayout = gtdb.getLayout(dbC1, layoutId)
+    log.info("Getting weather object from database")
+    weather = gtdb.getWeather(dbC1, weatherId)
+    log.info("Getting weather object from database")
+    raceType = gtdb.getRaceType(dbC1, raceTypeId)
 
     # Display what user selected
+    cls()
+    print("Adding a Race")
+
     displayCollection(rcCollection)
-    print("")
-    # Need Track, Layout, weather and race type
-    htmltrackNlayout = html.escape(f"{track.name} : {tLayout.name}")
+    # Display track layout
+    htmltrackNlayout = html.escape(
+        f"{tLayout.track.name} ({tLayout.track.id}) : {tLayout.name} ({tLayout.id})")
     htmlLine = f"Track and Layout: <ansigreen>{htmltrackNlayout}</ansigreen>"
     print_formatted_text(HTML(htmlLine))
-
-    # Prompt user for Race Name
-    log.info("Getting race name from user")
-    htmlLine = f"<b>Enter a unique race name for this race collection</b>"
+    # Display Weather and race type
+    htmlLine = f"Weather: <ansigreen>{weather.name}</ansigreen> Race type: <ansigreen>{raceType.name}</ansigreen>"
     print_formatted_text(HTML(htmlLine))
-    name = prompt("  (Enter to cancel) >> ")
-    log.debug(f"name={name}")
-    if name == None or name == "":  # User didn't provide data
-        log.info("User did not provide race name")
-        return [1, "Race name not provided."]
+    htmlLine = f" >> add race collectionId={rcCollection.id} layoutId={tLayout.id} weatherId={weather.id} raceTypeId={raceType.id}"
+    print_formatted_text(HTML(htmlLine))
+
+    # Prompt user for Race Number
+    log.info("Getting race number from user")
+    numCheck = Validator.from_callable(_isNum,
+                                       error_message='This input contains non-numeric characters',
+                                       move_cursor_to_end=True)
+    raceNum = prompt("  Race number for this collection >> ",
+                     validator=numCheck)
+    log.debug(f"raceNum={raceNum}")
+    if int(raceNum) == 0:  # User didn't provide data
+        log.info("User did not provide a race number")
+        print("Invalid race number provided")
+        return
     # Now have all the required data to create the Race Object
+    name = f"Race {raceNum}"
     xRace = GT.Race(id=0, name=name, trackLayout=tLayout,
                     raceCollection=rcCollection, raceType=raceType, weather=weather)
 
@@ -494,6 +588,8 @@ def addRace(rcCollection):
         htmlLine = f'  <ansigreen>Race Added</ansigreen>'
         displayCollection(rcCollection)
 
+    return
+
 
 def displayCarCats(theList):
     """Display all the Car Categories/Classes"""
@@ -527,7 +623,7 @@ def displayCollection(raceColObj):
     htmlCollection = html.escape(
         f"{raceColObj.name}")
     print_formatted_text(HTML(
-        f"League     : <ansigreen>{htmlLeague}</ansigreen> ({raceColObj.league.id}) - <ansigreen>{htmlCollection}</ansigreen> ({raceColObj.id})"))
+        f"League     : <ansigreen>{htmlLeague} ({raceColObj.league.id})</ansigreen>  Collection: <ansigreen>{htmlCollection} ({raceColObj.id})</ansigreen> "))
     # Race collection description
     htmlText = f"Desciption : <ansigreen>{html.escape(raceColObj.desc)}</ansigreen>"
     print_formatted_text(HTML(htmlText))
@@ -544,7 +640,7 @@ def displayCollection(raceColObj):
     trackNlayout = "Track (id): Layout (id)"
     tlMiles = "Miles".ljust(5)
     racetime = "Time "
-    weather = "weather"
+    weather = "Weather"
     print_formatted_text(
         HTML(f"{id} | {rName} | {trackNlayout[0:65].ljust(65)} | {tlMiles} | {racetime} | {weather}"))
 

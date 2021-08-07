@@ -18,5 +18,6 @@ def load_config(cfgFile):
 
 dbcfg = dict()
 logcfg = dict()
+curcfg = dict()
 config = configparser.ConfigParser()
 load_config('./GTTracking.conf')

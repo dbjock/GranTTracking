@@ -1140,6 +1140,7 @@ def getRaceType(dbConn, id):
 
     Returns:
         RaceTypeObj: Race type object
+        If RaceTypeObj.id=0 then race type was not found
     """
     selectSQL = "SELECT id, name FROM race_type"
     whereSQL = "WHERE id = ?"
@@ -1296,6 +1297,8 @@ def getWeather(dbConn, id):
 
     Returns:
         Weather object
+        if WeatherObject.id == 0 then weather was not found
+
     """
     logger.info(f"Getting weather object by id: {id}")
     selectSQL = "SELECT id, name FROM weather"
@@ -1500,7 +1503,7 @@ def validateRace(dbConn, race):
     for row in xList:
         logger.debug(f"raceId={row[0]}. checking race name: {row[1]}")
         if row[1].upper() == race.name.upper():  # layout name exist for track
-            msg = f"Race name [{race.name}] for Race ID [{race.id}] already exists"
+            msg = f"Race name [{race.name}] for race collection id {race.raceCollection.id} already exists. The race name must be unique."
             result = (False, msg)
             logger.info(f"returning = {result}")
             return result
