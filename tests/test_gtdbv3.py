@@ -845,30 +845,6 @@ class TestTrack(unittest.TestCase):
 
         logger.info("==== END TEST Add Track")
 
-    def test_deleteTrack(self):
-        logger.info("===== BEGIN Delete Track")
-        d1 = gtdbV3.create_connection(":memory:")
-
-        # Delete Track - Track Exist: Yes, Track Layouts: Yes
-        testmsg = '1 - Delete existing TrackId'
-        logger.info(testmsg)
-        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
-        trackId = 6  # Track has multiple layouts
-        result = gtdbV3.deleteTrack(d1, trackId)
-        logger.info(f"result={result}")
-        # Sqlite.. the delete works, even if record doesn't exist.
-        self.assertEqual(result[0], 0)
-
-        testmsg = '2 - Delete existing TrackId'
-        logger.info(testmsg)
-        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
-        trackId = 99999  # Track has multiple layouts
-        result = gtdbV3.deleteTrack(d1, trackId)
-        logger.info(f"result={result}")
-        self.assertEqual(result[0], 0)
-
-        logger.info("===== END Delete Track")
-
     def test_getTrack(self):
         logger.info("==== BEGIN Get/read Track")
         d1 = gtdbV3.create_connection(":memory:")
@@ -1070,30 +1046,6 @@ class TestTrackLayout(unittest.TestCase):
                          "Failed getting correct trackLayoutId from list")
 
         logger.info("==== END get Layout List")
-
-    def test_deleteTrackLayout(self):
-        logger.info("==== BEGIN Deleting Track Layout")
-        d1 = gtdbV3.create_connection(":memory:")
-
-        logger.info("Delete track layout exists : yes")
-        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
-        layoutId = 29
-        logger.info(f"layoutId={layoutId}")
-        result = gtdbV3.deleteTrackLayout(d1, layoutId)
-        logger.info(f"result={result}")
-        errMsg = "delete existing track layout unsuccessful"
-        self.assertEqual(result[0], 0, errMsg)
-
-        logger.info("Delete track layout exists : no")
-        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
-        layoutId = 99999
-        logger.info(f"layoutId={layoutId}")
-        result = gtdbV3.deleteTrackLayout(d1, layoutId)
-        logger.info(f"result={result}")
-        errMsg = "delete non existing track layout unsuccessful"
-        self.assertEqual(result[0], 0, errMsg)
-
-        logger.info("==== END Deleting Track Layout")
 
     def test_updateTrackLayout(self):
         logger.info("===== BEGIN Track Layout Update ")
