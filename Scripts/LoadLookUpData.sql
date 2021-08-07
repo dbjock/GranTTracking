@@ -294,8 +294,8 @@ INSERT INTO league (id, name, sortord) VALUES (3, 'Endurance', 30);
 INSERT INTO league (id, name, sortord) VALUES (4, 'Professional', 20);
 
 -- Table: race_type
-INSERT INTO race_type (ID, name) VALUES (1, 'Lap');
-INSERT INTO race_type (ID, name) VALUES (2, 'Endurance');
+INSERT INTO race_type (ID, name) VALUES (1, 'Lap(s)');
+INSERT INTO race_type (ID, name) VALUES (2, 'Minutes');
 
 -- Table: weather
 INSERT INTO weather (id, name) VALUES (1, 'Fine/Clear');
