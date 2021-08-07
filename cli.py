@@ -142,7 +142,9 @@ def main():
             },
             'drivetrains': None,
             'manufactures': {'orderBy=': None},
-            'race': None,
+            'race': {
+                'id=': None
+            },
             'track': {
                 'id=': None,
                 'name=': None,
@@ -349,11 +351,6 @@ def addCollectionCmd(args):
         x = f'  <ansigreen>Race Collection Added</ansigreen>'
         print_formatted_text(HTML(x))
         log.info(f"Race Collection Added")
-
-
-def addRace(collectionId=None, layoutId=None, weatherId=None, raceTypeId=None):
-    """Being depricated"""
-    pass
 
 
 def addRaceCmd(args):
@@ -625,7 +622,7 @@ def displayCollection(raceColObj):
     print_formatted_text(HTML(
         f"League     : <ansigreen>{htmlLeague} ({raceColObj.league.id})</ansigreen>  Collection: <ansigreen>{htmlCollection} ({raceColObj.id})</ansigreen> "))
     # Race collection description
-    htmlText = f"Desciption : <ansigreen>{html.escape(raceColObj.desc)}</ansigreen>"
+    htmlText = f"Description : <ansigreen>{html.escape(raceColObj.desc)}</ansigreen>"
     print_formatted_text(HTML(htmlText))
     # Prizes and Class
     prize1 = f"{raceColObj.prize1:,d}"[0:7].ljust(7)
@@ -634,29 +631,30 @@ def displayCollection(raceColObj):
     htmlText = f" Class : <ansigreen>{raceColObj.classcat.name}</ansigreen>  1st: <ansigreen>{prize1}</ansigreen> 2nd: <ansigreen>{prize2}</ansigreen> 3rd: <ansigreen>{prize3}</ansigreen>"
     print_formatted_text(HTML(htmlText))
 
-    print("\nRace(s):")
+    print("\nRaces:")
     id = f"ID".rjust(3)
     rName = "Name".ljust(7)
     trackNlayout = "Track (id): Layout (id)"
-    tlMiles = "Miles".ljust(5)
-    racetime = "Time "
+    limits = f"Limit".ljust(11)
+    startTime = "Start"
     weather = "Weather"
     print_formatted_text(
-        HTML(f"{id} | {rName} | {trackNlayout[0:65].ljust(65)} | {tlMiles} | {racetime} | {weather}"))
+        HTML(f"{id} | {rName} | {trackNlayout[0:65].ljust(65)} | {limits} | {startTime} | {weather}"))
 
-    print("-" * 110)  # header seperator
+    print("-" * 118)  # header seperator
     for x in gtdb.getRaceList(dbC1, raceColObj.id):
         race = gtdb.getRace(dbC1, x[0])
         id = f"{race.id:d}".rjust(3)
         rName = html.escape(race.name[0:7].ljust(7))
         trackNlayout = html.escape(
             f"{race.trackLayout.track.name} ({race.trackLayout.track.id}): {race.trackLayout.name} ({race.trackLayout.id})")
-        tlMiles = "{:.2f}".format(race.trackLayout.miles).rjust(5)
-        racetime = html.escape(race.racetime.ljust(5))
+        limit = f"{race.limits}".rjust(3)
+        limits = f"{limit} {race.raceType.name}".ljust(11)
+        startTime = html.escape(race.racetime.ljust(5))
         weather = html.escape(race.weather.name)
         print_formatted_text(
-            HTML(f"<ansigreen>{id}</ansigreen> | <ansigreen>{rName}</ansigreen> | <ansigreen>{trackNlayout[0:65].ljust(65)}</ansigreen> | <ansigreen>{tlMiles}</ansigreen> | <ansigreen>{racetime}</ansigreen> | <ansigreen>{weather}</ansigreen>"))
-    print("=" * 110)  # End of display
+            HTML(f"<ansigreen>{id}</ansigreen> | <ansigreen>{rName}</ansigreen> | <ansigreen>{trackNlayout[0:65].ljust(65)}</ansigreen> | <ansigreen>{limits}</ansigreen> | <ansigreen>{startTime}</ansigreen> | <ansigreen>{weather}</ansigreen>"))
+    print("=" * 118)  # End of display
 
 
 def displayCollections(leagueObj):
@@ -722,61 +720,50 @@ def displayRace(race):
     Args:
         race (object): The race class object
     """
-    # TODO: More stuff to put in here
     # League and collection info
     htmlLeague = html.escape(
         f'{race.raceCollection.league.name}')
     htmlCollection = html.escape(
         f"{race.raceCollection.name}")
+    htmlRaceName = html.escape(f'{race.name}')
     print_formatted_text(HTML(
-        f"<b>League     :</b> <ansigreen>{htmlLeague}</ansigreen> ({race.raceCollection.league.id}) - <ansigreen>{htmlCollection}</ansigreen> ({race.raceCollection.id})"))
-    # Race info and type
-    htmlData = html.escape(f'{race.name}')
-    print_formatted_text(
-        HTML(f'<b>Race       :</b> <ansigreen>{htmlData}</ansigreen> ({race.id})   <b>Type: </b> <ansigreen>{race.raceType.name}</ansigreen>'))
-    # Track and Layout
-    htmlData = html.escape(
-        f"{race.trackLayout.track.name} - {race.trackLayout.name}")
-    print_formatted_text(HTML(f"  <ansigreen>{htmlData}</ansigreen>"))
-    # Prizes
-    p1 = f"1st"[0:7].ljust(7)
-    p2 = f"2nd"[0:7].ljust(7)
-    p3 = f"3rd"[0:7].ljust(7)
-    print(f"  {p1} |{p2} |{p3} |")
-    print(f"  {'-'*27}")
-    p1 = f"{race.prize1:,d}"[0:7].rjust(7)
-    p2 = f"{race.prize2:,d}"[0:7].rjust(7)
-    p3 = f"{race.prize3:,d}"[0:7].rjust(7)
-    print_formatted_text(HTML(
-        f"  <ansigreen>{p1}</ansigreen> |<ansigreen>{p2}</ansigreen> |<ansigreen>{p3}</ansigreen> |"))
+        f"League : <ansigreen>{htmlLeague} ({race.raceCollection.league.id})</ansigreen>  Collection: <ansigreen>{htmlCollection} ({race.raceCollection.id})</ansigreen> Race: <ansigreen>{htmlRaceName} ({race.id})</ansigreen>"))
+    # Race collection description
+    htmlText = f" <ansigreen>{html.escape(race.raceCollection.desc)}</ansigreen>"
+    print_formatted_text(HTML(htmlText))
+    # Prizes and Class
+    prize1 = f"{race.raceCollection.prize1:,d}"[0:7].ljust(7)
+    prize2 = f"{race.raceCollection.prize2:,d}"[0:7].ljust(7)
+    prize3 = f"{race.raceCollection.prize3:,d}"[0:7].ljust(7)
+    htmlText = f" Class : <ansigreen>{race.raceCollection.classcat.name}</ansigreen>  1st: <ansigreen>{prize1}</ansigreen> 2nd: <ansigreen>{prize2}</ansigreen> 3rd: <ansigreen>{prize3}</ansigreen>"
+    print_formatted_text(HTML(htmlText))
+    # Track Layout and miles long
+    htmltrackNlayout = html.escape(
+        f"{race.trackLayout.track.name} ({race.trackLayout.track.id}) : {race.trackLayout.name} ({race.trackLayout.id})")
 
-    # Weather and miles
-    print_formatted_text(
-        HTML(f"  <b>Miles :</b> <ansigreen>{race.trackLayout.miles}</ansigreen> <b>Weather : </b><ansigreen>{race.weather.name}</ansigreen>"))
+    htmlLine = f"  Track and Layout: <ansigreen>{htmltrackNlayout}</ansigreen>"
+    print_formatted_text(HTML(htmlLine))
 
-    if race.racetime:
-        racetime = race.racetime
-    else:
-        racetime = "-- Nothing Entered --"
-    print(f"  Race Time  :{racetime}")
-    if race.limits:
-        limits = race.limits
-    else:
-        limits = "-- Nothing Entered --"
-    #         Weather    :
-    print(f"  Limits     : {limits}")
+    # Race Start Time, Weather and Limits
+    startTime = html.escape(race.racetime.ljust(5))
+    print_formatted_text(
+        HTML(f"  Start Time: <ansigreen>{startTime}</ansigreen>  Weather: <ansigreen>{race.weather.name}</ansigreen> Limit: <ansigreen>{race.limits} {race.raceType.name}</ansigreen>"))
+
+    # If lap type race.. show total race length
+    if race.raceType.id == 1:
+        ttlRaceLen = race.trackLayout.miles * float(race.limits)
+        print_formatted_text(
+            HTML(f"  Race Length: <ansigreen>{ttlRaceLen:.2f} Miles</ansigreen>"))
+
+    # Race Notes
     if race.notes:
-        notes = race.notes
+        notes = html.escape(f"{race.notes}")
     else:
         notes = "-- Nothing Entered --"
-    print(f"  Notes      : {notes}")
-    # Results:
-    # ID  |Place | XP      | Credits | Car                         | Time  |Crd P/M |XP P/M  |
-    # xxxx| 1    | 999,999 | 999,999 |xxxxxxxxxxxxxxxxxxxxxxxxxxxxx| MM:SS | 99,999 | 99,999 |
-    # xxxx| 1    | 999,999 | 999,999 |xxxxxxxxxxxxxxxxxxxxxxxxxxxxx| MM:SS | 99,999 | 99,999 |
-    # xxxx| 1    | 999,999 | 999,999 |xxxxxxxxxxxxxxxxxxxxxxxxxxxxx| MM:SS | 99,999 | 99,999 |
-    # xxxx| 1    | 999,999 | 999,999 |xxxxxxxxxxxxxxxxxxxxxxxxxxxxx| MM:SS | 99,999 | 99,999 |
-    print("** Got more work **")
+    print_formatted_text(HTML(f"Notes: <ansigreen>{notes}</ansigreen>"))
+    print_formatted_text(HTML(f"Race Results:"))
+    print("-" * 123)
+    print("=" * 123)
 
 
 def displayTrack(trackObj):
@@ -890,7 +877,7 @@ def displayTrackLayout(trackLayout):
     print_formatted_text(HTML(htmlLine))
     htmlLine = f"Miles: <ansigreen>{miles}</ansigreen>  Country: <ansigreen>{htmlCountry}</ansigreen>"
     print_formatted_text(HTML(htmlLine))
-    print_formatted_text(HTML("Race(s)"))
+    print_formatted_text(HTML("Races"))
     # Race Header line
     raceID = " ID"
     rName = "Race".ljust(7)
@@ -899,12 +886,14 @@ def displayTrackLayout(trackLayout):
     prize1 = f'1st ~'.ljust(10)
     prize2 = f'2nd ~'.ljust(10)
     prize3 = f'3rd ~'.ljust(10)
-    racetime = "Time "
+    limits = f"Limit".ljust(11)
+    weather = "Weather"
     print_formatted_text(HTML(
-        f"{raceID} | {rName} | {leagueNcollection} | {carClass} | {prize1} | {prize2} | {prize3} | {racetime}"))
-    print("-" * 142)
+        f"{raceID} | {rName} | {leagueNcollection} | {carClass} | {prize1} | {prize2} | {prize3} | {limits} | {weather}"))
+    print("-" * 163)
     # Race detail info
-    selectSQL = "SELECT r.id, r.name, l.name || ' (' || l.id || ') - ' || rc.name || ' (' || rc.id || ')' AS wtf, carcat.name as Class, r.racetime, rc.prize1, rc.prize2, rc.prize3, rt.name type, w.name AS weather"
+    log.info(f"Getting race detail info for {trackLayout.id}")
+    selectSQL = "SELECT r.id, r.name, l.name || ' (' || l.id || ') - ' || rc.name || ' (' || rc.id || ')' AS wtf, carcat.name AS Class, r.limits, rc.prize1, rc.prize2, rc.prize3, rt.name type, w.name AS weather"
     fromSQL = "FROM race AS r JOIN track_layout AS tl ON r.tl_id = tl.id JOIN race_type AS rt ON r.type_id = rt.id JOIN weather AS w ON r.weather_id = w.id JOIN race_collection AS rc ON r.rc_id = rc.id JOIN league AS l ON rc.league_id = l.id JOIN category as carcat ON rc.cat_id = carcat.id"
     whereSQL = "WHERE tl.id = ?"
     orderBySQL = "ORDER BY l.name, rc.name"
@@ -918,10 +907,13 @@ def displayTrackLayout(trackLayout):
         prize1 = f'{int(row[5]):,}'.rjust(10)
         prize2 = f'{int(row[6]):,}'.rjust(10)
         prize3 = f'{int(row[7]):,}'.rjust(10)
+        limit = f"{row[4]}".rjust(3)
+        limits = f"{limit} {row[8]}".ljust(11)
+        weather = f'{row[9]}'
 
         print_formatted_text(HTML(
-            f"<ansigreen>{raceID}</ansigreen> | <ansigreen>{rName}</ansigreen> | <ansigreen>{leagueNcollection}</ansigreen> | <ansigreen>{carClass}</ansigreen> | <ansigreen>{prize1}</ansigreen> | <ansigreen>{prize2}</ansigreen> | <ansigreen>{prize3}</ansigreen> | <ansigreen>{racetime}</ansigreen>"))
-    print("=" * 142)
+            f"<ansigreen>{raceID}</ansigreen> | <ansigreen>{rName}</ansigreen> | <ansigreen>{leagueNcollection}</ansigreen> | <ansigreen>{carClass}</ansigreen> | <ansigreen>{prize1}</ansigreen> | <ansigreen>{prize2}</ansigreen> | <ansigreen>{prize3}</ansigreen> | <ansigreen>{limits}</ansigreen> | <ansigreen>{weather}</ansigreen>"))
+    print("=" * 163)
     return
 
 
