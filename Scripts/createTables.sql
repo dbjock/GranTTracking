@@ -1,31 +1,7 @@
 --
--- 05/28/2021
---
 -- Text encoding used: System
 --
 PRAGMA foreign_keys = off;
--- Table: car
-DROP TABLE IF EXISTS car;
-CREATE TABLE car (
-    id            INTEGER      PRIMARY KEY,
-    model         TEXT NOT NULL
-							   COLLATE NOCASE,
-    mfg_id        INTEGER      REFERENCES manufacture (id) ON DELETE RESTRICT
-                               NOT NULL,
-    cat_id        INTEGER      REFERENCES category (id) ON DELETE RESTRICT
-                               NOT NULL,
-    drivetrain_id INTEGER      NOT NULL
-                               REFERENCES drivetrain (id) ON DELETE RESTRICT
-                               NOT NULL,
-    year          INTEGER,
-    displacement  TEXT,
-    length_in     DECIMAL,
-    width_in      DECIMAL,
-    height_in     DECIMAL,
-    weight_lb     DECIMAL,
-    max_power     INTEGER,
-    max_torque    INTEGER
-);
 
 -- Table: category
 DROP TABLE IF EXISTS category;
