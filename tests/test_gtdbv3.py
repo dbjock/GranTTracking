@@ -38,6 +38,37 @@ logger.addHandler(fileHandler)
 print(f"Logging to {_logfile}")
 
 
+class TestCar(unittest.TestCase):
+    def test_getCar(self):
+        logger.info("==== BEGIN get car tests")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        # init car table createUserTables.sql
+        gtdbV3._exeScriptFile(d1, scriptFileName=_gtScripts /
+                              'createUserTables.sql')
+        # Load test car data
+        gtdbV3._exeScriptFile(d1, scriptFileName=_gtPath /
+                              'tests' / 'test_carData.sql')
+
+        logger.info("Get existing car by id")
+        testVal = 1
+        logger.info(f"Getting carId = {testVal}")
+        xObj = gtdbV3.getCar(d1, id=testVal)
+        logger.info(f"Returned: {xObj}")
+        self.assertEqual(
+            xObj.id, 1, "Failed Get existing car by id. Expecting car Id=1")
+
+        logger.info("Get NON existing car by id")
+        testVal = 999
+        logger.info(f"Getting carId = {testVal}")
+        xObj = gtdbV3.getCar(d1, id=testVal)
+        logger.info(f"Returned: {xObj}")
+        self.assertEqual(
+            xObj.id, 0, "Failed Get NON existing car by id. Expecting car id = 0")
+
+        logger.info("==== END get car tests")
+
+
 class TestCarCat(unittest.TestCase):
     def test_getCarCats(self):
         logger.info("==== BEGIN Get Car category tests")
