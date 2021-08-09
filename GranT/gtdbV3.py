@@ -448,6 +448,47 @@ def deleteTrackLayout(dbConn, layoutId):
     return result
 
 
+def getCar(dbConn, id):
+    """Get a Car from db
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        id (int): Unique id assigned in the db to the car
+
+    Returns:
+        Car Object
+        IF CarObject.id == 0 then nothing found
+    """
+    logger.info(f"Getting car object id={id}")
+    selectSQL = "SELECT id, model, mfg_id, cat_id, drivetrain_id, year"
+    fromSQL = "FROM car"
+    whereSQL = "WHERE id=?"
+    sql = f"{selectSQL} {fromSQL} {whereSQL}"
+    theVals = (id,)
+    # Execute the SQL
+    results = directSql(dbConn, sql, theVals)
+    if results:  # have data
+        logger.info(f"Found carid: {id}. Converting to car Object")
+        xMaker = getMfg(dbConn, value=results[0][2])
+        xClassCat = getCarCat(dbConn, results[0][3])
+        xDriveTrain = getDriveTrain(dbConn, results[0][4])
+        xCar = gtClass.Car(results[0][0], results[0]
+                           [1], xMaker, xDriveTrain, xClassCat)
+        xCar.year = results[0][5]
+
+    else:  # Create blank car
+        logger.info(f"Unable to find carid: {id}. Creating empty car object")
+        xCountry = gtClass.Country(
+            cntryID=0, cntryName=None, alpha2=None, alpha3=None, region=None)
+        xMaker = gtClass.Manufacture(0, None, xCountry)
+        xDriveTrain = gtClass.DriveTrain(0, code=None, desc=None)
+        xClassCat = gtClass.ClassCat(0, name=None, desc=None)
+        xCar = gtClass.Car(0, None, xMaker, xDriveTrain, xClassCat)
+
+    logger.debug(f"Returning : {xCar}")
+    return xCar
+
+
 def getCarCat(dbConn, id):
     """Get a Car Class Category from db
 

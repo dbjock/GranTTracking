@@ -2,6 +2,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class Car(object):
+    def __init__(self, id, model, Manufacture, DriveTrain, ClassCat):
+        self.id = id
+        self.model = model
+        self.year = None
+        self.maker = Manufacture
+        self.driveTrain = DriveTrain
+        self.catclass = ClassCat
+
+    def __repr__(self):
+        return f"Car(id={self.id}, model={self.model}, {self.maker}),{self.driveTrain},{self.catclass}"
+
+
 class Country(object):
 
     def __init__(self, cntryID, cntryName, alpha2, alpha3, region):
