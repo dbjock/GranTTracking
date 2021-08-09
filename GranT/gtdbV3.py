@@ -453,7 +453,7 @@ def getCarCat(dbConn, id):
 
     Args:
         dbConn (sqlite3.connect): Database connection
-        id (id): Clar Class Cateory ID
+        id (id): Car Class Cateory ID
 
     Returns:
         ClassCat object
@@ -646,6 +646,35 @@ def getCountry(dbConn, countryId):
             region=None)
     logger.info(f"Returning country={country}")
     return country
+
+
+def getDriveTrain(dbConn, id):
+    """Get a Drive Train from the database
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        id (int): Unique ID for the drivetrain in db
+
+    Returns:
+        DriveTrain object
+        IF DriveTrain.id == 0 then no drive train found
+    """
+    logger.info(f"Getting drivetrain object id={id}")
+    selectSQL = "SELECT id, code, description"
+    fromSQL = "FROM drivetrain"
+    whereSQL = "WHERE id=?"
+    sql = f"{selectSQL} {fromSQL} {whereSQL}"
+    theVals = (id,)
+    # Execute the SQL
+    results = directSql(dbConn, sql, theVals)
+
+    if results:  # Create DriveTrain object
+        xObj = gtClass.DriveTrain(results[0][0], results[0][1], results[0][2])
+    else:  # Create empty DriveTrain object
+        xObj = gtClass.DriveTrain(0, None, None)
+
+    logger.debug(f"Returning : {xObj}")
+    return xObj
 
 
 def getDriveTrainList(dbConn, orderBy='code'):

@@ -145,6 +145,27 @@ class TestCircuit(unittest.TestCase):
         logger.info(f"==== END Get Circuit List\n")
 
 
+class TestDriveTrain(unittest.TestCase):
+    def test_getDriveTrain(self):
+        logger.info("==== BEGIN Get Drivetrain")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+        logger.info("Get existing Drivetrain by id")
+        testVal = 1
+        xObj = gtdbV3.getDriveTrain(d1, id=testVal)
+        logger.info(f"Returned: {xObj}")
+        self.assertEqual(
+            xObj.id, 1, "Failed Get existing Drivetrain by id. Expecting id=1")
+
+        logger.info("Get non existing Drivetrain by id")
+        testVal = 999
+        xObj = gtdbV3.getDriveTrain(d1, id=testVal)
+        logger.info(f"Returned: {xObj}")
+        self.assertEqual(
+            xObj.id, 0, "Failed Get non existing Drivetrain by id. Expecting id=0")
+
+
 class TestLeagues(unittest.TestCase):
     def test_getLeague(self):
         logger.info("==== BEGIN Get/read League")
