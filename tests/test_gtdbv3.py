@@ -156,7 +156,7 @@ class TestCar(unittest.TestCase):
         self.assertNotEqual(
             result[0], 0, "Failed: Add Car : Model Name is ''. Car should not have been saved")
 
-        logger.info("Testing Add Car : Model Name not unique for Manufacture")
+        logger.info("Testing Add Car : Model Name not unique")
         xdriveTrain = GT.DriveTrain(id=1, code='NA', desc='NA')
         xclassCat = GT.ClassCat(id=1, name='NA', desc='NA')
         # test_carData.sql data has model='Test Car B' and mfg_id=10.
@@ -167,7 +167,18 @@ class TestCar(unittest.TestCase):
         logger.info(f"Saving car {xObj}")
         result = gtdbV3.addCar(d1, xObj)
         self.assertNotEqual(
-            result[0], 0, "Failed: Add Car : Model Name not unique for Manufacture. Record should not have been saved")
+            result[0], 0, "Failed: Add Car : Model Name not unique. Record should not have been saved")
+
+        logger.info("Testing Add Car : Valid Car")
+        xdriveTrain = GT.DriveTrain(id=1, code='NA', desc='NA')
+        xclassCat = GT.ClassCat(id=1, name='NA', desc='NA')
+        xmfg = GT.Manufacture(id=10, name='NA', countryObj=xcountry)
+        xObj = GT.Car(id=0, model='Test model name 9999', Manufacture=xmfg,
+                      DriveTrain=xdriveTrain, ClassCat=xclassCat)
+        logger.info(f"Saving car {xObj}")
+        result = gtdbV3.addCar(d1, xObj)
+        self.assertEqual(
+            result[0], 0, "Failed: Add Car : Valid Car. Record should have been saved")
 
         logger.info("==== END BEGIN add car tests===")
 
