@@ -39,6 +39,138 @@ print(f"Logging to {_logfile}")
 
 
 class TestCar(unittest.TestCase):
+    def test_addCar(self):
+        logger.info("==== BEGIN get car tests")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        # init car table createUserTables.sql
+        gtdbV3._exeScriptFile(d1, scriptFileName=_gtScripts /
+                              'createUserTables.sql')
+        # Load test car data
+        gtdbV3._exeScriptFile(d1, scriptFileName=_gtPath /
+                              'tests' / 'test_carData.sql')
+        # Default country
+        xcountry = GT.Country(235, cntryName='NA',
+                              alpha2='NA', alpha3='NA', region='NA')
+
+        ## Now the testing ##
+        logger.info("Testing Add Car : Manufacture id does not exist")
+        xdriveTrain = GT.DriveTrain(id=1, code='NA', desc='NA')
+        xclassCat = GT.ClassCat(id=1, name='NA', desc='NA')
+        # Alter xmfg so id does not exist
+        xmfg = GT.Manufacture(id=9999, name='NA', countryObj=xcountry)
+        xObj = GT.Car(id=0, model='Test model name 9999', Manufacture=xmfg,
+                      DriveTrain=xdriveTrain, ClassCat=xclassCat)
+        logger.info(f"Saving car {xObj}")
+        result = gtdbV3.addCar(d1, xObj)
+        logger.info(f"result: {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed: Add Car : Manufacture id does not exist. Car should not have been saved")
+
+        logger.info("Testing Add Car : Manufacture id=0")
+        xdriveTrain = GT.DriveTrain(id=1, code='NA', desc='NA')
+        xclassCat = GT.ClassCat(id=1, name='NA', desc='NA')
+        # Alter xmfg so id is 0
+        xmfg = GT.Manufacture(id=0, name='NA', countryObj=xcountry)
+        xObj = GT.Car(id=0, model='Test model name 9999', Manufacture=xmfg,
+                      DriveTrain=xdriveTrain, ClassCat=xclassCat)
+        logger.info(f"Saving car {xObj}")
+        result = gtdbV3.addCar(d1, xObj)
+        logger.info(f"result: {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed: Add Car : Manufacture id=0. Car should not have been saved")
+
+        logger.info("Testing Add Car : DriveTrain id does not exist")
+        # Alter drivetrain.id so number does not exist
+        xdriveTrain = GT.DriveTrain(id=9999, code='NA', desc='NA')
+        xclassCat = GT.ClassCat(id=1, name='NA', desc='NA')
+        xmfg = GT.Manufacture(id=1, name='NA', countryObj=xcountry)
+        xObj = GT.Car(id=0, model='Test model name 9999', Manufacture=xmfg,
+                      DriveTrain=xdriveTrain, ClassCat=xclassCat)
+        logger.info(f"Saving car {xObj}")
+        result = gtdbV3.addCar(d1, xObj)
+        logger.info(f"result: {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed: Add Car : DriveTrain id does not exist. Car should not have been saved")
+
+        logger.info("Testing Add Car : DriveTrain id = 0")
+        # Alter drivetrain.id so its zero
+        xdriveTrain = GT.DriveTrain(id=0, code='NA', desc='NA')
+        xclassCat = GT.ClassCat(id=1, name='NA', desc='NA')
+        xmfg = GT.Manufacture(id=1, name='NA', countryObj=xcountry)
+        xObj = GT.Car(id=0, model='Test model name 9999', Manufacture=xmfg,
+                      DriveTrain=xdriveTrain, ClassCat=xclassCat)
+        logger.info(f"Saving car {xObj}")
+        result = gtdbV3.addCar(d1, xObj)
+        logger.info(f"result: {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed: Add Car : DriveTrain id = 0. Car should not have been saved")
+
+        logger.info("Testing Add Car : cat Class id does not exist")
+        xdriveTrain = GT.DriveTrain(id=1, code='NA', desc='NA')
+        # Alter classcat.id so number does not exist
+        xclassCat = GT.ClassCat(id=9999, name='NA', desc='NA')
+        xmfg = GT.Manufacture(id=1, name='NA', countryObj=xcountry)
+        xObj = GT.Car(id=0, model='Test model name 9999', Manufacture=xmfg,
+                      DriveTrain=xdriveTrain, ClassCat=xclassCat)
+        logger.info(f"Saving car {xObj}")
+        result = gtdbV3.addCar(d1, xObj)
+        logger.info(f"result: {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed: Add Car : cat Class id does not exist. Car should not have been saved")
+
+        logger.info("Testing Add Car : cat Class id is 0")
+        xdriveTrain = GT.DriveTrain(id=1, code='NA', desc='NA')
+        # Alter classcat.id so number does not exist
+        xclassCat = GT.ClassCat(id=9999, name='NA', desc='NA')
+        xmfg = GT.Manufacture(id=1, name='NA', countryObj=xcountry)
+        xObj = GT.Car(id=0, model='Test model name 9999', Manufacture=xmfg,
+                      DriveTrain=xdriveTrain, ClassCat=xclassCat)
+        logger.info(f"Saving car {xObj}")
+        result = gtdbV3.addCar(d1, xObj)
+        logger.info(f"result: {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed: Add Car : cat Class id is 0. Car should not have been saved")
+
+        logger.info("Testing Add Car : Model Name is None")
+        xdriveTrain = GT.DriveTrain(id=1, code='NA', desc='NA')
+        xclassCat = GT.ClassCat(id=1, name='NA', desc='NA')
+        xmfg = GT.Manufacture(id=1, name='NA', countryObj=xcountry)
+        xObj = GT.Car(id=0, model=None, Manufacture=xmfg,
+                      DriveTrain=xdriveTrain, ClassCat=xclassCat)
+        logger.info(f"Saving car {xObj}")
+        result = gtdbV3.addCar(d1, xObj)
+        logger.info(f"result: {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed: Add Car : Model Name is None. Car should not have been saved")
+
+        logger.info("Testing Add Car : Model Name is ''")
+        xdriveTrain = GT.DriveTrain(id=1, code='NA', desc='NA')
+        xclassCat = GT.ClassCat(id=1, name='NA', desc='NA')
+        xmfg = GT.Manufacture(id=1, name='NA', countryObj=xcountry)
+        xObj = GT.Car(id=0, model='', Manufacture=xmfg,
+                      DriveTrain=xdriveTrain, ClassCat=xclassCat)
+        logger.info(f"Saving car {xObj}")
+        result = gtdbV3.addCar(d1, xObj)
+        logger.info(f"result: {result}")
+        self.assertNotEqual(
+            result[0], 0, "Failed: Add Car : Model Name is ''. Car should not have been saved")
+
+        logger.info("Testing Add Car : Model Name not unique for Manufacture")
+        xdriveTrain = GT.DriveTrain(id=1, code='NA', desc='NA')
+        xclassCat = GT.ClassCat(id=1, name='NA', desc='NA')
+        # test_carData.sql data has model='Test Car B' and mfg_id=10.
+        #    using that existing info for testing
+        xmfg = GT.Manufacture(id=10, name='NA', countryObj=xcountry)
+        xObj = GT.Car(id=0, model='Test Car B', Manufacture=xmfg,
+                      DriveTrain=xdriveTrain, ClassCat=xclassCat)
+        logger.info(f"Saving car {xObj}")
+        result = gtdbV3.addCar(d1, xObj)
+        self.assertNotEqual(
+            result[0], 0, "Failed: Add Car : Model Name not unique for Manufacture. Record should not have been saved")
+
+        logger.info("==== END BEGIN add car tests===")
+
     def test_getCar(self):
         logger.info("==== BEGIN get car tests")
         d1 = gtdbV3.create_connection(":memory:")
@@ -418,16 +550,15 @@ class TestMfg(unittest.TestCase):
         self.assertNotEqual(result[0], 0)
 
     def test_getMfgList(self):
-        logger.info("==== BEGIN get AllMfg List")
+        logger.info("==== BEGIN get mfg List")
         d1 = gtdbV3.create_connection(":memory:")
         gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
 
-        logger.info("Get mfg sorted by default (id)")
-        testVal = 1  # first element should be mfgID 1
+        logger.info("Testing more than 5 rows are return")
         testList = gtdbV3.getMfgList(d1)
         logger.info(f"layoutList={testList}")
-        self.assertEqual(testList[0][0], testVal,
-                         "Failed mfg sorting by id")
+        self.assertGreaterEqual(len(testList), 5,
+                                "Failed: Manufacture list should be 5 or greater rows")
 
 
 class TestRaceCollection(unittest.TestCase):
