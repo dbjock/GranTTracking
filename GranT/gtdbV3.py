@@ -211,6 +211,39 @@ def addTrack(dbConn, layout):
     return result
 
 
+def addCar(dbConn, car):
+    """Adds a Car record to database
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        car : Car object to be added
+
+    Returns:
+        list: ResultCode, ResultText
+              ResultCode 0 = Success
+              ResultCode != 0 = see ResultText for details
+    """
+    logger.info(f"Adding {car}")
+    # Go validate and see what happens
+    valResult = validateCar(dbConn, car)
+    if valResult[0]:
+        logger.info("All validation passed. Saving Car")
+        sql = "INSERT INTO car (model, mfg_id, cat_id, drivetrain_id, year) VALUES (:model, :mfgId, :catId, :dtId, :year)"
+        theVals = {'model': car.model,
+                   'year': car.year,
+                   'mfgId': car.manufacture.id,
+                   'catId': car.catclass.id,
+                   'dtId': car.driveTrain.id}
+        result = _exeDML(dbConn, sql, theVals)
+        logger.debug(f"save result: {result}")
+        if result[0] == 0:
+            return(0, f"Car added. {result[1]}")
+        else:
+            return(1, f"Unable to save: {result[1]}")
+    else:  # Validation failed
+        return (1, valResult[1])
+
+
 def addLayout(dbConn, trackLayout):
     """Adds a Track Layout record
 
@@ -978,7 +1011,7 @@ def getMfgList(dbConn):
     """
     logger.info(f"Getting all manufactures")
     selectSQL = """SELECT mfg.id as id, mfg.name AS Make FROM manufacture AS mfg"""
-    orderBySQL = f"ORDER BY mfg.id"
+    orderBySQL = f"ORDER BY mfg.name"
 
     sql = f"{selectSQL} {orderBySQL}"
 
@@ -1540,6 +1573,72 @@ def updateTrackLayout(dbConn, uLayout):
 
     logger.debug(f"returning: {result}")
     return result
+
+
+def validateCar(dbConn, car):
+    """Validates the car object
+
+    Args:
+        dbConn ([type]): [description]
+        car ([type]): [description]
+
+    Returns:
+        list: (Bool,msg)
+        Bool = True/False if passed. If False see msg as to why
+        msg = string as to why it failed
+    """
+    # Model name is unique for the manufacture
+    logger.info("Checking for valid model name")
+    if car.model:
+        # Get a list of all car models for the manufacture
+        pass
+    else:  # car.model must have a value
+        result = (False, f"Model must have a value")
+        logger.info(f"{result}")
+        return result
+    logger.info("Passed: Model name is valid")
+
+    # Validate Manufacture Id
+    logger.info("Checking for valid manufacture id")
+    if car.manufacture.id == 0:
+        result = (
+            False, f"Manufacture id {car.manufacture.id} must not be zero")
+        logger.info(f"{result}")
+        return result
+    xObj = getMfg(dbConn, value=car.manufacture.id)
+    if xObj.id == 0:
+        result = (
+            False, f"Manufacture id {car.manufacture.id} not found")
+        logger.info(f"{result}")
+        return result
+    logger.info("Passed: manufacture id valid")
+
+    # driveTrain id exists
+    logger.info("Checking for valid drive train id")
+    if car.driveTrain.id == 0:
+        result = (False, f"Drivetrain id must not be zero")
+        logger.info(f"{result}")
+        return result
+    xObj = getDriveTrain(dbConn, car.driveTrain.id)
+    if xObj.id == 0:
+        result = (False, f"Drivetrain id {car.driveTrain.id} not found")
+        logger.info(f"{result}")
+        return result
+    logger.info("Passed: drive train id valid")
+
+    # catClass Id exists
+    logger.info("Checking for valid Class category id")
+    if car.catclass.id == 0:
+        result = (False, f"Class category must not be zero")
+        logger.info(f"{result}")
+        return result
+    xObj = getCarCat(dbConn, car.catclass.id)
+    if xObj.id == 0:
+        result = (False, f"ClassCat id {car.catclass.id} not found")
+        logger.info(f"{result}")
+        return result
+
+    return (True, "Car validation passed")
 
 
 def validateRace(dbConn, race):
