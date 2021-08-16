@@ -126,12 +126,9 @@ def main():
             'dbinit': None
         },
         'add': {
-            'collection': {
-                'leagueId=': None
-            },
-            'race': {
-                'collectionId=': None
-            }
+            'car': {'mfgid=': None},
+            'collection': {'leagueId=': None},
+            'race': {'collectionId=': None}
         },
         'list': {
             'circuits': None,
@@ -233,10 +230,151 @@ def addAction(cmd):
         addCollectionCmd(cmd[len(obj):].strip())
     elif obj == "race":
         addRaceCmd(cmd[len(obj):].strip())
+    elif obj == "car":
+        addCarCmd(cmd[len(obj):].strip())
     else:  # Unknown object
         print_formatted_text(
             HTML(f'<ansired>ERROR</ansired> - Unknown <ansigreen>add</ansigreen> object <b>{obj}</b>'))
         log.info("Unknown object for add action")
+
+
+def addCarCmd(args):
+    """Add car to database.
+
+    Args:
+        args (str): All the args passed from the command
+    """
+    log.debug(f"args passed: {args}")
+    mfgId = None
+    classId = None
+    driveTrainId = None
+    for setting in args.split():
+        if setting.split("=")[0].upper() == 'MFGID':
+            mfgId = setting.split("=")[1]
+        elif setting.split("=")[0].upper() == 'CLASSID':
+            classId = setting.split("=")[1]
+        elif setting.split("=")[0].upper() == 'DRIVETRAINID':
+            driveTrainId = setting.split("=")[1]
+
+    log.debug(f"mfgId={mfgId} classId={classId} driveTrainId={driveTrainId}")
+
+    if mfgId:
+        log.info(f"Validating mfgId {mfgId}")
+        mfg = gtdb.getMfg(dbC1, key='mfgId', value=mfgId)
+        if mfg.id == 0:  # mfg not found
+            log.info(f"mfgId={mfgId} no found. Prompt user for manufacture")
+            mfgId = pickMfg(
+                text='Invalid mfgId provided. Please select a manufacture for the new car')
+            if mfgId == None:  # no mfg picked
+                log.info("No manufacture picked")
+                print("No manufacture provided")
+                return
+            else:  # mfg picked
+                log.info(f"Loading manufacture object mfgId={mfgId}")
+                mfg = gtdb.getMfg(dbC1, key='mfgId', value=mfgId)
+        else:  # mfg validated
+            log.info(f"mfgId {mfgId} validated and loaded")
+    else:  # Prompt user for Mfg
+        log.info(f"mfgId not provided. Prompt user for manufacture")
+        mfgId = pickMfg(text='Please select a manufacture for the new car')
+        if mfgId == None:  # no mfg picked
+            log.info("No manufacture picked")
+            return
+        else:  # mfg picked
+            log.info(f"Loading manufacture object mfgId={mfgId}")
+            mfg = gtdb.getMfg(dbC1, key='mfgId', value=mfgId)
+
+    if classId:
+        log.info(f"Validating classId {classId}")
+        carClass = gtdb.getCarCat(dbC1, classId)
+        if carClass.id == 0:  # carClass not found
+            log.info(
+                f"classId={classId} not found. Prompt user for class/category")
+            classId = pickCarCategory(
+                text='Invalid classId provided. Please select a car class category for the new car')
+            if classId == None:  # no carClass picked
+                log.info("No class/category picked")
+                return
+            else:  # carClass picked
+                log.info(f"Loading class/category object classId={classId}")
+                carClass = gtdb.getCarCat(dbC1, classId)
+        else:  # carClass validated
+            log.info(f"classId {classId} validated and loaded")
+    else:  # Prompt user for carClass
+        log.info(f"classId not provided. Prompt user for class/category")
+        classId = pickCarCategory(
+            text='Please select a car class category for the new car')
+        if classId == None:  # no carClass picked
+            log.info("No class/category picked")
+            return
+        else:  # carClass picked
+            log.info(f"Loading class/category object classId={classId}")
+            carClass = gtdb.getCarCat(dbC1, classId)
+
+    if driveTrainId:
+        log.info(f"Validating driveTrainId {driveTrainId}")
+        driveTrain = gtdb.getDriveTrain(dbC1, driveTrainId)
+        if driveTrain.id == 0:  # Drivetrain not found
+            log.info(
+                f"driveTrainId={driveTrainId} not found. Prompt user for a drivetrain")
+            driveTrainId = pickDriveTrain(
+                text="Invalid driveTrainID provided. Please select a drivetrain for the new car")
+            if driveTrainId:  # User choose
+                driveTrain = gtdb.getDriveTrain(dbC1, driveTrainId)
+                log.info(
+                    f"Loading drivetrain object driveTrainId={driveTrainId} ")
+                driveTrain = gtdb.getDriveTrain(dbC1, driveTrainId)
+            else:  # Bail out
+                log.info(f"No drivetrainId provided")
+                print(f"No drivetrain selected")
+                return
+    else:  # get drivetrainid from user prompt
+        log.info(f"driveTrainID not provided. Prompt user for driveTrainID ")
+        driveTrainId = pickDriveTrain(
+            text="Select a drivetrain for the new car")
+        if driveTrainId:  # User provided choice
+            driveTrain = gtdb.getDriveTrain(dbC1, driveTrainId)
+            log.info(f"Loading drivetrain object driveTrainId={driveTrainId} ")
+            driveTrain = gtdb.getDriveTrain(dbC1, driveTrainId)
+        else:  # Bail out
+            log.info(f"No drivetrainId provided")
+            print(f"No drivetrain selected")
+            return
+
+    # Display new car info user select
+    cls()
+    print_formatted_text(HTML(f"<b>Adding a car to the garage</b>"))
+    print_formatted_text(HTML(
+        f"Make: <ansigreen>{html.escape(mfg.name)}</ansigreen>    Class: <ansigreen>{html.escape(carClass.name)}</ansigreen>"))
+    print_formatted_text(HTML(
+        f"Drive Train: <ansigreen>{html.escape(driveTrain.code)} - {html.escape(driveTrain.desc)}</ansigreen>"))
+
+    # TODO: List all car makes in the garage.
+    # TODO: Model Name | Year | Class | Drive Train
+    # Command to use if adding another
+    print_formatted_text(HTML(
+        f"   >> add car mfgId={mfg.id} classId={carClass.id} driveTrainId={driveTrain.id}"))
+
+    print()
+    # Now to get the user typed in details
+    mYear = prompt("  Model Year > ")
+    log.info(f"User enter {mYear} for year")
+    mName = prompt("  Model Name > ")
+    log.info(f"User enter {mName} for name")
+    car = GT.Car(id=0, model=mName, Manufacture=mfg,
+                 DriveTrain=driveTrain, ClassCat=carClass)
+    car.year = mYear
+    log.info(f"car={car}")
+    result = gtdb.addCar(dbC1, car)
+    if result[0] == 0:
+        x = f'  <ansigreen>Car added to garage</ansigreen>'
+        print_formatted_text(HTML(x))
+        log.info(f"Car added to garage")
+    else:
+        x = f'  <ansired>Unable to add car to garage. Return Code: {result[0]} Desc: {result[1]}</ansired>'
+        print_formatted_text(HTML(x))
+        log.info(
+            f"Unable to add car to garage. Return Code: {result[0]} Desc: {result[1]}")
 
 
 def addCollection(leagueId):
@@ -318,7 +456,6 @@ def addCollection(leagueId):
 def addCollectionCmd(args):
     """What to do when asked to add a collection"""
     log.debug(f"args passed: {args}")
-    log.debug(f"length of args: {len(args)}")
     if len(args) > 0 and args.find("=") > 0:  # Have valid args
         if args.split('=')[0].strip() == 'leagueId':
             id = args.split('=')[1].strip()
@@ -1137,6 +1274,26 @@ def pickCarCategory(text='Select a Car Class Category'):
     return result
 
 
+def pickDriveTrain(text="Select a Drivetrain"):
+    """Dialog box for user to select a drivetrain from
+
+    Args:
+        text (str, optional): [description]. Defaults to "Select a Drivetrain".
+
+    Returns:
+        int : the drivetrain id user choose. (None if there was not a choice)
+    """
+    log.info("Getting list of drivetrains")
+    pickList = gtdb.getDriveTrainList(dbC1)
+    log.info("Display drivetrain dialog box for user to choose")
+    result = radiolist_dialog(title="Drivetrains",
+                              text=text,
+                              values=pickList
+                              ).run()
+    log.info(f"User choose {result}")
+    return result
+
+
 def pickLeague(text='Select a League'):
     """Dialog box for user to select a League
 
@@ -1152,6 +1309,22 @@ def pickLeague(text='Select a League'):
         values=pickList
     ).run()
     log.info(f"User choose leagueId: {result}")
+    return result
+
+
+def pickMfg(text='Select manufacture'):
+    """Dialog box for picking a manufacture/make
+
+    Args:
+        text (str, optional): Text in dialog box for user. Defaults to 'Select manufacture'.
+    """
+    log.info("Getting list of manufactures for user to select")
+    pickList = gtdb.getMfgList(dbC1)
+    log.info("Display dialog")
+    result = radiolist_dialog(title="Manufactures",
+                              text=text,
+                              values=pickList).run()
+    log.info(f"User choose mfgId: {result}")
     return result
 
 
