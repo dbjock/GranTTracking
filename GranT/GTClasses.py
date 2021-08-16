@@ -7,58 +7,27 @@ class Car(object):
         self.id = id
         self.model = model
         self.year = None
-        self.maker = Manufacture
+        self.manufacture = Manufacture
         self.driveTrain = DriveTrain
         self.catclass = ClassCat
 
     def __repr__(self):
-        return f"Car(id={self.id}, model={self.model}, {self.maker}),{self.driveTrain},{self.catclass}"
+        return f"Car(id={self.id}, model={self.model}, manufacture={self.manufacture},driveTrain={self.driveTrain},catclass={self.catclass})"
 
 
-class Country(object):
-
-    def __init__(self, cntryID, cntryName, alpha2, alpha3, region):
-        self.id = cntryID
-        self.cntryName = cntryName
-        self.alpha2 = alpha2
-        self.alpha3 = alpha3
-        self.region = region
-
-    def __repr__(self):
-        return f"country(id={self.id}, cntryName='{self.cntryName}', alpha2='{self.alpha2}', alpha3='{self.alpha3}', region='{self.region}')"
-
-
-class Manufacture(object):
-    def __init__(self, id, name, countryObj):
+class Circuit(object):
+    def __init__(self, id, name):
         """
-        Manufacture object. Used by car, and many other objects
-        id     : type int. Unique for all manufactures in db
-        Name   : type str. Unique for all manufactures in db
-        countryObj: object created from the Country Class.
+        Circut object. This object is a property of different race tracks.
+
+        id   : type int. Unique for all circuits in db.
+        name : type str. name of the circuit, unique in db.
         """
         self.id = id
         self.name = name
-        self.country = countryObj
 
     def __repr__(self):
-        return f"Manufacture(id={self.id},name='{self.name}', {self.country})"
-
-
-class DriveTrain(object):
-    def __init__(self, id, code, desc):
-        """
-        Drive Train object. Primarily used with cars.
-
-        id   : type int. Unique for all drive trains in db.
-        code : type str. Unique for all drive trains.
-        desc : type str. Free text describing the Drive Train.
-        """
-        self.id = id
-        self.code = code
-        self.desc = desc
-
-    def __repr__(self):
-        return f"DriveTrain(id={self.id},code='{self.code}',desc='{self.desc}')"
+        return f"Circuit(id={self.id}, name={self.name})"
 
 
 class ClassCat(object):
@@ -76,46 +45,70 @@ class ClassCat(object):
         self.sortOrder = None
 
     def __repr__(self):
-        return f"ClassCat(id={self.id}, name='{self.name}', desc='{self.desc}', sortOrder='{self.sortOrder}')"
+        return f"ClassCat(id={self.id}, name={self.name}, desc={self.desc})"
 
 
-class Circuit(object):
-    def __init__(self, id, name):
-        """
-        Circut object. This object is a property of different race tracks.
+class Country(object):
 
-        id   : type int. Unique for all circuits in db.
-        name : type str. name of the circuit, unique in db.
-        """
-        self.id = id
-        self.name = name
+    def __init__(self, cntryID, cntryName, alpha2, alpha3, region):
+        self.id = cntryID
+        self.cntryName = cntryName
+        self.alpha2 = alpha2
+        self.alpha3 = alpha3
+        self.region = region
 
     def __repr__(self):
-        return f"circuit(id={self.id}, name='{self.name}')"
+        return f"Country(id={self.id}, cntryName={self.cntryName}, alpha2={self.alpha2}, alpha3={self.alpha3}, region={self.region})"
 
 
-class RaceCollection(object):
-    def __init__(self, id, name, desc, leagueObj):
+class DriveTrain(object):
+    def __init__(self, id, code, desc):
         """
-        Race Collection object.
-        id     : type int. ID of the race collection
-        Name   : type str. Name of the Race collection
-        Desc   : Description of the Race Collection
-        leagueObj: object created from the League Class.
-        """
+        Drive Train object. Primarily used with cars.
 
+        id   : type int. Unique for all drive trains in db.
+        code : type str. Unique for all drive trains.
+        desc : type str. Free text describing the Drive Train.
+        """
         self.id = id
-        self.name = name
+        self.code = code
         self.desc = desc
-        self.league = leagueObj
-        # classcat is the ClassCat object
-        self.classcat = ClassCat(id=None, name="", desc="")
-        self.prize1 = 0
-        self.prize2 = 0
-        self.prize3 = 0
 
     def __repr__(self):
-        return f"RaceCollection(id={self.id}, name='{self.name}', desc='{self.desc}',league={self.league}, classcat={self.classcat}, prize1={self.prize1},prize2={self.prize2}, prize3={self.prize3})"
+        return f"DriveTrain(id={self.id},code={self.code},desc={self.desc})"
+
+
+class League(object):
+    def __init__(self, id, name, sortord):
+        """
+        League object.
+
+        id     : type int. Unique for all Leagues in db.
+        name   : type str. name of the League, unique in db.
+        sortord: type int. Order which the object should be sorted.
+        """
+        self.id = id
+        self.name = name
+        self.sortord = sortord
+
+    def __repr__(self):
+        return f"League(id={self.id}, name={self.name}, sortord={self.sortord})"
+
+
+class Manufacture(object):
+    def __init__(self, id, name, countryObj):
+        """
+        Manufacture object. Used by car, and many other objects
+        id     : type int. Unique for all manufactures in db
+        Name   : type str. Unique for all manufactures in db
+        countryObj: object created from the Country Class.
+        """
+        self.id = id
+        self.name = name
+        self.country = countryObj
+
+    def __repr__(self):
+        return f"Manufacture(id={self.id},name={self.name}, countryObj={self.country})"
 
 
 class Race(object):
@@ -143,7 +136,31 @@ class Race(object):
         self.notes = None
 
     def __repr__(self):
-        return f"Race(id={self.id}, name='{self.name}',racetime={self.racetime}, limits={self.limits}, notes={self.notes},{self.trackLayout},{self.raceCollection},{self.raceType},{self.weather})"
+        return f"Race(id={self.id}, name={self.name},trackLayout={self.trackLayout},raceCollection={self.raceCollection},raceType={self.raceType},weather={self.weather})"
+
+
+class RaceCollection(object):
+    def __init__(self, id, name, desc, leagueObj):
+        """
+        Race Collection object.
+        id     : type int. ID of the race collection
+        Name   : type str. Name of the Race collection
+        Desc   : Description of the Race Collection
+        leagueObj: object created from the League Class.
+        """
+
+        self.id = id
+        self.name = name
+        self.desc = desc
+        self.league = leagueObj
+        # classcat is the ClassCat object. This is optional
+        self.classcat = ClassCat(id=None, name="", desc="")
+        self.prize1 = 0
+        self.prize2 = 0
+        self.prize3 = 0
+
+    def __repr__(self):
+        return f"RaceCollection(id={self.id}, name={self.name}, desc={self.desc},leagueObj={self.league})"
 
 
 class RaceType(object):
@@ -158,39 +175,7 @@ class RaceType(object):
         self.name = name
 
     def __repr__(self):
-        return f"raceType(id={self.id}, name={self.name})"
-
-
-class Weather(object):
-    def __init__(self, id, name):
-        """Init the Weather object
-
-        Args:
-            id (int): Unique ID for the weather
-            name (string): Name of the Weather
-        """
-        self.id = id
-        self.name = name
-
-    def __repr__(self):
-        return f"weather(id={self.id}, name={self.name})"
-
-
-class League(object):
-    def __init__(self, id, name, sortord):
-        """
-        League object.
-
-        id     : type int. Unique for all Leagues in db.
-        name   : type str. name of the League, unique in db.
-        sortord: type int. Order which the object should be sorted.
-        """
-        self.id = id
-        self.name = name
-        self.sortord = sortord
-
-    def __repr__(self):
-        return f"League(id={self.id}, name='{self.name}', sortord={self.sortord})"
+        return f"RaceType(id={self.id}, name={self.name})"
 
 
 class Track(object):
@@ -208,7 +193,7 @@ class Track(object):
         self.country = countryObj
 
     def __repr__(self):
-        return f"track(id={self.id},name='{self.name}', {self.country})"
+        return f"Track(id={self.id},name={self.name},countryObj={self.country})"
 
 
 class TrackLayout(object):
@@ -226,4 +211,19 @@ class TrackLayout(object):
         self.miles = miles
 
     def __repr__(self):
-        return f"trackLayout(id={self.id},name='{self.name}',miles={self.miles}), {self.track}, {self.circuit}"
+        return f"TrackLayout(id={self.id},name={self.name},miles={self.miles}), trackObj={self.track},circuitObj={self.circuit}"
+
+
+class Weather(object):
+    def __init__(self, id, name):
+        """Init the Weather object
+
+        Args:
+            id (int): Unique ID for the weather
+            name (string): Name of the Weather
+        """
+        self.id = id
+        self.name = name
+
+    def __repr__(self):
+        return f"Weather(id={self.id}, name={self.name})"
