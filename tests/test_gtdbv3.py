@@ -169,12 +169,25 @@ class TestCar(unittest.TestCase):
         self.assertNotEqual(
             result[0], 0, "Failed: Add Car : Model Name not unique. Record should not have been saved")
 
+        logger.info("Testing Add Car : Year is text")
+        xdriveTrain = GT.DriveTrain(id=1, code='NA', desc='NA')
+        xclassCat = GT.ClassCat(id=1, name='NA', desc='NA')
+        xmfg = GT.Manufacture(id=10, name='NA', countryObj=xcountry)
+        xObj = GT.Car(id=0, model='Test model name 9999', Manufacture=xmfg,
+                      DriveTrain=xdriveTrain, ClassCat=xclassCat)
+        xObj.year = "ABC"
+        logger.info(f"Saving car {xObj}")
+        result = gtdbV3.addCar(d1, xObj)
+        self.assertNotEqual(
+            result[0], 0, "Failed: Add Car : Testing Add Car : Year is text. Record should not have been saved")
+
         logger.info("Testing Add Car : Valid Car")
         xdriveTrain = GT.DriveTrain(id=1, code='NA', desc='NA')
         xclassCat = GT.ClassCat(id=1, name='NA', desc='NA')
         xmfg = GT.Manufacture(id=10, name='NA', countryObj=xcountry)
         xObj = GT.Car(id=0, model='Test model name 9999', Manufacture=xmfg,
                       DriveTrain=xdriveTrain, ClassCat=xclassCat)
+        xObj.year = 123
         logger.info(f"Saving car {xObj}")
         result = gtdbV3.addCar(d1, xObj)
         self.assertEqual(
@@ -182,21 +195,27 @@ class TestCar(unittest.TestCase):
 
         logger.info("==== END BEGIN add car tests===")
 
-    def test_getCar(self):
-        logger.info("==== BEGIN get car tests")
-        d1 = gtdbV3.create_connection(":memory:")
-        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+
+class TestCar_Get(unittest.TestCase):
+    def setUp(self):
+        self.testDb = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(self.testDb, scriptPath=f'{_gtScripts}')
         # init car table createUserTables.sql
-        gtdbV3._exeScriptFile(d1, scriptFileName=_gtScripts /
+        gtdbV3._exeScriptFile(self.testDb, scriptFileName=_gtScripts /
                               'createUserTables.sql')
         # Load test car data
-        gtdbV3._exeScriptFile(d1, scriptFileName=_gtPath /
+        gtdbV3._exeScriptFile(self.testDb, scriptFileName=_gtPath /
                               'tests' / 'test_carData.sql')
 
+    def tearDown(self):
+        self.testDb.close()
+
+    def test_getCar(self):
+        logger.info("==== BEGIN testing getCar method")
         logger.info("Get existing car by id")
         testVal = 1
         logger.info(f"Getting carId = {testVal}")
-        xObj = gtdbV3.getCar(d1, id=testVal)
+        xObj = gtdbV3.getCar(self.testDb, id=testVal)
         logger.info(f"Returned: {xObj}")
         self.assertEqual(
             xObj.id, 1, "Failed Get existing car by id. Expecting car Id=1")
@@ -204,12 +223,39 @@ class TestCar(unittest.TestCase):
         logger.info("Get NON existing car by id")
         testVal = 999
         logger.info(f"Getting carId = {testVal}")
-        xObj = gtdbV3.getCar(d1, id=testVal)
+        xObj = gtdbV3.getCar(self.testDb, id=testVal)
         logger.info(f"Returned: {xObj}")
         self.assertEqual(
             xObj.id, 0, "Failed Get NON existing car by id. Expecting car id = 0")
 
-        logger.info("==== END get car tests")
+        logger.info("==== END testing getCar method")
+
+    def test_getCarList(self):
+        logger.info("==== BEGIN testing getCarList method")
+        logger.info("Get car list by name")
+        result = gtdbV3.getCarList(self.testDb, mfgID=3, sortBy="name")
+        self.assertGreaterEqual(
+            len(result), 1, "Failed Get car list by name. Should have at minimum 1 row")
+
+        logger.info("Get car list by year")
+        result = gtdbV3.getCarList(self.testDb, mfgID=3, sortBy="year")
+        self.assertGreaterEqual(
+            len(result), 1, "Failed Get car list by year. Should have at minimum 1 row")
+
+        logger.info("Get car list by ClassCat")
+        result = gtdbV3.getCarList(self.testDb, mfgID=3, sortBy="ClassCat")
+        self.assertGreaterEqual(
+            len(result), 1, "Failed Get car list by ClassCat. Should have at minimum 1 row")
+
+        logger.info("Get car list by drivetrain")
+        result = gtdbV3.getCarList(self.testDb, mfgID=3, sortBy="drivetrain")
+        self.assertGreaterEqual(
+            len(result), 1, "Failed Get car list by drivetrain. Should have at minimum 1 row")
+
+        logger.info("Get car list by something")
+        result = gtdbV3.getCarList(self.testDb, mfgID=3, sortBy="something")
+        self.assertGreaterEqual(
+            len(result), 1, "Failed Get car list by something. Should have at minimum 1 row")
 
 
 class TestCarCat(unittest.TestCase):
