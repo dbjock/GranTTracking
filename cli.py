@@ -25,6 +25,7 @@ from GranT import gtcfg
 gtcfg.curcfg['gtPath'] = Path.cwd()
 gtcfg.curcfg['gtScripts'] = gtcfg.curcfg['gtPath'] / 'Scripts'
 gtcfg.curcfg['layoutUpdated'] = True
+gtcfg.curcfg['version'] = '1.alpha'
 # Log Formatters
 smlFMT = logging.Formatter(
     '%(asctime)s %(levelname)-8s %(message)s')
@@ -53,15 +54,16 @@ log_fh.setLevel(logging.DEBUG)
 log.addHandler(log_fh)
 linePrmpt = '  system> '
 print(f"{linePrmpt} Logging to: {logFile}")
+log.info(f"CLI app version : {gtcfg.curcfg['version']} starting")
 # create Path to database if it does not exists
 Path(Path(gtcfg.dbcfg['dbFile']).parent).mkdir(parents=True, exist_ok=True)
 print(f"{linePrmpt} Database  : {gtcfg.dbcfg['dbFile']}")
 if not Path(gtcfg.dbcfg['dbFile']).exists():
     newDB = True
-    log.debug(f"Db file not found: newDB={newDB}")
+    log.info(f"Db file not found: newDB={newDB}")
 else:
     newDB = False
-    log.debug(f"Db found: newDB={newDB}")
+    log.info(f"Db found: newDB={newDB}")
 
 # sqlite will create a database file if it does not exist.
 dbC1 = gtdb.create_connection(gtcfg.dbcfg['dbFile'])
@@ -70,6 +72,9 @@ if newDB:
     log.info(f"Initializing new database: {gtcfg.dbcfg['dbFile']}")
     print(f"{linePrmpt} Initializing new database")
     gtdb.initDB(dbC1, scriptPath=gtcfg.curcfg['gtScripts'])
+    log.info(f"Creating User Tables")
+    gtdb._exeScriptFile(
+        dbC1, scriptFileName=gtcfg.curcfg['gtScripts'] / 'createUserTables.sql')
 
 
 def _sortTuple(tup, key):
@@ -86,6 +91,21 @@ def _sortTuple(tup, key):
 def _isNum(text):
     """Used for validation to ensure numbers are provided"""
     return text.isdigit()
+
+
+def _isNumOrNull(text):
+    if len(text) == 0:
+        return True
+
+    return text.isdigit()
+
+
+def _YorN(text):
+    for validChar in ['Y', 'N']:
+        if text.upper() == validChar:
+            return True
+
+    return False
 
 
 def _valTime(text):
@@ -344,37 +364,58 @@ def addCarCmd(args):
     # Display new car info user select
     cls()
     print_formatted_text(HTML(f"<b>Adding a car to the garage</b>"))
-    print_formatted_text(HTML(
-        f"Make: <ansigreen>{html.escape(mfg.name)}</ansigreen>    Class: <ansigreen>{html.escape(carClass.name)}</ansigreen>"))
-    print_formatted_text(HTML(
-        f"Drive Train: <ansigreen>{html.escape(driveTrain.code)} - {html.escape(driveTrain.desc)}</ansigreen>"))
+    displayCarMfg(mfg.id)
 
-    # TODO: List all car makes in the garage.
-    # TODO: Model Name | Year | Class | Drive Train
-    # Command to use if adding another
+    # Display command to use if adding another
     print_formatted_text(HTML(
         f"   >> add car mfgId={mfg.id} classId={carClass.id} driveTrainId={driveTrain.id}"))
 
     print()
+    print_formatted_text(HTML(
+        f"      Class: <ansigreen>{html.escape(carClass.name)}</ansigreen>"))
+    print_formatted_text(HTML(
+        f"Drive Train: <ansigreen>{html.escape(driveTrain.code)} - {html.escape(driveTrain.desc)}</ansigreen>"))
+
     # Now to get the user typed in details
-    mYear = prompt("  Model Year > ")
-    log.info(f"User enter {mYear} for year")
-    mName = prompt("  Model Name > ")
-    log.info(f"User enter {mName} for name")
-    car = GT.Car(id=0, model=mName, Manufacture=mfg,
-                 DriveTrain=driveTrain, ClassCat=carClass)
-    car.year = mYear
-    log.info(f"car={car}")
-    result = gtdb.addCar(dbC1, car)
-    if result[0] == 0:
-        x = f'  <ansigreen>Car added to garage</ansigreen>'
-        print_formatted_text(HTML(x))
-        log.info(f"Car added to garage")
-    else:
-        x = f'  <ansired>Unable to add car to garage. Return Code: {result[0]} Desc: {result[1]}</ansired>'
-        print_formatted_text(HTML(x))
-        log.info(
-            f"Unable to add car to garage. Return Code: {result[0]} Desc: {result[1]}")
+    validator = Validator.from_callable(_isNumOrNull,
+                                        error_message='Input must be a number or blank',
+                                        move_cursor_to_end=True)
+
+    enterYear = prompt("  Model Year > ", validator=validator)
+    if enterYear:
+        enterYear = int(enterYear)
+
+    log.info(f"User enter {enterYear} for year")
+    enterName = prompt("  Model Name > ")
+    log.info(f"User enter {enterName} for name")
+
+    # Prompt if car is to be saved
+    validator = Validator.from_callable(_YorN,
+                                        error_message='Y or N',
+                                        move_cursor_to_end=True)
+    xTmp = prompt("Do you wish to save this car? (Y or N) > ",
+                  validator=validator)
+    if xTmp.upper() == "N":
+        log.info("User does not want to save car")
+        print("Car will not be saved")
+    elif xTmp.upper() == "Y":
+        # Attempting to save car
+        car = GT.Car(id=0, model=enterName, Manufacture=mfg,
+                     DriveTrain=driveTrain, ClassCat=carClass)
+        car.year = enterYear
+        log.info(f"car={car}")
+        result = gtdb.addCar(dbC1, car)
+        if result[0] == 0:
+            x = f'  <ansigreen>Car added to garage</ansigreen>'
+            print_formatted_text(HTML(x))
+            log.info(f"Car added to garage")
+            # TODO: Display the cars by mfg
+            displayCarMfg(mfg.id)
+        else:
+            x = f'  <ansired>Unable to add car to garage. Return Code: {result[0]} Desc: {result[1]}</ansired>'
+            print_formatted_text(HTML(x))
+            log.info(
+                f"Unable to add car to garage. Return Code: {result[0]} Desc: {result[1]}")
 
 
 def addCollection(leagueId):
@@ -723,6 +764,50 @@ def addRaceCmd(args):
         displayCollection(rcCollection)
 
     return
+
+
+def displayCarMfg(mfgId):
+    """Display all cars in garage for mfgId
+
+    Args:
+        mfgId (int): Manufacture ID
+    """
+    mfg = gtdb.getMfg(dbC1, key='mfgId', value=mfgId)
+    print_formatted_text(HTML(
+        f"Cars in your garage for manufacture: <ansigreen>{html.escape(mfg.name)}</ansigreen>"))
+    print()
+
+    # header line
+    carId = f' ID'
+    modName = f'Model Name'.ljust(60)
+    mYear = f'Year'.ljust(4)
+    carClassN = f'Class'.ljust(6)
+    mDT = f'Drive'
+
+    print(
+        f" {carId} | {modName} | {mYear} | {carClassN} | {mDT}")
+    print("-" * 104)  # header seperator
+    # Getting and display cars
+    selectSQL = "SELECT car.id, model, year, cat.name as class, dt.code"
+    fromSQL = "FROM car JOIN drivetrain AS dt ON car.drivetrain_id = dt.id JOIN category as cat on car.cat_id = cat.id"
+    whereSQL = "WHERE mfg_id = :mfgID"
+    orderBy = "ORDER BY model"
+    sql = f"{selectSQL} {fromSQL} {whereSQL} {orderBy}"
+    vals = {'mfgID': mfgId}
+    results = gtdb.directSql(dbC1, sql, vals)
+    for row in results:
+        carId = f"{row[0]:d}".rjust(3)
+        modName = html.escape(row[1].ljust(60))
+        if row[2]:  # year as a value
+            mYear = f"{row[2]:d}".rjust(4)
+        else:  # year has no value
+            mYear = "    "
+        carClassN = html.escape(row[3].ljust(6))
+        mDT = html.escape(row[4].ljust(4))
+
+        htmlText = f" <ansigreen>{carId}</ansigreen> | <ansigreen>{modName}</ansigreen> | <ansigreen>{mYear}</ansigreen> | <ansigreen>{carClassN}</ansigreen> | <ansigreen>{mDT}</ansigreen>"
+        print_formatted_text(HTML(htmlText))
+    print("-" * 104)  # header seperator
 
 
 def displayCarCats(theList):
