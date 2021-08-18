@@ -542,23 +542,12 @@ def getCarCat(dbConn, id):
     theVals = (value,)
     logger.debug(f"sql = {sql}")
     logger.debug(f"theVals = {theVals}")
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql, theVals)
-        row = cur.fetchone()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback
-    dbConn.set_trace_callback(None)
+    row = directSql(dbConn, sql, theVals)
     logger.debug(f"row={row}")
     if row:  # Create ClassCat object
         rtnObj = gtClass.ClassCat(
-            id=row[0], name=row[1], desc=row[2])
-        rtnObj.sortOrder = row[3]
+            id=row[0][0], name=row[0][1], desc=row[0][2])
+        rtnObj.sortOrder = row[0][3]
     else:  # Create an empty ClassCat object
         rtnObj = gtClass.ClassCat(id=0, name="", desc="")
 
@@ -579,19 +568,8 @@ def getCarCatList(dbConn):
     selectSQL = "SELECT c.id as id, c.name as carClass, c.description as desc, c.sortOrder as sortorder FROM category as c ORDER BY c.sortOrder"
     sql = selectSQL
     logger.debug(f"sql = {sql}")
-
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql)
-        result = cur.fetchall()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback to logger.debug
-    dbConn.set_trace_callback(None)
+    theVals = ()
+    result = directSql(dbConn, sql, theVals)
     logger.info(f"Returning {len(result)} rows")
     return result
 
@@ -661,21 +639,10 @@ def getCircuit(dbConn, key='id', value=None):
     theVals = (value,)
     logger.debug(f"sql = {sql}")
     logger.debug(f"theVals = {theVals}")
-    # enable full sql trackback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql, theVals)
-        row = cur.fetchone()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback
-    dbConn.set_trace_callback(None)
+    row = directSql(dbConn, sql, theVals)
     if row:  # populate ciruit object
         logger.info(f"Circuit found")
-        xCircuit = gtClass.Circuit(id=row[0], name=row[1])
+        xCircuit = gtClass.Circuit(id=row[0][0], name=row[0][1])
     else:  # create blank ciruit object
         logger.info(f"Circuit not found")
         xCircuit = gtClass.Circuit(id=0, name=None)
@@ -696,20 +663,9 @@ def getCircuitList(dbConn):
     selectSQL = "SELECT c.id as id, c.name as name from circuit as c"
     orderbySQL = "ORDER by name"
     sql = f"{selectSQL} {orderbySQL}"
+    theVals = ()
     logger.debug(f"sql = {sql}")
-
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql)
-        result = cur.fetchall()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback to logger.debug
-    dbConn.set_trace_callback(None)
+    result = directSql(dbConn, sql, theVals)
     logger.info(f"Returning {len(result)} rows")
     return result
 
@@ -728,27 +684,15 @@ def getCountry(dbConn, countryId):
     theVals = (countryId,)
     logger.debug(f"sql={sql}")
     logger.debug(f"theVals={theVals}")
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql, theVals)
-        row = cur.fetchone()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback to logger.debug
-    dbConn.set_trace_callback(None)
-
+    row = directSql(dbConn, sql, theVals)
     if row:  # Populate Country obj with db data
         logger.info(f"Found countryId: {countryId}")
         country = gtClass.Country(
-            cntryID=row[0],
-            cntryName=row[1],
-            alpha2=row[2],
-            alpha3=row[3],
-            region=row[4])
+            cntryID=row[0][0],
+            cntryName=row[0][1],
+            alpha2=row[0][2],
+            alpha3=row[0][3],
+            region=row[0][4])
     else:  # Create blank Country obj
         logger.info(f"Unable to find countryId: {countryId}")
         country = gtClass.Country(
@@ -806,19 +750,8 @@ def getDriveTrainList(dbConn, orderBy='code'):
     orderBySQL = f"ORDER BY {orderBy}"
     sql = f"{selectSQL} {orderBySQL}"
     logger.debug(f"sql: {sql}")
-
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql)
-        result = cur.fetchall()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback to logger.debug
-    dbConn.set_trace_callback(None)
+    theVals = ()
+    result = directSql(dbConn, sql, theVals)
     logger.info(f"Returning {len(result)} rows")
     return result
 
@@ -835,30 +768,15 @@ def getLayout(dbConn, layoutId):
     logger.info(f"Getting track layout id {layoutId}")
     sql = """SELECT id as layoutId, name as layoutName, miles, track_id, circuit_id FROM track_layout WHERE layoutId=?"""
     theVals = (layoutId,)
-    # Execute the SQL
-    logger.debug(f"sql: {sql}")
     logger.debug(f"sql={sql}")
     logger.debug(f"theVals={theVals}")
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql, theVals)
-        row = cur.fetchone()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-
-    # Disable full sql traceback
-    dbConn.set_trace_callback(None)
-
+    row = directSql(dbConn, sql, theVals)
     if row:  # Populate trackLayout obj
         logger.info(f"Found track layout id {layoutId}")
-        xTrack = getTrack(dbConn, key='trackId', value=row[3])
-        xCircuit = getCircuit(dbConn, key='id', value=row[4])
+        xTrack = getTrack(dbConn, key='trackId', value=row[0][3])
+        xCircuit = getCircuit(dbConn, key='id', value=row[0][4])
         xTrackLayout = gtClass.TrackLayout(
-            row[0], row[1], miles=row[2], trackObj=xTrack, circuitObj=xCircuit)
+            row[0][0], row[0][1], miles=row[0][2], trackObj=xTrack, circuitObj=xCircuit)
 
     else:  # Create blank trackLayout obj (no data returned)
         logger.info(f"Unable to find track layout id {layoutId}")
@@ -890,22 +808,9 @@ def getLayoutList(dbConn, trackId):
     theVals = (trackId,)
     logger.debug(f"sql = {sql}")
     logger.debug(f"theVals = {theVals}")
-
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql, theVals)
-        result = cur.fetchall()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback to logger.debug
-    dbConn.set_trace_callback(None)
-
-    logger.info(f"Returning {len(result)} rows")
-    return result
+    results = directSql(dbConn, sql, theVals)
+    logger.info(f"Returning {len(results)} rows")
+    return results
 
 
 def getLeague(dbConn, key='id', value=None):
@@ -926,21 +831,10 @@ def getLeague(dbConn, key='id', value=None):
     sql = f"{selectSQL} {whereSQL}"
     logger.debug(f"sql={sql}")
     logger.debug(f"theVals={theVals}")
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql, theVals)
-        row = cur.fetchone()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback
-    dbConn.set_trace_callback(None)
-    logger.debug(f"row={row}")
+    row = directSql(dbConn, sql, theVals)
     if row:  # have data from db
-        league = gtClass.League(id=row[0], name=row[1], sortord=row[2])
+        league = gtClass.League(
+            id=row[0][0], name=row[0][1], sortord=row[0][2])
     else:  # No data from db. Create empty object
         league = gtClass.League(id=0, name="", sortord=0)
     logger.debug(f'returning: {league}')
@@ -961,20 +855,10 @@ def getLeagueList(dbConn):
     orderBySQL = "ORDER BY sortord"
     sql = f"{selectSQL} {orderBySQL}"
     logger.debug(f"sql = {sql}")
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql)
-        result = cur.fetchall()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback to logger.debug
-    dbConn.set_trace_callback(None)
-    logger.debug(f"Returning {len(result)} rows")
-    return result
+    theVals = ()
+    results = directSql(dbConn, sql, theVals)
+    logger.debug(f"Returning {len(results)} rows")
+    return results
 
 
 def getMfg(dbConn, key='mfgId', value=None):
@@ -994,27 +878,13 @@ def getMfg(dbConn, key='mfgId', value=None):
 			mfg.name AS Make,
 			country_id as cntryId
 			FROM manufacture AS mfg"""
-
     whereSQL = f" WHERE {key} = ?"
-
-    theVars = (value,)
+    theVals = (value,)
     sql = f"{selectSQL} {whereSQL}"
     # Ready to execute SQL
-    logger.debug(f"theVars: {theVars}")
+    logger.debug(f"theVars: {theVals}")
     logger.debug(f"sql: {sql}")
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql, theVars)
-        row = cur.fetchone()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback
-    dbConn.set_trace_callback(None)
+    row = directSql(dbConn, sql, theVals)
     logger.debug(f"row={row}")
     # default Country object (blank)
     xCountry = gtClass.Country(
@@ -1022,11 +892,11 @@ def getMfg(dbConn, key='mfgId', value=None):
 
     if row:  # Populate Manufacture object
         logger.debug("manufacture found.")
-        if row[2]:  # We have a country. Load country object
-            xCountry = getCountry(dbConn, row[2])
+        if row[0][2]:  # We have a country. Load country object
+            xCountry = getCountry(dbConn, row[0][2])
 
         xMake = gtClass.Manufacture(
-            id=row[0], name=row[1], countryObj=xCountry)
+            id=row[0][0], name=row[0][1], countryObj=xCountry)
         logger.debug(f"returning manufacture object")
     else:
         # Create blank Manufacture object
@@ -1051,25 +921,12 @@ def getMfgList(dbConn):
     logger.info(f"Getting all manufactures")
     selectSQL = """SELECT mfg.id as id, mfg.name AS Make FROM manufacture AS mfg"""
     orderBySQL = f"ORDER BY mfg.name"
-
     sql = f"{selectSQL} {orderBySQL}"
-
-    # Ready to execute SQL
+    theVals = ()
     logger.debug(f"sql: {sql}")
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql)
-        result = cur.fetchall()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback to logger.debug
-    dbConn.set_trace_callback(None)
-    logger.info(f"Rows being returned: {len(result)}")
-    return result
+    results = directSql(dbConn, sql, theVals)
+    logger.info(f"Rows being returned: {len(results)}")
+    return results
 
 
 def getRace(dbConn, id):
@@ -1091,31 +948,19 @@ def getRace(dbConn, id):
     sql = f"{selectSQL} {whereSQL}"
     logger.debug(f"sql={sql}")
     logger.debug(f"theVals={theVals}")
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql, theVals)
-        row = cur.fetchone()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback to logger.debug
-    dbConn.set_trace_callback(None)
-
+    row = directSql(dbConn, sql, theVals)
     if row:  # Create a race object
         logger.info("Found race")
         logger.debug(f"row={row}")
-        id = row[0]
-        name = row[1]
-        trackLayout = getLayout(dbConn, row[2])
-        raceCollection = getRaceCollection(dbConn, rcId=row[3])
-        weather = getWeather(dbConn, row[4])
-        raceType = getRaceType(dbConn, row[5])
-        racetime = row[6]
-        limits = row[7]
-        notes = row[8]
+        id = row[0][0]
+        name = row[0][1]
+        trackLayout = getLayout(dbConn, row[0][2])
+        raceCollection = getRaceCollection(dbConn, rcId=row[0][3])
+        weather = getWeather(dbConn, row[0][4])
+        raceType = getRaceType(dbConn, row[0][5])
+        racetime = row[0][6]
+        limits = row[0][7]
+        notes = row[0][8]
     else:  # create a blank racetype object
         logger.info("Race not found")
         trackLayout = getLayout(dbConn, 0)
@@ -1157,21 +1002,10 @@ def getRaceList(dbConn, raceCollectionID):
     theVals = (raceCollectionID,)
     logger.debug(f"sql = {sql}")
     logger.debug(f"theVals = {theVals}")
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql, theVals)
-        result = cur.fetchall()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback
-    dbConn.set_trace_callback(None)
-    logger.info(f"Returning {len(result)} rows")
-    logger.debug(f"result={result}")
-    return result
+    results = directSql(dbConn, sql, theVals)
+    logger.info(f"Returning {len(results)} rows")
+    logger.debug(f"result={results}")
+    return results
 
 
 def getRaceCollection(dbConn, rcId):
@@ -1193,30 +1027,18 @@ def getRaceCollection(dbConn, rcId):
     theVals = (value,)
     logger.debug(f"sql = {sql}")
     logger.debug(f"theVals = {theVals}")
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql, theVals)
-        row = cur.fetchone()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback
-    dbConn.set_trace_callback(None)
+    row = directSql(dbConn, sql, theVals)
     if row:  # populate the raceCollection object
         logger.debug("Found race collection")
         logger.debug(f"row={row}")
 
-        league = getLeague(dbConn, key='id', value=row[3])
+        league = getLeague(dbConn, key='id', value=row[0][3])
         logger.debug(f"league={league}")
-
         raceCollection = gtClass.RaceCollection(
-            id=row[0], name=row[1], desc=row[2], leagueObj=league)
+            id=row[0][0], name=row[0][1], desc=row[0][2], leagueObj=league)
 
         # Getting the car class category
-        catClass = getCarCat(dbConn, id=row[4])
+        catClass = getCarCat(dbConn, id=row[0][4])
         if catClass.id == 0:  # no catClass assigned to raceCollection
             raceCollection.classcat = gtClass.ClassCat(
                 id=None, name="", desc="")
@@ -1224,9 +1046,9 @@ def getRaceCollection(dbConn, rcId):
             raceCollection.classcat = catClass
 
         # Prize money
-        raceCollection.prize1 = row[5]
-        raceCollection.prize2 = row[6]
-        raceCollection.prize3 = row[7]
+        raceCollection.prize1 = row[0][5]
+        raceCollection.prize2 = row[0][6]
+        raceCollection.prize3 = row[0][7]
 
     else:  # create a blank raceCollection object
         league = getLeague(dbConn, key='id', value=0)
@@ -1257,20 +1079,9 @@ def getRaceCollectionList(dbConn, leagueId):
     theVals = (leagueId,)
     logger.debug(f"sql = {sql}")
     logger.debug(f"theVals = {theVals}")
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql, theVals)
-        result = cur.fetchall()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback to logger.debug
-    dbConn.set_trace_callback(None)
-    logger.info(f"Rows being returned: {len(result)}")
-    return result
+    results = directSql(dbConn, sql, theVals)
+    logger.info(f"Rows being returned: {len(results)}")
+    return results
 
 
 def getRaceType(dbConn, id):
@@ -1287,26 +1098,14 @@ def getRaceType(dbConn, id):
     selectSQL = "SELECT id, name FROM race_type"
     whereSQL = "WHERE id = ?"
     value = id
-    theVals = (value,)
     sql = f"{selectSQL} {whereSQL}"
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql, theVals)
-        row = cur.fetchone()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback
-    dbConn.set_trace_callback(None)
+    theVals = (value,)
+    row = directSql(dbConn, sql, theVals)
     logger.debug(f"row={row}")
-
     if row:  # Create a racetype object
         logger.debug("Found race type")
         logger.debug(f"row={row}")
-        rt = gtClass.RaceType(id=row[0], name=row[1])
+        rt = gtClass.RaceType(id=row[0][0], name=row[0][1])
     else:  # create a blank racetype object
         rt = gtClass.RaceType(id=0, name="")
 
@@ -1326,21 +1125,11 @@ def getRaceTypeList(dbConn):
     logger.info("Getting list of race types from db")
     selectSQL = "SELECT id, name FROM race_type ORDER by name"
     sql = selectSQL
+    theVals = ()
     logger.debug(f"sql = {sql}")
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql)
-        result = cur.fetchall()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback
-    dbConn.set_trace_callback(None)
-    logger.debug(f"Returning {len(result)} rows")
-    return result
+    results = directSql(dbConn, sql, theVals)
+    logger.debug(f"Returning {len(results)} rows")
+    return results
 
 
 def getTrack(dbConn, key='trackId', value=None):
@@ -1361,23 +1150,12 @@ def getTrack(dbConn, key='trackId', value=None):
     elif key == 'track':
         whereSQL = "WHERE track = ?"
 
-    sqlSelect = """SELECT id AS trackId, name AS track, country_id as countryId FROM track  """
+    sqlSelect = """SELECT id AS trackId, name AS track, country_id as countryId FROM track"""
     sql = f"{sqlSelect} {whereSQL}"
     theVals = (value,)
     logger.debug(f"sql = {sql}")
     logger.debug(f"theVals = {theVals}")
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql, theVals)
-        row = cur.fetchone()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback
-    dbConn.set_trace_callback(None)
+    row = directSql(dbConn, sql, theVals)
     logger.debug(f"row={row}")
     # default Country object (blank)
     xCountry = gtClass.Country(
@@ -1385,11 +1163,10 @@ def getTrack(dbConn, key='trackId', value=None):
 
     if row:  # Populate the track object
         logger.info(f"Found Track")
-        if row[2]:  # We have a country
-            xCountry = getCountry(dbConn, row[2])
-
         xTrack = gtClass.Track(
-            id=row[0], name=row[1], countryObj=xCountry)
+            id=row[0][0], name=row[0][1], countryObj=xCountry)
+        if row[0][2]:  # We have a country
+            xCountry = getCountry(dbConn, row[0][2])
 
     else:  # create a blank track object
         logger.debug("no track found")
@@ -1413,21 +1190,11 @@ def getTrackList(dbConn):
     fromSQL = "FROM track as t LEFT join track_layout as tl ON t.id = tl.track_id GROUP BY tl.track_id"
     orderBySQL = "ORDER BY t.name"
     sql = f"{selectSQL} {fromSQL} {orderBySQL}"
+    theVals = ()
     logger.debug(f"sql = {sql}")
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql)
-        result = cur.fetchall()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback to logger.debug
-    dbConn.set_trace_callback(None)
-    logger.info(f"Rows being returned: {len(result)}")
-    return result
+    results = directSql(dbConn, sql, theVals)
+    logger.info(f"Rows being returned: {len(results)}")
+    return results
 
 
 def getWeather(dbConn, id):
@@ -1449,21 +1216,10 @@ def getWeather(dbConn, id):
     sql = f"{selectSQL} {whereSQL}"
     logger.debug(f"{theVals}")
     logger.debug(f"sql: {sql}")
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql, theVals)
-        row = cur.fetchone()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback
-    dbConn.set_trace_callback(None)
+    row = directSql(dbConn, sql, theVals)
     logger.debug(f"row={row}")
     if row:  # have data from db
-        weather = gtClass.Weather(id=row[0], name=row[1])
+        weather = gtClass.Weather(id=row[0][0], name=row[0][1])
     else:  # No data from db. Create empty object
         weather = gtClass.Weather(id=0, name="")
     logger.debug(f'weather = {weather}')
@@ -1483,20 +1239,10 @@ def getWeatherList(dbConn):
     selectSQL = "SELECT id, name FROM weather ORDER by name"
     sql = selectSQL
     logger.debug(f"sql = {sql}")
-    # Enabling full sql traceback to logger.debug
-    dbConn.set_trace_callback(logger.debug)
-    try:
-        cur = dbConn.cursor()
-        cur.execute(sql)
-        result = cur.fetchall()
-    except:
-        logger.critical(
-            f'Unexpected error executing sql: {sql}', exc_info=True)
-        sys.exit(1)
-    # Disable full sql traceback to logger.debug
-    dbConn.set_trace_callback(None)
-    logger.info(f"Rows being returned: {len(result)}")
-    return result
+    theVals = ()
+    results = directSql(dbConn, sql, theVals)
+    logger.info(f"Rows being returned: {len(results)}")
+    return results
 
 
 def initDB(dbConn, scriptPath=None):
