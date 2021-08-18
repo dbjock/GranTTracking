@@ -241,6 +241,7 @@ def addCar(dbConn, car):
         else:
             return(1, f"Unable to save: {result[1]}")
     else:  # Validation failed
+        logger.debug(f"Validation did not pass: {valResult}")
         return (1, valResult[1])
 
 
@@ -593,6 +594,44 @@ def getCarCatList(dbConn):
     dbConn.set_trace_callback(None)
     logger.info(f"Returning {len(result)} rows")
     return result
+
+
+def getCarList(dbConn, mfgID, sortBy="year"):
+    """Get a list of cars for mfgID sorted by <sortBy>
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        mfgID (int): Manufacture unique ID
+        sortBy (str, optional): List sorted by. Defaults to "year". (not case sensitive)
+            name = Sorted by car name
+            year = Sorted by the year, name
+            ClassCat = Sorted by the class category text (not id), name
+            drivetrain = Sorted by the drive train name (not id), name
+
+    """
+    logger.debug(f"mfgID={mfgID} sortBy={sortBy} ")
+    selectSQL = "SELECT car.mfg_id, model, year, cat.name as class, dt.code"
+    fromSQL = "FROM car JOIN drivetrain AS dt ON car.drivetrain_id = dt.id JOIN category as cat on car.cat_id = cat.id"
+    whereSQL = "WHERE mfg_id = :mfgID"
+    vals = {'mfgID': mfgID}
+
+    if sortBy.lower() == 'classcat':  # Sort by the ClassCat.name
+        orderSQL = "ORDER BY cat.name"
+    elif sortBy.lower() == 'drivetrain':
+        orderSQL = "ORDER BY dt.code"
+    elif sortBy.lower() == 'name':
+        orderSQL = "ORDER BY model"
+    elif sortBy.lower() == 'year':
+        orderSQL = "ORDER BY year"
+    else:
+        logger.warning(
+            f"Unknown sortBy value passed. Setting no orderby")
+        orderSQL = ""
+
+    sql = f"{selectSQL} {fromSQL} {whereSQL} {orderSQL}"
+    results = directSql(dbConn=dbConn, sql=sql, theVals=vals)
+    logger.info(f"Returning {len(results)} rows")
+    return results
 
 
 def getCircuit(dbConn, key='id', value=None):
@@ -1637,6 +1676,15 @@ def validateCar(dbConn, car):
         result = (False, f"ClassCat id {car.catclass.id} not found")
         logger.info(f"{result}")
         return result
+
+    # Year value can be null/none OR int
+    logger.info("Checking to see if year has a valid entry")
+    if car.year:
+        if type(car.year) != int:
+            result = (
+                False, f"Invalid year value. Year={car.year}. Must be null or an integer")
+            logger.info(f"{result}")
+            return result
 
     return (True, "Car validation passed")
 
