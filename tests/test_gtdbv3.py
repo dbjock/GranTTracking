@@ -958,7 +958,23 @@ class TestRace(unittest.TestCase):
         logger.info("==== BEGIN Get Race")
         d1 = gtdbV3.create_connection(":memory:")
         gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
-        # There are no existing Races yet for testing
+
+        logger.info("Get Race : Existing Race by ID")
+        testVal = 1
+        logger.info(f"Race ID = {testVal}")
+        xObj = gtdbV3.getRace(d1, testVal)
+        logger.info(f"Result = {xObj}")
+        self.assertEqual(
+            xObj.id, testVal, f"Failed Get Race : Existing Race by ID. Should be {testVal}")
+
+        logger.info("Get Race : Non Existing Race by ID")
+        testVal = 999999
+        logger.info(f"Race ID = {testVal}")
+        xObj = gtdbV3.getRace(d1, testVal)
+        logger.info(f"Result = {xObj}")
+        self.assertEqual(
+            xObj.id, 0, f"Failed Get Race : Non Existing Race by ID.")
+
         logger.info("==== END Get Race")
 
 
