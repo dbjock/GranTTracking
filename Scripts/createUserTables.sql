@@ -22,4 +22,26 @@ CREATE TABLE car (
     year          INTEGER
 );
 
+-- Table: car_settings
+DROP TABLE IF EXISTS car_settings;
+CREATE TABLE car_settings (
+    id              INTEGER PRIMARY KEY
+                            NOT NULL,
+    car_id                  REFERENCES car (id) ON DELETE RESTRICT
+                                                ON UPDATE CASCADE
+                            NOT NULL,
+    name            TEXT    NOT NULL,
+    maxpower        DECIMAL NOT NULL,
+    maxtorque       DECIMAL NOT NULL,
+    powerration     INTEGER NOT NULL,
+    cat_id          INTEGER REFERENCES category (id) ON DELETE RESTRICT
+                                                     ON UPDATE CASCADE
+                            NOT NULL,
+    weight          INTEGER NOT NULL,
+    WeightReduction INTEGER NOT NULL,
+    tire_code       TEXT    REFERENCES tire (code) ON DELETE RESTRICT
+                                                   ON UPDATE CASCADE
+                            NOT NULL
+);
+
 PRAGMA foreign_keys = on;
