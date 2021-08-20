@@ -280,7 +280,6 @@ INSERT INTO country (ID, name, alpha2, alpha3, region) VALUES (248, 'Zambia', 'Z
 INSERT INTO country (ID, name, alpha2, alpha3, region) VALUES (249, 'Zimbabwe', 'ZW', 'ZWE', 'Africa');
 
 -- Table: drivetrain
-
 INSERT INTO drivetrain (id, code, description) VALUES (1, 'FF', 'Front Engine, Front wheel drive');
 INSERT INTO drivetrain (id, code, description) VALUES (2, 'FR', 'Front Engine, Rear wheel drive');
 INSERT INTO drivetrain (id, code, description) VALUES (3, 'MR', 'Middle Engine, Rear wheel drive');
@@ -296,6 +295,20 @@ INSERT INTO league (id, name, sortord) VALUES (4, 'Professional', 20);
 -- Table: race_type
 INSERT INTO race_type (ID, name) VALUES (1, 'Lap(s)');
 INSERT INTO race_type (ID, name) VALUES (2, 'Minutes');
+
+--Table: tire
+INSERT INTO tire (code, description) VALUES ('CH', 'Comfort: Hard');
+INSERT INTO tire (code, description) VALUES ('CM', 'Comfort: Medium');
+INSERT INTO tire (code, description) VALUES ('CS', 'Comfort: Soft');
+INSERT INTO tire (code, description) VALUES ('SH', 'Sports: Hard');
+INSERT INTO tire (code, description) VALUES ('SM', 'Sports: Medium');
+INSERT INTO tire (code, description) VALUES ('SS', 'Sports: Soft');
+INSERT INTO tire (code, description) VALUES ('RH', 'Racing: Hard');
+INSERT INTO tire (code, description) VALUES ('RM', 'Racing: Medium');
+INSERT INTO tire (code, description) VALUES ('RS', 'Racing: Soft');
+INSERT INTO tire (code, description) VALUES ('RSS', 'Racing: Super Soft');
+INSERT INTO tire (code, description) VALUES ('RI', 'Racing: Intermediate');
+INSERT INTO tire (code, description) VALUES ('RHW', 'Racing: Heavy Wet');
 
 -- Table: weather
 INSERT INTO weather (id, name) VALUES (1, 'Fine/Clear');

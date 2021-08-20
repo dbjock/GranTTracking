@@ -106,6 +106,14 @@ CREATE TABLE race_type (
                       COLLATE NOCASE
 );
 
+-- Table: tire
+DROP TABLE IF EXISTS tire;
+CREATE TABLE tire (
+    code        TEXT PRIMARY KEY
+                     NOT NULL,
+    description TEXT
+);
+
 -- Table: track
 DROP TABLE IF EXISTS track;
 CREATE TABLE track (
