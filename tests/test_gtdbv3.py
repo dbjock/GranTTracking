@@ -1001,6 +1001,17 @@ class TestRacetype(unittest.TestCase):
         logger.info("=== END Get/read Race Type")
 
 
+class TestTireList(unittest.TestCase):
+    def test_getTireList(self):
+        logger.info("==== BEGIN TEST Tire List")
+        d1 = gtdbV3.create_connection(":memory:")
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        testList = gtdbV3.getTireList(d1)
+        logger.info(f"testList={testList}")
+        self.assertGreaterEqual(
+            len(testList), 1, "Failed - Tire List should have at least 1 record")
+
+
 class TestTrack(unittest.TestCase):
     def test_addTrack(self):
         logger.info(

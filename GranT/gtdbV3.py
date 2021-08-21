@@ -1132,6 +1132,25 @@ def getRaceTypeList(dbConn):
     return results
 
 
+def getTireList(dbConn):
+    """Return a list of all the tire type in db
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+
+    Returns:
+        list: (raceTypeid, raceTypeName)
+
+    """
+    logger.info("Getting list of race types from db")
+    sql = "SELECT code, description from tire ORDER BY code"
+    theVals = ()
+    logger.debug(f"sql = {sql}")
+    results = directSql(dbConn, sql, theVals)
+    logger.debug(f"Returning {len(results)} rows")
+    return results
+
+
 def getTrack(dbConn, key='trackId', value=None):
     """Gets a single Track record from database based on key and value passed.
 
