@@ -15,6 +15,25 @@ class Car(object):
         return f"Car(id={self.id}, model={self.model}, manufacture={self.manufacture},driveTrain={self.driveTrain},catclass={self.catclass})"
 
 
+class CustCarSettings(object):
+    # TESTING: Other classes are not going to be embedded. Using more memory with it.
+    #          FrontEnd can just query to get further object detail. i.e. query car_id
+    def __init__(self, id, car_id, name, maxpower, maxtorque, powerratio, cat_id, weight, weightreduction, tire_code):
+        self.id = id
+        self.car_id = car_id
+        self.name = name
+        self.maxpower = maxpower
+        self.maxtorque = maxtorque
+        self.powerratio = powerratio
+        self.cat_id = cat_id
+        self.weight = weight
+        self.weightreduction = weightreduction
+        self.tire_code = tire_code
+
+    def __repr__(self):
+        return f"CustCarSettings(id={self.id}, car_id={self.car_id}, name={self.name}, maxpower={self.maxpower}, maxtorque={self.maxtorque}, powerratio={self.powerratio}, cat_id={self.cat_id}, weight={self.weight}, weightreduction={self.weightreduction}, tire_code={self.tire_code})"
+
+
 class Circuit(object):
     def __init__(self, id, name):
         """

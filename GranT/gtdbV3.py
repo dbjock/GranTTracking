@@ -245,6 +245,35 @@ def addCar(dbConn, car):
         return (1, valResult[1])
 
 
+def addCustCarSettings(dbConn, custcarsettings):
+    """Adds a Custom Car Settings record to db
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        custcarsettings : CustCarSettings Object
+
+    Returns:
+        list: ResultCode, ResultText
+              ResultCode = 0 Success
+              ResultCode != 0 see ResultText for details
+    """
+    logger.debug(f'custcarsettings={custcarsettings}')
+    logger.info(
+        f"Request to add custom car settings {custcarsettings.name} for car id {custcarsettings.car_id}")
+    logger.info('Validating data')
+    valResult = validateCustomCarSettings(dbConn, custcarsettings)
+    if valResult[0]:  # Tests passed (true/false)
+        logger.warning(
+            "Now I would save the record, but code is not ready yet.")
+        result = (0, valResult[1])
+    else:
+        logger.warning(valResult[1])
+        result = (1, valResult[1])
+
+    logger.debug(f"returning: {result}")
+    return result
+
+
 def addLayout(dbConn, trackLayout):
     """Adds a Track Layout record
 
@@ -401,7 +430,7 @@ def deleteMfg(dbConn, mfgId):
     if result[0] == 0:
         result[1] = "Manufacture Deleted"
     else:
-        logger.debug(f"problem with manufacture delete {r}.")
+        logger.debug(f"problem with manufacture delete {result}.")
 
     logger.debug(f"returning {result}")
     return result
@@ -874,10 +903,7 @@ def getMfg(dbConn, key='mfgId', value=None):
         ManufactureObject. IF ManufactureObject.id = 0 then nothing found
     """
     logger.debug(f"Getting Manufacture: {key}={value}")
-    selectSQL = """SELECT mfg.id as mfgId,
-			mfg.name AS Make,
-			country_id as cntryId
-			FROM manufacture AS mfg"""
+    selectSQL = "SELECT mfg.id as mfgId, mfg.name AS Make, country_id as cntryId FROM manufacture AS mfg"
     whereSQL = f" WHERE {key} = ?"
     theVals = (value,)
     sql = f"{selectSQL} {whereSQL}"
@@ -1139,7 +1165,7 @@ def getTireList(dbConn):
         dbConn (sqlite3.connect): Database connection
 
     Returns:
-        list: (raceTypeid, raceTypeName)
+        list: (TireCode, description)
 
     """
     logger.info("Getting list of race types from db")
@@ -1454,6 +1480,120 @@ def validateCar(dbConn, car):
     return (True, "Car validation passed")
 
 
+def validateCustomCarSettings(dbConn, custCarSettings):
+    """[summary]
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        custCarSettings (CustCarSettings object): CustCarSettings that are being validated
+
+    Returns:
+        list: (True/False, msg)
+        True = Tests passed
+        False = See msg for what did not pass
+
+    """
+    logger.info(f"Validating custom car settings = {custCarSettings}")
+    # name must contain at least one character
+    logger.debug(f"Checking name to be sure it contains at least 1 character")
+    if not custCarSettings.name:
+        msg = f"Custom car settings name invalid. It must contain a value"
+        result = (False, msg)
+        logger.info(f"return = {result}")
+
+    logger.debug("Check maxpower is not a string")
+    if custCarSettings.maxpower:
+        if type(custCarSettings.maxpower) == str:
+            result = (
+                False, f"Invalid maxpower value. maxpower={custCarSettings.maxpower}. Must be null or a numeric value")
+            logger.info(f"{result}")
+            return result
+
+    logger.debug("Check maxtorque is not a string")
+    if custCarSettings.maxtorque:
+        if type(custCarSettings.maxtorque) == str:
+            result = (
+                False, f"Invalid maxtorque value. maxtorque={custCarSettings.maxtorque}. Must be null or a numeric value")
+            logger.info(f"{result}")
+            return result
+
+    logger.debug("Check powerratio is not a string")
+    if custCarSettings.powerratio:
+        if type(custCarSettings.powerratio) == str:
+            result = (
+                False, f"Invalid powerratio value. maxtorque={custCarSettings.powerratio}. Must be null or a numeric value")
+            logger.info(f"{result}")
+            return result
+
+    logger.debug("Check weight is not a string")
+    if custCarSettings.weight:
+        if type(custCarSettings.weight) == str:
+            result = (
+                False, f"Invalid weight value. weight={custCarSettings.weight}. Must be null or a numeric value")
+            logger.info(f"{result}")
+            return result
+
+    logger.debug("Check weightreduction is not a string")
+    if custCarSettings.weightreduction:
+        if type(custCarSettings.weightreduction) == str:
+            result = (
+                False, f"Invalid weightreduction value. weightreduction={custCarSettings.weightreduction}. Must be null or a numeric value")
+            logger.info(f"{result}")
+            return result
+
+    logger.debug("Check car_id exists")
+    car = getCar(dbConn, custCarSettings.car_id)
+    if car.id == 0:
+        result = (
+            False, f"Car id does not exist. car_id={custCarSettings.car_id}")
+        logger.info(f"{result}")
+        return result
+
+    logger.debug("Check cat_id exists")
+    carCat = getCarCat(dbConn, custCarSettings.cat_id)
+    if carCat.id == 0:
+        result = (
+            False, f"Category id does not exist. cat_id={custCarSettings.cat_id}")
+        logger.info(f"{result}")
+        return result
+
+    logger.debug("Check tire_code exists")
+    x = getTireList(dbConn)
+    found = False
+    for chk in x:
+        logger.debug(f"{chk[0]}")
+        if chk[0].upper() == custCarSettings.tire_code.upper():
+            found = True
+    if not found:
+        result = (
+            False, f"Tire code does not exist. tire_code={custCarSettings.tire_code}")
+        logger.info(f"{result}")
+        return result
+
+    # name must be unique for the car_id
+    logger.debug(
+        f"Checking name is unique for the car. carid = {custCarSettings.car_id}")
+    selectSQL = "SELECT id, name, car_id"
+    fromSQL = "FROM car_settings"
+    whereSQL = "WHERE car_id=:carID and name=:csName"
+    theVals = {'carID': custCarSettings.car_id,
+               'csName': custCarSettings.name.strip()}
+    sql = f"{selectSQL} {fromSQL} {whereSQL}"
+    results = directSql(dbConn, sql, theVals)
+    logger.debug(f"results={results}")
+    if results:
+        logger.debug(
+            f"Name is not unique for car. customCarSettingID={results[0][0]}, for carid={results[0][2]}")
+        result = (
+            False, f"Custom car name already exists car id {custCarSettings.car_id}")
+        logger.info(f"{result}")
+        return result
+
+    result = (True, "Tests passed")
+    logger.info(f"{result}")
+    return result
+
+
 def validateRace(dbConn, race):
     """Validates the Race rules and returns results
 
@@ -1470,7 +1610,7 @@ def validateRace(dbConn, race):
     # Race name must contain at least one charcter
     logger.debug(
         f"Checking race name to be sure it contains at lease one character")
-    if race.name == None or race.name == "":
+    if not race.name:
         msg = f"Race name must contain at least one character"
         result = (False, msg)
         logger.info(f"returning = {result}")
@@ -1588,12 +1728,12 @@ def validateTrackLayout(dbConn, trackLayout):
 
     Args:
         dbConn (sqlite3.connect): Database connection
-        trackLayout (TrackLayout object): Track Layout that is being saved
+        trackLayout (TrackLayout object): Track Layout that is being validated
 
     Returns:
-            list: (True/False, msg)
-            True = Tests passed
-            False = See msg for what did not pass
+        list: (True/False, msg)
+        True = Tests passed
+        False = See msg for what did not pass
     """
     logger.debug(f"trackLayout={trackLayout}")
     # Layout name must contain at least one charcter
