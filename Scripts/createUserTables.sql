@@ -33,7 +33,7 @@ CREATE TABLE car_settings (
     name            TEXT    NOT NULL,
     maxpower        DECIMAL NOT NULL,
     maxtorque       DECIMAL NOT NULL,
-    powerration     INTEGER NOT NULL,
+    powerratio     INTEGER NOT NULL,
     cat_id          INTEGER REFERENCES category (id) ON DELETE RESTRICT
                                                      ON UPDATE CASCADE
                             NOT NULL,
