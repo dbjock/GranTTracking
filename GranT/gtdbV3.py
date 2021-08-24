@@ -262,16 +262,30 @@ def addCustCarSettings(dbConn, custcarsettings):
         f"Request to add custom car settings {custcarsettings.name} for car id {custcarsettings.car_id}")
     logger.info('Validating data')
     valResult = validateCustomCarSettings(dbConn, custcarsettings)
-    if valResult[0]:  # Tests passed (true/false)
-        logger.warning(
-            "Now I would save the record, but code is not ready yet.")
-        result = (0, valResult[1])
-    else:
+    if valResult[0]:  # validation passed
+        logger.info("All validation passed. Saving custom car settings")
+        insertSQL = "INSERT INTO car_settings (car_id, name, maxpower, maxtorque, powerratio, cat_id, weight, weightreduction, tire_code)"
+        valuesSQL = "VALUES (:car_id, :name, :maxpower, :maxtorque, :powerratio, :cat_id, :weight, :weightreduction, :tire_code)"
+        sql = f"{insertSQL} {valuesSQL}"
+        theVals = {'car_id': custcarsettings.car_id,
+                   'name': custcarsettings.name,
+                   'maxpower': custcarsettings.maxpower,
+                   'maxtorque': custcarsettings.maxtorque,
+                   'powerratio': custcarsettings.powerratio,
+                   'cat_id': custcarsettings.cat_id,
+                   'weight': custcarsettings.weight,
+                   'weightreduction': custcarsettings.weightreduction,
+                   'tire_code': custcarsettings.tire_code}
+        result = _exeDML(dbConn, sql, theVals)
+        logger.debug(f"save result: {result}")
+        if result[0] == 0:
+            return(0, f"Custom car settings added. {result[1]}")
+        else:
+            return(1, f"Unable to add: {result[1]}")
+    else:  # validation failed
         logger.warning(valResult[1])
         result = (1, valResult[1])
-
-    logger.debug(f"returning: {result}")
-    return result
+        return result
 
 
 def addLayout(dbConn, trackLayout):

@@ -310,7 +310,7 @@ class TestCountry(unittest.TestCase):
 
 
 class TestCustomCarSettings(unittest.TestCase):
-    def test_add(self):
+    def test_addCustCarSettings(self):
         logger.info("===== BEGIN testing add Custom Car settings")
         d1 = gtdbV3.create_connection(":memory:")
         # d1 = gtdbV3.create_connection(_gtPath / 'Data' / 'testdb.db')
