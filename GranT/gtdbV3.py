@@ -1222,10 +1222,10 @@ def getTrack(dbConn, key='trackId', value=None):
 
     if row:  # Populate the track object
         logger.info(f"Found Track")
-        xTrack = gtClass.Track(
-            id=row[0][0], name=row[0][1], countryObj=xCountry)
         if row[0][2]:  # We have a country
             xCountry = getCountry(dbConn, row[0][2])
+        xTrack = gtClass.Track(
+            id=row[0][0], name=row[0][1], countryObj=xCountry)
 
     else:  # create a blank track object
         logger.debug("no track found")
