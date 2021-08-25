@@ -220,8 +220,6 @@ def main():
                 break
             elif action == 'dbinit':
                 dbInit()
-            elif action == 'secret':
-                _POCtest()
             else:
                 log.info('Unknown command Please enter a command')
                 print_formatted_text(
@@ -252,6 +250,8 @@ def addAction(cmd):
         addRaceCmd(cmd[len(obj):].strip())
     elif obj == "car":
         addCarCmd(cmd[len(obj):].strip())
+    elif obj == "carSettings":
+        pass
     else:  # Unknown object
         print_formatted_text(
             HTML(f'<ansired>ERROR</ansired> - Unknown <ansigreen>add</ansigreen> object <b>{obj}</b>'))
@@ -1339,6 +1339,34 @@ def listRaceCollections(args):
     log.info(f"Getting collection info for league id {id}")
     league = gtdb.getLeague(dbC1, value=id)
     displayCollections(league)
+
+
+def pickCar(text='Select a Car', mfgId=0):
+    """Dialog box for user to select a car from a manufacture
+
+    Args:
+        text (str, optional): [description]. Defaults to 'Select a Car'.
+        mfgId (int, optional): [description]. Defaults to 0.
+
+    Returns:
+        Car.id user chose
+    """
+    log.info("Getting cars for mfgId={mfgId}")
+    selectSQL = "SELECT id, model"
+    fromSQL = "FROM car"
+    whereSQL = "WHERE mfg_id = :mfgID"
+    orderBy = "ORDER BY model"
+    sql = f"{selectSQL} {fromSQL} {whereSQL} {orderBy}"
+    vals = {'mfgID': mfgId}
+    pickList = gtdb.directSql(dbC1, sql, vals)
+    log.info("Displaying cars for use to select")
+    result = radiolist_dialog(
+        title="Cars",
+        text=text,
+        values=pickList
+    ).run()
+    log.info(f"User choose: {result}")
+    return result
 
 
 def pickCarCategory(text='Select a Car Class Category'):
