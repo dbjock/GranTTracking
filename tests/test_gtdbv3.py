@@ -13,7 +13,7 @@ from GranT import gtdbV3
 from GranT import GTClasses as GT
 
 _gtPath = Path.cwd()
-_gtLogs = _gtPath / 'Logs'
+_gtLogs = Path("z:/logs")
 _gtScripts = _gtPath / 'Scripts'
 _logfile = _gtLogs / f"Testing-{datetime.now().strftime('%Y%j-%H%M%S')}.log"
 
@@ -309,9 +309,9 @@ class TestCountry(unittest.TestCase):
             xCountry.id, 0, "Failed Get Country : Non Existing Country by id. should be countryid 0")
 
 
-class TestCustomCarSettings(unittest.TestCase):
-    def test_addCustCarSettings(self):
-        logger.info("===== BEGIN testing add Custom Car settings")
+class TestCarSetting(unittest.TestCase):
+    def test_addCarSetting(self):
+        logger.info("===== BEGIN testing add Car setting")
         d1 = gtdbV3.create_connection(":memory:")
         # d1 = gtdbV3.create_connection(_gtPath / 'Data' / 'testdb.db')
         gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
@@ -322,130 +322,211 @@ class TestCustomCarSettings(unittest.TestCase):
         gtdbV3._exeScriptFile(d1, scriptFileName=_gtPath /
                               'tests' / 'test_carData.sql')
 
-        logger.info("TEST Add CustomCarSetting: Duplicate name for Car ID")
+        logger.info("TEST Add CarSetting: Duplicate name for same Car ID")
         testVal = 'IB3F0SK1'
-        xObj = GT.CustCarSettings(id=0,
-                                  car_id=1,
-                                  name=testVal,
-                                  maxpower=0, maxtorque=0, powerratio=0, weight=0, weightreduction=0,
-                                  cat_id=1, tire_code="SS")
-        result = gtdbV3.addCustCarSettings(d1, xObj)
+        xObj = GT.CustCarSettings(id=0,car_id=1,name=testVal,cat_id=1)
+        logger.info(f"xObj={xObj.__dict__}")
+        result = gtdbV3.addCarSetting(d1, xObj)
         logger.info(f"Valiation result={result}")
         self.assertEqual(
-            result[0], 1, "Failed: Add CustomCarSetting: Duplicate name for Car ID. Record should not have been saved")
+            result[0], 1, "Failed: Add CarSetting: Duplicate name for Car ID. Record should not have been saved")
 
         logger.info(
-            "TEST Add CustomCarSetting: Duplicate name for Car ID testing trim")
+            "TEST Add CarSetting: Duplicate name for Car ID testing trim")
         testVal = 'IB3F0SK1    '
-        xObj = GT.CustCarSettings(id=0,
-                                  car_id=1,
-                                  name=testVal,
-                                  maxpower=0, maxtorque=0, powerratio=0, weight=0, weightreduction=0,
-                                  cat_id=1, tire_code="SS")
-        result = gtdbV3.addCustCarSettings(d1, xObj)
+        xObj = GT.CustCarSettings(id=0,car_id=1,name=testVal,cat_id=1)
+        result = gtdbV3.addCarSetting(d1, xObj)
         logger.info(f"result={result}")
         self.assertEqual(
-            result[0], 1, "Failed: Add CustomCarSetting: Duplicate name for Car ID testing trim. Record should not have been saved")
+            result[0], 1, "Failed: Add CarSetting: Duplicate name for Car ID testing trim. Record should not have been saved")
 
-        logger.info("TEST Add CustomCarSetting: maxpower is a string")
-        xObj = GT.CustCarSettings(id=0,
-                                  car_id=1,
-                                  name='I should not save',
-                                  maxpower="0", maxtorque=0, powerratio=0, weight=0, weightreduction=0,
-                                  cat_id=1, tire_code="SS")
-        result = gtdbV3.addCustCarSettings(d1, xObj)
+        logger.info("TEST Add CarSetting: car_id does not exist")
+        xObj = GT.CustCarSettings(id=0,car_id=99999,name='I should not save',cat_id=1)
+        result = gtdbV3.addCarSetting(d1, xObj)
         logger.info(f"result={result}")
         self.assertEqual(
-            result[0], 1, "Failed: Add CustomCarSetting: maxpower is a string. Record should not have been saved")
+            result[0], 1, "Failed: Add CarSetting: car_id does not exist. Record should not have been saved")
 
-        logger.info("TEST Add CustomCarSetting: maxtorque is a string")
-        xObj = GT.CustCarSettings(id=0,
-                                  car_id=1,
-                                  name='I should not save',
-                                  maxpower=0, maxtorque="0", powerratio=0, weight=0, weightreduction=0,
-                                  cat_id=1, tire_code="SS")
-        result = gtdbV3.addCustCarSettings(d1, xObj)
+        logger.info("TEST Add CarSetting: cat_id does not exist")
+        xObj = GT.CustCarSettings(id=0,car_id=1,name='I should not save',cat_id=999)
+        result = gtdbV3.addCarSetting(d1, xObj)
         logger.info(f"result={result}")
         self.assertEqual(
-            result[0], 1, "Failed: Add CustomCarSetting: maxtorque is a string. Record should not have been saved")
+            result[0], 1, "Failed: Add CarSetting: cat_id does not exist. Record should not have been saved")
 
-        logger.info("TEST Add CustomCarSetting: powerratio is a string")
-        xObj = GT.CustCarSettings(id=0,
-                                  car_id=1,
-                                  name='I should not save',
-                                  maxpower=0, maxtorque=0, powerratio="0", weight=0, weightreduction=0,
-                                  cat_id=1, tire_code="SS")
-        result = gtdbV3.addCustCarSettings(d1, xObj)
+        logger.info("TEST Add CarSetting: tire_code does not exist")
+        xObj = GT.CustCarSettings(id=0,car_id=1,name='I should not save',cat_id=1)
+        xObj.tire_code="ZZZZZZ"
+        result = gtdbV3.addCarSetting(d1, xObj)
         logger.info(f"result={result}")
         self.assertEqual(
-            result[0], 1, "Failed: Add CustomCarSetting: powerratio is a string. Record should not have been saved")
+            result[0], 1, "Failed: Add CarSetting: tire_code does not exist. Record should not have been saved")
 
-        logger.info("TEST Add CustomCarSetting: weight is a string")
-        xObj = GT.CustCarSettings(id=0,
-                                  car_id=1,
-                                  name='I should not save',
-                                  maxpower=0, maxtorque=0, powerratio=0, weight="0", weightreduction=0,
-                                  cat_id=1, tire_code="SS")
-        result = gtdbV3.addCustCarSettings(d1, xObj)
+        logger.info("TEST Add CarSetting: Minimum required to create a record")
+        xObj = GT.CustCarSettings(id=0,car_id=2,name='Here are just the mandatory values',cat_id=1)
+        result = gtdbV3.addCarSetting(d1, xObj)
         logger.info(f"result={result}")
         self.assertEqual(
-            result[0], 1, "Failed: Add CustomCarSetting: weight is a string. Record should not have been saved")
+            result[0], 0, "Failed: Add CarSetting: Minimum required to create a record. Record should have been saved")
 
-        logger.info("TEST Add CustomCarSetting: weightreduction is a string")
-        xObj = GT.CustCarSettings(id=0,
-                                  car_id=1,
-                                  name='I should not save',
-                                  maxpower=0, maxtorque=0, powerratio=0, weight=0, weightreduction="0",
-                                  cat_id=1, tire_code="SS")
-        result = gtdbV3.addCustCarSettings(d1, xObj)
+        logger.info("TEST Add CarSetting: All Properties have values - Valid record")
+        xObj = GT.CustCarSettings(id=0,car_id=1,name='I should be able to be saved',cat_id=1)
+        xObj.accel = 9.23
+        xObj.brake_balance=-2
+        xObj.braking = 4.0
+        xObj.cornering = 2.10
+        xObj.final_gear="8.888"
+        xObj.gear_1="1.000/1"
+        xObj.gear_2="2.001/2"
+        xObj.gear_3="3.020/3"
+        xObj.gear_4="4.300/4"
+        xObj.gear_5="5.304/5"
+        xObj.gear_6="6.060/6"
+        xObj.gear_7="7.070/7"
+        xObj.max_power=100
+        xObj.max_speed = 123.45
+        xObj.max_torque=876.5
+        xObj.power_ratio=90
+        xObj.stability = 123.45
+        xObj.tire_code="RH"
+        xObj.top_speed=1000
+        xObj.traction_control=-1
+        xObj.weight=12345
+        xObj.weight_reduction=80
+        result = gtdbV3.addCarSetting(d1, xObj)
         logger.info(f"result={result}")
         self.assertEqual(
-            result[0], 1, "Failed: Add CustomCarSetting: weightreduction is a string. Record should not have been saved")
+            result[0], 0, "Failed: Add CarSetting: All Properties have values - Valid record. Record should have been saved")
 
-        logger.info("TEST Add CustomCarSetting: car_id does not exist")
-        xObj = GT.CustCarSettings(id=0,
-                                  car_id=99999,
-                                  name='I should not save',
-                                  maxpower=0, maxtorque=0, powerratio=0, weight=0, weightreduction=0,
-                                  cat_id=1, tire_code="SS")
-        result = gtdbV3.addCustCarSettings(d1, xObj)
-        logger.info(f"result={result}")
-        self.assertEqual(
-            result[0], 1, "Failed: Add CustomCarSetting: car_id does not exist. Record should not have been saved")
+    def test_delCarSetting(self):
+        logger.info("===== BEGIN testing delete Car settings")
+        d1 = gtdbV3.create_connection(":memory:")
+        # d1 = gtdbV3.create_connection(_gtPath / 'Data' / 'testdb.db')
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        # init user tables
+        gtdbV3._exeScriptFile(d1, scriptFileName=_gtScripts /
+                              'createUserTables.sql')
+        # Load car test data
+        gtdbV3._exeScriptFile(d1, scriptFileName=_gtPath /
+                              'tests' / 'test_carData.sql')
 
-        logger.info("TEST Add CustomCarSetting: cat_id does not exist")
-        xObj = GT.CustCarSettings(id=0,
-                                  car_id=1,
-                                  name='I should not save',
-                                  maxpower=0, maxtorque=0, powerratio=0, weight=0, weightreduction=0,
-                                  cat_id=999, tire_code="SS")
-        result = gtdbV3.addCustCarSettings(d1, xObj)
-        logger.info(f"result={result}")
-        self.assertEqual(
-            result[0], 1, "Failed: Add CustomCarSetting: cat_id does not exist. Record should not have been saved")
+        logger.info("TEST deleting non existing CarSetting")
+        result = gtdbV3.deleteCarSetting(d1,id=99999)
+        logger.info(f"Returned result = {result}")
+        self.assertNotEqual(result[0],0, "Failed: Delete non existing CarSetting: Should not get a success result code")
 
-        logger.info("TEST Add CustomCarSetting: tire_code does not exist")
-        xObj = GT.CustCarSettings(id=0,
-                                  car_id=1,
-                                  name='I should not save',
-                                  maxpower=0, maxtorque=0, powerratio=0, weight=0, weightreduction=0,
-                                  cat_id=1, tire_code="ZZZZZ")
-        result = gtdbV3.addCustCarSettings(d1, xObj)
-        logger.info(f"result={result}")
-        self.assertEqual(
-            result[0], 1, "Failed: Add CustomCarSetting: tire_code does not exist. Record should not have been saved")
+        logger.info("TEST deleting existing CarSetting")
+        result = gtdbV3.deleteCarSetting(d1,id=1)
+        logger.info(f"Returned result = {result}")
+        self.assertEqual(result[0],0, "Failed: Delete existing CarSetting: Expecting a success result")
 
-        logger.info("TEST Add CustomCarSetting: Last Test - Valid record")
-        xObj = GT.CustCarSettings(id=0,
-                                  car_id=1,
-                                  name='I am good',
-                                  maxpower=0, maxtorque=0, powerratio=0, weight=0, weightreduction=0,
-                                  cat_id=1, tire_code="SS")
-        result = gtdbV3.addCustCarSettings(d1, xObj)
-        logger.info(f"result={result}")
-        self.assertEqual(
-            result[0], 0, "Failed: Add CustomCarSetting: Last Test - Valid record. Record should have been saved")
+    def test_getCarSetting(self):
+        logger.info("===== BEGIN testing get Car setting")
+        d1 = gtdbV3.create_connection(":memory:")
+        # d1 = gtdbV3.create_connection(_gtPath / 'Data' / 'testdb.db')
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        # init user tables
+        gtdbV3._exeScriptFile(d1, scriptFileName=_gtScripts /
+                              'createUserTables.sql')
+        # Load car test data
+        gtdbV3._exeScriptFile(d1, scriptFileName=_gtPath /
+                              'tests' / 'test_carData.sql')
 
+        logger.info("TEST Get non existing CarSetting")
+        testVal = 999999
+        xObj = gtdbV3.getCarSetting(d1,id=testVal)
+        logger.info(f"CustCarSetting Object={xObj.__dict__}")
+        self.assertEqual(xObj.id,0, "Failed Get non existing CarSetting.")
+
+        logger.info("TEST Get existing CarSetting")
+        testVal = 1
+        xObj = gtdbV3.getCarSetting(d1,id=testVal)
+        logger.info(f"CustCarSetting Object={xObj.__dict__}")
+        self.assertEqual(xObj.id,1, "Failed Get existing CarSetting.")
+
+    def test_updateCarSetting(self):
+        logger.info("===== BEGIN testing update Car setting. Assumption getCarSetting works")
+        d1 = gtdbV3.create_connection(":memory:")
+        # d1 = gtdbV3.create_connection(_gtPath / 'Data' / 'testdb.db')
+        gtdbV3.initDB(d1, scriptPath=f'{_gtScripts}')
+        # init user tables
+        gtdbV3._exeScriptFile(d1, scriptFileName=_gtScripts /
+                              'createUserTables.sql')
+        # Load car test data
+        gtdbV3._exeScriptFile(d1, scriptFileName=_gtPath /
+                              'tests' / 'test_carData.sql')
+
+        logger.info("Update CarSetting: Duplicate name for same Car ID ")
+        logger.info("Getting dummy data")
+        dummyData = gtdbV3.getCarSetting(d1,id=1)
+        logger.info("Getting car setting id 5 to change")
+        xObj = gtdbV3.getCarSetting(d1,id=5)
+        logger.info(f"Before memory Change = {xObj.__dict__}")
+        xObj.car_id = dummyData.car_id
+        xObj.name = dummyData.name
+        logger.info(f"After memory Change = {xObj.__dict__}")
+        logger.info(f"Attempt update")
+        retVal = gtdbV3.updateCarSetting(d1,xObj)
+        logger.info(f"return value = {retVal}")
+        self.assertNotEqual(retVal[0],0,"Failed: Update CarSetting. CarSetting name is same for carID therefore should not be saved")
+
+        logger.info("Update CarSetting: car_id does not exist")
+        logger.info("Getting dummy data")
+        dummyData = gtdbV3.getCarSetting(d1,id=1)
+        logger.info("Getting car setting id 5 to change")
+        xObj = gtdbV3.getCarSetting(d1,id=5)
+        logger.info(f"Before memory Change = {xObj.__dict__}")
+        xObj.car_id = 9999999
+        xObj.name = "This car setting should not be saved"
+        logger.info(f"After memory Change = {xObj.__dict__}")
+        logger.info(f"Attempt update")
+        retVal = gtdbV3.updateCarSetting(d1,xObj)
+        logger.info(f"return value = {retVal}")
+        self.assertNotEqual(retVal[0],0, "Failed: Update CarSetting: car_id does not exist. Record should not have been saved")
+
+        logger.info("Update CarSetting: cat_id does not exist")
+        logger.info("Getting dummy data")
+        dummyData = gtdbV3.getCarSetting(d1,id=1)
+        logger.info("Getting car setting id 5 to change")
+        xObj = gtdbV3.getCarSetting(d1,id=5)
+        logger.info(f"Before memory Change = {xObj.__dict__}")
+        xObj.cat_id = 99999
+        logger.info(f"After memory Change = {xObj.__dict__}")
+        logger.info(f"Attempt update")
+        retVal = gtdbV3.updateCarSetting(d1,xObj)
+        logger.info(f"return value = {retVal}")
+        self.assertNotEqual(retVal[0],0, "Failed: Update CarSetting: cat_id does not exist. Record should not have been saved")
+
+        logger.info("Update CarSetting: tire_code does not exist")
+        logger.info("Getting dummy data")
+        dummyData = gtdbV3.getCarSetting(d1,id=1)
+        logger.info("Getting car setting id 5 to change")
+        xObj = gtdbV3.getCarSetting(d1,id=5)
+        logger.info(f"Before memory Change = {xObj.__dict__}")
+        xObj.tire_code = "AZZ"
+        logger.info(f"After memory Change = {xObj.__dict__}")
+        logger.info(f"Attempt update")
+        retVal = gtdbV3.updateCarSetting(d1,xObj)
+        logger.info(f"return value = {retVal}")
+        self.assertNotEqual(retVal[0],0, "Failed: Update CarSetting: tire_code does not exist")
+
+        logger.info("Update CarSetting: Valid change - Name change")
+        logger.info("Getting dummy data")
+        dummyData = gtdbV3.getCarSetting(d1,id=1)
+        logger.info("Getting car setting id 5 to change")
+        xObj = gtdbV3.getCarSetting(d1,id=5)
+        logger.info(f"Before memory Change = {xObj.__dict__}")
+        xName = "My Name is being changed"
+        xObj.name = xName
+        logger.info(f"After memory Change = {xObj.__dict__}")
+        logger.info(f"Attempt update")
+        retVal = gtdbV3.updateCarSetting(d1,xObj)
+        logger.info(f"return value = {retVal}")
+        self.assertEqual(retVal[0],0, "Failed: Update CarSetting: Name changed update failed")
+        logger.info("Confirm commited to db")
+        tempObj = gtdbV3.getCarSetting(d1,id=5)
+        logger.info(f"From db = {xObj.__dict__}")
+        self.assertEqual(tempObj.name,xName, "Failed: Update CarSetting: get from db different")
 
 class TestCircuit(unittest.TestCase):
     def test_getCircuit(self):

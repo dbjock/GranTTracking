@@ -1,5 +1,5 @@
 import logging
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class Car(object):
@@ -18,20 +18,352 @@ class Car(object):
 class CustCarSettings(object):
     # TESTING: Other classes are not going to be embedded. Using more memory with it.
     #          FrontEnd can just query to get further object detail. i.e. query car_id
-    def __init__(self, id, car_id, name, maxpower, maxtorque, powerratio, cat_id, weight, weightreduction, tire_code):
+    def __init__(self, id, car_id, name, cat_id):
         self.id = id
+        self.accel = None
+        self.brake_balance = None
+        self.braking = None
         self.car_id = car_id
-        self.name = name
-        self.maxpower = maxpower
-        self.maxtorque = maxtorque
-        self.powerratio = powerratio
         self.cat_id = cat_id
-        self.weight = weight
-        self.weightreduction = weightreduction
-        self.tire_code = tire_code
+        self.cornering = None
+        self.final_gear = None
+        self.gear_1 = None
+        self.gear_2 = None
+        self.gear_3 = None
+        self.gear_4 = None
+        self.gear_5 = None
+        self.gear_6 = None
+        self.gear_7 = None
+        self.max_power = None
+        self.max_speed = None
+        self.max_torque = None
+        self.name = name
+        self.power_ratio = None
+        self.stability = None
+        self.tire_code = None
+        self.top_speed = None
+        self.traction_control = None
+        self.weight = None
+        self.weight_reduction = None
 
-    def __repr__(self):
-        return f"CustCarSettings(id={self.id}, car_id={self.car_id}, name={self.name}, maxpower={self.maxpower}, maxtorque={self.maxtorque}, powerratio={self.powerratio}, cat_id={self.cat_id}, weight={self.weight}, weightreduction={self.weightreduction}, tire_code={self.tire_code})"
+    @property
+    def stability(self):
+        return self._stability
+
+    @stability.setter
+    def stability(self,val):
+        self._stability = self.convert_floatORNone('stability',val)
+
+    @property
+    def cornering(self):
+        return self._cornering
+
+    @cornering.setter
+    def cornering(self,val):
+        self._cornering = self.convert_floatORNone('cornering',val)
+
+    @property
+    def braking(self):
+        return self._braking
+
+    @braking.setter
+    def braking(self,val):
+        self._braking = self.convert_floatORNone('braking',val)
+
+    @property
+    def max_speed(self):
+        return self._max_speed
+
+    @max_speed.setter
+    def max_speed(self,val):
+        self._max_speed = self.convert_floatORNone('max_speed',val)
+
+    @property
+    def accel(self):
+        return self._accel
+
+    @accel.setter
+    def accel(self,val):
+        log.debug('setting accel')
+        self._accel = self.convert_floatORNone('accel',val)
+
+    @property
+    def id(self):
+        return self._id
+
+    @id.setter
+    def id(self,val):
+        self._id = self.validate_int('id',val)
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self,val):
+        self._name = self.validate_str('name',val)
+
+    @property
+    def car_id(self):
+        return self._car_id
+
+    @car_id.setter
+    def car_id(self,val):
+        self._car_id = self.validate_int('car_id',val)
+
+    @property
+    def cat_id(self):
+        return self._cat_id
+
+    @cat_id.setter
+    def cat_id(self,val):
+        self._cat_id = self.validate_int('cat_id',val)
+
+    @property
+    def max_power(self):
+        return self._max_power
+
+    @max_power.setter
+    def max_power(self,val):
+        self._max_power = self.convert_intOrNone('max_power',val)
+
+    @property
+    def max_torque(self):
+        return self._max_torque
+
+    @max_torque.setter
+    def max_torque(self,val):
+        self._max_torque = self.convert_floatORNone('max_torque',val)
+
+    @property
+    def power_ratio(self):
+        return self._power_ratio
+
+    @power_ratio.setter
+    def power_ratio(self,val):
+        self._power_ratio = self.convert_intOrNone('power_ratio',val)
+
+    @property
+    def weight(self):
+        return self._weight
+
+    @weight.setter
+    def weight(self,val):
+        self._weight = self.convert_intOrNone('weight',val)
+
+    @property
+    def weight_reduction(self):
+        return self._weight_reduction
+
+    @weight_reduction.setter
+    def weight_reduction(self,val):
+        self._weight_reduction = self.convert_intOrNone('weight_reduction',val)
+
+    @property
+    def traction_control(self):
+        return self._traction_control
+
+    @traction_control.setter
+    def traction_control(self,val):
+        self._traction_control = self.convert_intOrNone('traction_control',val)
+
+    @property
+    def brake_balance(self):
+        return self._brake_balance
+
+    @brake_balance.setter
+    def brake_balance(self,val):
+        self._brake_balance = self.convert_intOrNone('brake_balance',val)
+
+    @property
+    def top_speed(self):
+        return self._top_speed
+
+    @top_speed.setter
+    def top_speed(self,val):
+        self._top_speed = self.convert_intOrNone('top_speed',val)
+
+    @property
+    def tire_code(self):
+        return self._tire_code
+
+    @tire_code.setter
+    def tire_code(self,val):
+        self._tire_code = self.validate_strORNone('tire_code',val)
+
+    @property
+    def gear_1(self):
+        return self._gear_1
+
+    @gear_1.setter
+    def gear_1(self,val):
+        self._gear_1 = self.validate_strORNone('gear_1',val)
+
+    @property
+    def gear_2(self):
+        return self._gear_2
+
+    @gear_2.setter
+    def gear_2(self,val):
+        self._gear_2 = self.validate_strORNone('gear_2',val)
+
+    @property
+    def gear_3(self):
+        return self._gear_3
+
+    @gear_3.setter
+    def gear_3(self,val):
+        self._gear_3 = self.validate_strORNone('gear_3',val)
+
+    @property
+    def gear_4(self):
+        return self._gear_4
+
+    @gear_4.setter
+    def gear_4(self,val):
+        self._gear_4 = self.validate_strORNone('gear_4',val)
+
+    @property
+    def gear_5(self):
+        return self._gear_5
+
+    @gear_5.setter
+    def gear_5(self,val):
+        self._gear_5 = self.validate_strORNone('gear_5',val)
+
+    @property
+    def gear_6(self):
+        return self._gear_6
+
+    @gear_6.setter
+    def gear_6(self,val):
+        self._gear_6 = self.validate_strORNone('gear_6',val)
+
+    @property
+    def gear_7(self):
+        return self._gear_7
+
+    @gear_7.setter
+    def gear_7(self,val):
+        self._gear_7 = self.validate_strORNone('gear_7',val)
+
+    @property
+    def final_gear(self):
+        return self._final_gear
+
+    @final_gear.setter
+    def final_gear(self,val):
+        self._final_gear = self.validate_strORNone('final_gear',val)
+
+    def convert_floatORNone(self,key,val):
+        """Convert val to float or None. If not able to ValueError is raised
+
+        Args:
+            key (str): This should be the property that is being tested, as this appears
+                       in the error message to assist in debugging
+            val : The value that is being validated is a float
+        """
+        log.debug(f"Converting key={key} value={val} to float or None")
+
+        if val is None:
+            log.debug(f"None ok. returning None")
+            return val
+
+        if type(val) == int:
+            log.debug(f"value is an int. Converting to float")
+            return float(val)
+
+        if type(val) == float:
+            log.debug(f"value is an float. just returning")
+            return val
+
+        if val == "":
+            log.debug(f"value is an empty string. Converting to None")
+            return None
+
+        raise ValueError(f"{key} must be a float")
+
+    def validate_int(self,key,val):
+        """Validates that val must be an int. If not ValueError is raised.
+
+        Args:
+            key (str): This should be the property that is being tested, as this appears
+                       in the error message to assist in debugging
+            val : The value that is being validated is an integer
+        """
+        log.debug(f"validating if key={key} value={val} is an int")
+        if type(val) != int:
+            errMsg = f"{key} must be an integer"
+            log.debug(f"Raising value error: {errMsg}")
+            raise ValueError(errMsg)
+
+        # Passed validation
+        log.debug(f"validation passed for key={key} value={val} is an int")
+        return val
+
+    def convert_intOrNone(self,key,val):
+        """Convert val to int or None. If not able to ValueError is raised
+
+        Args:
+            key (str): This should be the property that is being tested, as this appears
+                       in the error message to assist in debugging
+            val : The value that is being converted
+        """
+        log.debug(f"Converting key={key} value={val} to float or None")
+        if val is None:
+            log.debug(f"None ok. returning None")
+            return val
+
+        if type(val) == int:
+            log.debug(f"value is an int. This is ok, returning it.")
+            return val
+
+        if val == "":
+            log.debug(f"value is an empty string. Converting to None")
+            return None
+
+        errMsg = f"{key} must be an integer or None. It is type {type(val)}"
+        log.debug(f"Raising value error: {errMsg}")
+        raise ValueError(errMsg)
+
+
+    def validate_str(self,key,val):
+        """Validates that val must be a string. If not ValueError is raised.
+
+        Args:
+            key (str): This should be the property that is being tested, as this appears
+                       in the error message to assist in debugging
+            val : The value that is being validated is a string
+        """
+        log.debug(f"validating if key={key} value={val} is a string")
+        if type(val) != str:
+            errMsg = f"{key} must be a string"
+            log.debug(f"Raising value error: {errMsg}")
+            raise ValueError(errMsg)
+
+        if val == "":
+            errMsg = f"{key} must be a string"
+            log.debug(f"Raising value error: {errMsg}")
+            raise ValueError(errMsg)
+
+        # Passed validation
+        log.debug(f"validation passed for key={key} value={val} is a string")
+        return val
+
+    def validate_strORNone(self,key,val):
+        """val must be an string or None to be valid else an error will be raised"""
+        log.debug(f"validating if key={key} value={val} is a string")
+        if val is None:
+            log.debug(f"validation passed for key={key} value={val} is None")
+            return val
+
+        if type(val) != str:
+            errMsg = f"{key} must be a string or None"
+            log.debug(f"Raising value error: {errMsg}")
+            raise ValueError(errMsg)
+
+        log.debug(f"validation passed for key={key} value={val} is string")
+        return val
 
 
 class Circuit(object):

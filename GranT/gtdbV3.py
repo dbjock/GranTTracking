@@ -90,20 +90,21 @@ def _exeDML(dbConn, sql, theVals):
         logger.warning(f"sqlite integrity error: {e.args[0]}")
         # Disable full sql traceback to logger.debug
         dbConn.set_trace_callback(None)
-        return [2, f"sqlite integrity error: {e.args[0]}"]
+        retVal = [2, f"sqlite integrity error: {e.args[0]}"]
+        logger.debug(f"Returning {retVal}")
+        return retVal
     except:
         logger.critical(
             f'Unexpected error executing sql: {sql}', exc_info=True)
         sys.exit(1)
-        logger.debug("successful commit of sql")
-        # Disable full sql traceback to logger.debug
-        dbConn.set_trace_callback(None)
-        return [0, f"Commit successful rowID={rowID}"]
 
-    logger.debug("successful commit of sql")
+    rowCount = cur.rowcount
+    logger.debug(f"successful commit of sql, Rows affected={rowCount}")
     # Disable full sql traceback to logger.debug
     dbConn.set_trace_callback(None)
-    return [0, f"Commit successful rowID={rowID}"]
+    retVal = [0, f"Commit successful rowID={rowID} rowCount={rowCount}"]
+    logger.debug(f"Returning {retVal}")
+    return retVal
 
 
 def _exeScriptFile(dbConn, scriptFileName=None):
@@ -245,37 +246,29 @@ def addCar(dbConn, car):
         return (1, valResult[1])
 
 
-def addCustCarSettings(dbConn, custcarsettings):
-    """Adds a Custom Car Settings record to db
+def addCarSetting(dbConn, carSetting):
+    """Adds a Car Setting record to db
 
     Args:
         dbConn (sqlite3.connect): Database connection
-        custcarsettings : CustCarSettings Object
+        carSetting : CustCarSettings Object
 
     Returns:
         list: ResultCode, ResultText
               ResultCode = 0 Success
               ResultCode != 0 see ResultText for details
     """
-    logger.debug(f'custcarsettings={custcarsettings}')
+    logger.debug(f'carSetting={carSetting.__dict__}')
     logger.info(
-        f"Request to add custom car settings {custcarsettings.name} for car id {custcarsettings.car_id}")
+        f"Request to add custom car setting name={carSetting.name} for car id={carSetting.car_id}")
     logger.info('Validating data')
-    valResult = validateCustomCarSettings(dbConn, custcarsettings)
+    valResult = validateCarSetting(dbConn, carSetting)
     if valResult[0]:  # validation passed
         logger.info("All validation passed. Saving custom car settings")
-        insertSQL = "INSERT INTO car_settings (car_id, name, maxpower, maxtorque, powerratio, cat_id, weight, weightreduction, tire_code)"
-        valuesSQL = "VALUES (:car_id, :name, :maxpower, :maxtorque, :powerratio, :cat_id, :weight, :weightreduction, :tire_code)"
+        insertSQL = "INSERT INTO car_setting (car_id,cat_id,name,max_power,max_torque,power_ratio,traction_control,brake_balance,top_speed,gear_1,gear_2,gear_3,gear_4,gear_5,gear_6,gear_7,final_gear,weight,weight_reduction,tire_code,accel,braking,max_speed,cornering,stability)"
+        valuesSQL = "VALUES (:car_id,:cat_id,:name,:max_power,:max_torque,:power_ratio,:traction_control,:brake_balance,:top_speed,:gear_1,:gear_2,:gear_3,:gear_4,:gear_5,:gear_6,:gear_7,:final_gear,:weight,:weight_reduction,:tire_code,:accel,:braking,:max_speed,:cornering,:stability)"
         sql = f"{insertSQL} {valuesSQL}"
-        theVals = {'car_id': custcarsettings.car_id,
-                   'name': custcarsettings.name,
-                   'maxpower': custcarsettings.maxpower,
-                   'maxtorque': custcarsettings.maxtorque,
-                   'powerratio': custcarsettings.powerratio,
-                   'cat_id': custcarsettings.cat_id,
-                   'weight': custcarsettings.weight,
-                   'weightreduction': custcarsettings.weightreduction,
-                   'tire_code': custcarsettings.tire_code}
+        theVals = {'car_id': carSetting.car_id,'cat_id': carSetting.cat_id,'name': carSetting.name,'max_power': carSetting.max_power,'max_torque': carSetting.max_torque,'power_ratio': carSetting.power_ratio,'traction_control': carSetting.traction_control,'brake_balance': carSetting.brake_balance,'top_speed': carSetting.top_speed,'gear_1': carSetting.gear_1,'gear_2': carSetting.gear_2,'gear_3': carSetting.gear_3,'gear_4': carSetting.gear_4,'gear_5': carSetting.gear_5,'gear_6': carSetting.gear_6,'gear_7': carSetting.gear_7,'final_gear': carSetting.final_gear,'weight': carSetting.weight,'weight_reduction': carSetting.weight_reduction,'tire_code': carSetting.tire_code,'accel': carSetting.accel,'braking': carSetting.braking,'max_speed': carSetting.max_speed,'cornering': carSetting.cornering,'stability': carSetting.stability}
         result = _exeDML(dbConn, sql, theVals)
         logger.debug(f"save result: {result}")
         if result[0] == 0:
@@ -424,6 +417,41 @@ def addRaceCollection(dbConn, raceCollection):
     logger.debug(f"Return {rtrnMsg}")
     return rtrnMsg
 
+def deleteCarSetting(dbConn,id):
+    """Delete car setting record from database
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        id ([int]): UniqueID assigned to the car setting
+
+    Returns:
+        list: (ResultCode, ResultText)
+                ResultCode == 0: it worked
+                Resultcode <> 0: See ResultText for details
+    """
+    logger.debug(f"delete CarSettingID={id}")
+    sql = "DELETE FROM car_setting WHERE id = ?"
+    theVals=(id,)
+    result = _exeDML(dbConn, sql, theVals)
+
+    if result[0] == 0: #Sql successfully commited
+        #Need to parse to get rowcount. Expecting rowCount=nnn
+        srchFor = 'ROWCOUNT'
+        rowCount=None
+        for x in result[1].split(' '):
+            if x.upper().find(srchFor) == 0: # found it
+                xTmp = x.split('=')
+                rowCount=int(xTmp[1])
+                break
+
+        if rowCount > 0:
+            result = [0, f'Deleted {rowCount} row(s)']
+        else:
+            result = [1, 'No rows were deleted']
+
+    logger.debug(f"returning {result}")
+    return result
+
 
 def deleteMfg(dbConn, mfgId):
     """Delete manufacture record from database
@@ -564,6 +592,82 @@ def getCar(dbConn, id):
 
     logger.debug(f"Returning : {xCar}")
     return xCar
+
+def getCarSetting(dbConn,id):
+    """Get a Car Setting from db
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        id (int): Unique id assigned in the db to the car setting
+
+    Returns:
+        CustCarSetting Object
+        IF CustCarSetting.id == 0 then nothing found
+    """
+    logger.info(f"Getting car setting object id={id}")
+    selectSQL="SELECT id,car_id,cat_id,name,max_power,max_torque,power_ratio,traction_control,brake_balance,top_speed,gear_1,gear_2,gear_3,gear_4,gear_5,gear_6,gear_7,final_gear,weight,weight_reduction,tire_code,accel,braking,max_speed,cornering,stability"
+    fromSQL="FROM car_setting"
+    whereSQL = "WHERE id=?"
+    sql = f"{selectSQL} {fromSQL} {whereSQL}"
+    theVals = (id,)
+    # Execute the SQL
+    results = directSql(dbConn, sql, theVals)
+    if results: # Have data
+        logger.info(f"Found carSettingID={id}. Converting to carSetting Object")
+        logger.debug(f"results={results}")
+        carSetting=gtClass.CustCarSettings(id=results[0][0],
+        car_id=results[0][1],
+        cat_id=results[0][2],
+        name=results[0][3])
+        carSetting.max_power=results[0][4]
+        carSetting.max_torque=results[0][5]
+        carSetting.power_ratio=results[0][6]
+        carSetting.traction_control=results[0][7]
+        carSetting.brake_balance=results[0][8]
+        carSetting.top_speed=results[0][9]
+        carSetting.gear_1=results[0][10]
+        carSetting.gear_2=results[0][11]
+        carSetting.gear_3=results[0][12]
+        carSetting.gear_4=results[0][13]
+        carSetting.gear_5=results[0][14]
+        carSetting.gear_6=results[0][15]
+        carSetting.gear_7=results[0][16]
+        carSetting.final_gear=results[0][17]
+        carSetting.weight=results[0][18]
+        carSetting.weight_reduction=results[0][19]
+        carSetting.tire_code=results[0][20]
+        carSetting.accel=results[0][21]
+        carSetting.braking=results[0][22]
+        carSetting.cornering=results[0][23]
+        carSetting.max_speed=results[0][24]
+        carSetting.stability=results[0][25]
+    else: # Create blank car settings object
+        logger.info(f"Unable to find carSettingID={id}. Creating empty carSetting Object")
+        carSetting=gtClass.CustCarSettings(id=0,car_id=0,name="Not found",cat_id=0)
+
+    logger.debug(f"carSettingObj={carSetting.__dict__}")
+    return carSetting
+
+def getCarSettingList(dbConn,carId):
+    """Returns a list of car settings for carId
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+        carId : The car.id to get all the settings for
+    Returns:
+        list(id, custSettingName)
+        The list will be sorted by custSettingName
+    """
+    logger.info(f"Getting list of car settings for carId={carId}")
+    selectSQL="SELECT cset.id, cset.name"
+    fromSQL="FROM car_setting AS cset INNER JOIN car ON cset.car_id = car.id"
+    orderBySQL="ORDER BY cset.name"
+    whereSQL = "WHERE car.id = ?"
+    sql = f"{selectSQL} {fromSQL} {whereSQL} {orderBySQL}"
+    theVals = (carId,)
+    result = directSql(dbConn, sql, theVals)
+    logger.info(f"Returning {len(result)} rows")
+    return result
 
 
 def getCarCat(dbConn, id):
@@ -797,6 +901,27 @@ def getDriveTrainList(dbConn, orderBy='code'):
     result = directSql(dbConn, sql, theVals)
     logger.info(f"Returning {len(result)} rows")
     return result
+
+def getGarageMfgList(dbConn):
+    """Get a list of all manufactures that have cars in the garage
+
+    Args:
+        dbConn (sqlite3.connect): Database connection
+
+    Returns:
+        list: (MfgId,Make)
+    """
+    logger.info(f"Getting list of manufactures that have cars in the garage")
+    selectSQL="SELECT mfg.id AS id,mfg.name AS Make"
+    fromSQL="FROM manufacture AS mfg JOIN car ON car.mfg_id = mfg.id"
+    groupBySQL ="GROUP BY mfg.id, mfg.name"
+    orderBySQL = f"ORDER BY mfg.name"
+    sql = f"{selectSQL} {fromSQL} {groupBySQL} {orderBySQL}"
+    theVals = ()
+    logger.debug(f"sql: {sql}")
+    results = directSql(dbConn, sql, theVals)
+    logger.info(f"Rows being returned: {len(results)}")
+    return results
 
 
 def getLayout(dbConn, layoutId):
@@ -1324,6 +1449,23 @@ def initDB(dbConn, scriptPath=None):
         _exeScriptFile(dbConn, scriptFileName=f'{scriptFile}')
     logger.info("Database init completed")
 
+def updateCarSetting(dbConn,carSetting):
+    valResult = validateCarSetting(dbConn,carSetting)
+    if not valResult[0]: # is not valid
+        logger.warning(valResult[1])
+        return (1,valResult[1])
+
+    updateSQL = "UPDATE car_setting"
+    setSQL = "SET car_id=:car_id, cat_id=:cat_id, name=:name, max_power=:max_power, max_torque=:max_torque, power_ratio=:power_ratio, traction_control=:traction_control, brake_balance=:brake_balance, top_speed=:top_speed, gear_1=:gear_1, gear_2=:gear_2, gear_3=:gear_3, gear_4=:gear_4, gear_5=:gear_5, gear_6=:gear_6, gear_7=:gear_7, final_gear=:final_gear, weight=:weight, weight_reduction=:weight_reduction, tire_code=:tire_code"
+
+    whereSQL = "WHERE id = :id"
+
+    theVals = {'id': carSetting.id,'car_id': carSetting.car_id,'cat_id': carSetting.cat_id,'name': carSetting.name,'max_power': carSetting.max_power,'max_torque': carSetting.max_torque,'power_ratio': carSetting.power_ratio,'traction_control': carSetting.traction_control,'brake_balance': carSetting.brake_balance,'top_speed': carSetting.top_speed,'gear_1': carSetting.gear_1,'gear_2': carSetting.gear_2,'gear_3': carSetting.gear_3,'gear_4': carSetting.gear_4,'gear_5': carSetting.gear_5,'gear_6': carSetting.gear_6,'gear_7': carSetting.gear_7,'final_gear': carSetting.final_gear,'weight': carSetting.weight,'weight_reduction': carSetting.weight_reduction,'tire_code': carSetting.tire_code}
+
+    sql = f"{updateSQL} {setSQL} {whereSQL}"
+    logger.info(f"Updating carSetting {carSetting.id}")
+    return _exeDML(dbConn, sql, theVals)
+
 
 def updateMfg(dbConn, mfgObj):
     """Update a manufacture record in database
@@ -1494,8 +1636,8 @@ def validateCar(dbConn, car):
     return (True, "Car validation passed")
 
 
-def validateCustomCarSettings(dbConn, custCarSettings):
-    """[summary]
+def validateCarSetting(dbConn, custCarSettings):
+    """Validates the custom Car Settings objects.
 
     Args:
         dbConn (sqlite3.connect): Database connection
@@ -1507,54 +1649,10 @@ def validateCustomCarSettings(dbConn, custCarSettings):
         False = See msg for what did not pass
 
     """
-    logger.info(f"Validating custom car settings = {custCarSettings}")
-    # name must contain at least one character
-    logger.debug(f"Checking name to be sure it contains at least 1 character")
-    if not custCarSettings.name:
-        msg = f"Custom car settings name invalid. It must contain a value"
-        result = (False, msg)
-        logger.info(f"return = {result}")
+    logger.info(f"Validating custom car settings = {custCarSettings.__dict__}")
 
-    logger.debug("Check maxpower is not a string")
-    if custCarSettings.maxpower:
-        if type(custCarSettings.maxpower) == str:
-            result = (
-                False, f"Invalid maxpower value. maxpower={custCarSettings.maxpower}. Must be null or a numeric value")
-            logger.info(f"{result}")
-            return result
-
-    logger.debug("Check maxtorque is not a string")
-    if custCarSettings.maxtorque:
-        if type(custCarSettings.maxtorque) == str:
-            result = (
-                False, f"Invalid maxtorque value. maxtorque={custCarSettings.maxtorque}. Must be null or a numeric value")
-            logger.info(f"{result}")
-            return result
-
-    logger.debug("Check powerratio is not a string")
-    if custCarSettings.powerratio:
-        if type(custCarSettings.powerratio) == str:
-            result = (
-                False, f"Invalid powerratio value. maxtorque={custCarSettings.powerratio}. Must be null or a numeric value")
-            logger.info(f"{result}")
-            return result
-
-    logger.debug("Check weight is not a string")
-    if custCarSettings.weight:
-        if type(custCarSettings.weight) == str:
-            result = (
-                False, f"Invalid weight value. weight={custCarSettings.weight}. Must be null or a numeric value")
-            logger.info(f"{result}")
-            return result
-
-    logger.debug("Check weightreduction is not a string")
-    if custCarSettings.weightreduction:
-        if type(custCarSettings.weightreduction) == str:
-            result = (
-                False, f"Invalid weightreduction value. weightreduction={custCarSettings.weightreduction}. Must be null or a numeric value")
-            logger.info(f"{result}")
-            return result
-
+    # The following tests access db.
+    # Last tests as no need to access db if validation fails
     logger.debug("Check car_id exists")
     car = getCar(dbConn, custCarSettings.car_id)
     if car.id == 0:
@@ -1572,23 +1670,24 @@ def validateCustomCarSettings(dbConn, custCarSettings):
         return result
 
     logger.debug("Check tire_code exists")
-    x = getTireList(dbConn)
-    found = False
-    for chk in x:
-        logger.debug(f"{chk[0]}")
-        if chk[0].upper() == custCarSettings.tire_code.upper():
-            found = True
-    if not found:
-        result = (
-            False, f"Tire code does not exist. tire_code={custCarSettings.tire_code}")
-        logger.info(f"{result}")
-        return result
+    if custCarSettings.tire_code:
+        x = getTireList(dbConn)
+        found = False
+        for chk in x:
+            logger.debug(f"{chk[0]}")
+            if chk[0].upper() == custCarSettings.tire_code.upper():
+                found = True
+        if not found:
+            result = (
+                False, f"Tire code does not exist. tire_code={custCarSettings.tire_code}")
+            logger.info(f"{result}")
+            return result
 
     # name must be unique for the car_id
     logger.debug(
         f"Checking name is unique for the car. carid = {custCarSettings.car_id}")
     selectSQL = "SELECT id, name, car_id"
-    fromSQL = "FROM car_settings"
+    fromSQL = "FROM car_setting"
     whereSQL = "WHERE car_id=:carID and name=:csName"
     theVals = {'carID': custCarSettings.car_id,
                'csName': custCarSettings.name.strip()}
@@ -1599,7 +1698,7 @@ def validateCustomCarSettings(dbConn, custCarSettings):
         logger.debug(
             f"Name is not unique for car. customCarSettingID={results[0][0]}, for carid={results[0][2]}")
         result = (
-            False, f"Custom car name already exists car id {custCarSettings.car_id}")
+            False, f"Car setting name already exists for car id {custCarSettings.car_id}")
         logger.info(f"{result}")
         return result
 
