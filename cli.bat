@@ -1,5 +1,5 @@
 @echo off
 call .\venv\Scripts\activate
-python cli.py
+python cli.py %*
 call .\venv\Scripts\deactivate
 @echo on
